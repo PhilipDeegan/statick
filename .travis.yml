@@ -1,0 +1,48 @@
+language: generic
+matrix:
+  include:
+  - os: linux
+    dist: xenial
+    sudo: required
+    language: cpp
+    compiler: gcc
+    addons:
+      apt:
+        sources:
+          - ubuntu-toolchain-r-test
+        packages:
+          - g++-8
+          - libatlas-base-dev
+          - libblas-dev
+  - os: osx
+    osx_image: xcode10.2
+    language: c++
+    compiler: clang
+
+before_install:
+  - |
+    git clone https://github.com/Dekken/maiken --depth 10 -b master maiken
+    python3 -m pip install pip --upgrade
+    if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
+      make bsd -C maiken CXX="clang++" & MKN=$!
+      python3 -m pip install numpy scikit-learn scipy mkl mkl-include
+      find /usr/local/lib -name "libmkl*"
+      wait $MKN
+    elif [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
+      make nix -C maiken & MKN=$!
+      sudo ln -fs /usr/bin/gcc-8 /usr/local/bin/gcc; sudo ln -fs /usr/bin/g++-8 /usr/local/bin/g++;
+      export PATH="$PWD:/opt/python/3.6.7/bin:$PATH"
+      python3 -m pip install numpy scikit-learn scipy
+      wait $MKN
+    fi
+  - mv maiken/mkn .
+
+script:
+  - set -e
+  - |
+    export KUL_GIT_CO="--depth 3"
+    export MKN_LIB_LINK_LIB=1
+    export PYTHON=python3
+    export XTRA="-x $PWD/res/ci/travis-${TRAVIS_OS_NAME}.yaml"
+    source $PWD/res/ci/travis-${TRAVIS_OS_NAME}.sh
+    exit 0
