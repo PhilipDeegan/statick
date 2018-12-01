@@ -1,0 +1,12 @@
+
+
+name: tickless
+inc: inc
+arg: -O3 -march=native -funroll-loops -ftree-vectorize -fopt-info-vec -fopt-info-vec-optimized #-fopt-info-vec-missed
+dep: io.cereal
+src: cpp.cpp
+test: saga_dense.cpp saga_sparse.cpp sgd_dense.cpp
+# mod:
+# - name: clang.format
+#   link:
+#     paths: .
