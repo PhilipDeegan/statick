@@ -1,0 +1,15 @@
+
+
+local:
+    repo: /opt/mkn
+    mod-repo: /opt/mkn-mod
+
+env:
+  - name: PATH
+    mode: prepend
+    value: /opt/rocm/bin
+file:
+  - type: c:cpp:cxx:cc
+    archiver: ar -cr
+    compiler: hcc $(hcc-config --cxxflags) -fPIC -std=c++14
+    linker: hcc $(hcc-config --ldflags)

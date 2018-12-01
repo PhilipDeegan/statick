@@ -1,0 +1,8 @@
+#! clean build -dtOSx hcc run -r 5
+
+name: hcc
+inc: /opt/rocm/rocrand/include ../inc
+# lib: hip_device hip_hcc rocrand
+link: -pthread
+main: main.cpp
+dep: mkn.kul io.cereal

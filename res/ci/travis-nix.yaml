@@ -1,0 +1,10 @@
+inc: /opt/python/3.6.3/include/python3.6m
+file:
+  - type: c:S
+    archiver: ar -cr
+    compiler: gcc
+    linker: gcc
+  - type: cpp:cxx:cc
+    archiver: ar -cr
+    compiler: g++ -std=c++17 -fPIC
+    linker: g++

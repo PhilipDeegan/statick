@@ -1,0 +1,12 @@
+inc:
+  /Users/travis/.pyenv/versions/3.6.7/include
+  /Users/travis/.pyenv/versions/3.6.7/lib/python3.6/site-packages/numpy/core/include
+file:
+  - type: c:S
+    archiver: ar -cr
+    compiler: clang
+    linker: clang
+  - type: cpp:cxx:cc
+    archiver: ar -cr
+    compiler: clang++ -std=c++17 -fPIC
+    linker: clang++

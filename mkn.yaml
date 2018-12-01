@@ -1,0 +1,36 @@
+#! clean build test -O
+
+name: statick
+
+parent: base
+
+profile:
+- name: base
+  inc: inc
+  if_arg:
+    nix: -std=c++17 -O3 -march=native -funroll-loops -ftree-vectorize -fopt-info-vec  -fopt-info-inline -fopt-info-inline-optimized -fopt-info-vec-optimized  #-fopt-info-vec-missed
+    win_cl: -std:c++17 -DNOMINMAX
+  if_link:
+    nix: -pthread
+  dep: io.cereal mkn.kul lang.pybind11
+  test: test/(\w).cpp
+  mod:
+  - name: lang.python3
+    compile:
+      with: numpy
+
+- name: example
+  install: .
+  parent: base
+  out: example
+  src: example.cpp
+  mod:
+  - name: lang.pybind11
+  test: example.py
+
+- name: clean
+  parent: base
+  mod:
+  - name: clang.format
+    link:
+      paths: .

@@ -1,0 +1,71 @@
+
+language: cpp
+
+matrix:
+  include:
+  - os: linux
+    language: generic
+    dist: trusty
+    sudo: required
+    compiler: gcc
+    addons:
+      apt:
+        sources:
+          - ubuntu-toolchain-r-test
+        packages:
+          - g++-8
+      env:
+        - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
+  - os: osx
+    language: generic
+    sudo: required
+    osx_image: xcode10.1
+    compiler: clang
+
+before_install:
+  # - which python3-config
+  # - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then sudo /usr/libexec/locate.updatedb; fi
+  # - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then locate Python.h; fi
+  - git clone https://github.com/Dekken/maiken --depth 10 -b master maiken
+  - cd maiken
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then make bsd CXX="clang++"; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then eval "${MATRIX_EVAL}"; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then make nix CXX=/usr/bin/g++-8; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo ln -s /usr/bin/gcc-8 /usr/local/bin/gcc; sudo ln -s /usr/bin/g++-8 /usr/local/bin/g++; gcc -v; fi
+  - cp mkn ..
+  - cd ..
+
+script:
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo ln -fs /usr/bin/gcc-8 /usr/local/bin/gcc; sudo ln -fs /usr/bin/g++-8 /usr/local/bin/g++; gcc -v; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]];   then source $PWD/res/ci/travis-osx.sh; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then source $PWD/res/ci/travis-nix.sh; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export XFILE=$PWD/res/ci/travis-nix.yaml; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx"   ]]; then export XFILE=$PWD/res/ci/travis-osx.yaml; fi
+  - export KUL_GIT_CO="--depth 3"
+  - export MKN_LIB_LINK_LIB=1
+  - export PATH="$PWD:/opt/python/3.6.3/bin:$PATH"
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export PATH="/opt/python/3.6.3/bin:$PATH"; fi
+  - export XTRA="-x $XFILE"
+  - export PYTHON=python3
+  - export PY3_CONFIG=python3-config
+  - python3 -V
+  - python3 -m pip install pip --upgrade
+  - python3 -m pip install -v numpy scikit-learn scipy
+  - python3 -c "import numpy; print(numpy.get_include())"
+  - KLOG=3 ./test.sh
+
+# deploy:
+#   - provider: bintray
+#     file: res/travis/mac_bintray.json
+#     user: dekken
+#     key:
+#       secure: ZMfDtmzwNq60lbX3nCr2PIKYXMcb1p976TJFl/i//AsnraFhlwvn30Q48FG2uY1cWuXCtr6ATdtThMlUd01zq5WVktTmmf4Q5CYFy5kiOr7Rajyg/5dMgSK3butJyHUVCki7dM0ztIPc82zQaWSy6wNUMPxf12e73cgGwWTnT1jUpTs1kKB5LpfduI4lOzggNc08Q23mlNYGW9XReV14QAdPgULogL+T0ABy8GKBQ/0Hx4eaj6IM9FHrZpDbfkgaeSsSByIY9sFi8njOirQ4YAzXG7J/GiubqGcLVYYwegbD8E3wJLSXny0s61nEzsMigG2ZQKfxlFmxW1TAOklEOd+B/vF9QBHF0/NuPSNEXAT2miZ9QqHKeN+B5vEZJqCEJ19nmEA5WDTfyHIojH0ZgCBUUCqfIuSOaYLmU7pgk2KUHfFtvDEQx2uy7Afjzmn+Ho+H4LXUwLliYZPNq2yHcqk0zd1xwI+h3B2N4npTxdwCMxUlr6QOSuEAGAssUdZyIZyTWttho6CQSDWpVGAMQYwkAMCWLC7nq9qy11RtIV/yJhOKIlJMMHFQYJtXTysWQs9mIZwKOG6O3tHiLABXdw7D2kkjpdxN85qeYUHa5oHeaBVKQTsLrYG+z6p66N/w+/1hyj4fkcsTBOziJwtTU1Vse+c3bMuRdlsAA1ToIJA=
+#     edge:
+#         branch: v1.8.47
+#   - provider: bintray
+#     file: res/travis/nix_bintray.json
+#     user: dekken
+#     key:
+#       secure: ZMfDtmzwNq60lbX3nCr2PIKYXMcb1p976TJFl/i//AsnraFhlwvn30Q48FG2uY1cWuXCtr6ATdtThMlUd01zq5WVktTmmf4Q5CYFy5kiOr7Rajyg/5dMgSK3butJyHUVCki7dM0ztIPc82zQaWSy6wNUMPxf12e73cgGwWTnT1jUpTs1kKB5LpfduI4lOzggNc08Q23mlNYGW9XReV14QAdPgULogL+T0ABy8GKBQ/0Hx4eaj6IM9FHrZpDbfkgaeSsSByIY9sFi8njOirQ4YAzXG7J/GiubqGcLVYYwegbD8E3wJLSXny0s61nEzsMigG2ZQKfxlFmxW1TAOklEOd+B/vF9QBHF0/NuPSNEXAT2miZ9QqHKeN+B5vEZJqCEJ19nmEA5WDTfyHIojH0ZgCBUUCqfIuSOaYLmU7pgk2KUHfFtvDEQx2uy7Afjzmn+Ho+H4LXUwLliYZPNq2yHcqk0zd1xwI+h3B2N4npTxdwCMxUlr6QOSuEAGAssUdZyIZyTWttho6CQSDWpVGAMQYwkAMCWLC7nq9qy11RtIV/yJhOKIlJMMHFQYJtXTysWQs9mIZwKOG6O3tHiLABXdw7D2kkjpdxN85qeYUHa5oHeaBVKQTsLrYG+z6p66N/w+/1hyj4fkcsTBOziJwtTU1Vse+c3bMuRdlsAA1ToIJA=
+#     edge:
+#         branch: v1.8.47
