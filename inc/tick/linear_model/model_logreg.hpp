@@ -4,24 +4,6 @@
 
 namespace tick {
 
-template <typename T>
-T abs(const T &f) {
-  return f < 0 ? f * -1 : f;
-}
-
-template <typename T>
-T sigmoid(const T z) {
-  if (z > 0) return 1 / (1 + exp(-z));
-  const T exp_z = exp(z);
-  return exp_z / (1 + exp_z);
-}
-
-template <typename T>
-T logistic(const T z) {
-  if (z > 0) return log(1 + exp(-z));
-  return -z + log(1 + exp(z));
-}
-
 namespace logreg {
 template <typename T>
 T dot(const T *t1, const T *t2, size_t size) {
@@ -31,7 +13,7 @@ T dot(const T *t1, const T *t2, size_t size) {
 }
 
 template <typename T>
-T loss(const Sparse2DRaw<T> &features, const T * const labels, T *coeffs) {
+T loss(const Sparse2DRaw<T> &features, const T *const labels, T *coeffs) {
   const size_t &rows = features.rows();
   T t{0};
   for (size_t i = 0; i < rows; i++) t += logistic(features.row(i).dot(coeffs) * labels[i]);
@@ -39,7 +21,7 @@ T loss(const Sparse2DRaw<T> &features, const T * const labels, T *coeffs) {
 }
 
 template <typename T, typename FEATURES>
-T loss(const FEATURES &features, const T * const labels, T *coeffs) {
+T loss(const FEATURES &features, const T *const labels, T *coeffs) {
   const size_t &rows = features.rows();
   T t{0};
   for (size_t i = 0; i < rows; i++) t += logistic(features.row(i).dot(coeffs) * labels[i]);
@@ -47,7 +29,7 @@ T loss(const FEATURES &features, const T * const labels, T *coeffs) {
 }
 
 template <typename T>
-T grad_i_factor(T *features, size_t cols, ulong i, T y_i, size_t coeffs_size, T *coeffs) {
+T grad_i_factor(T *features, size_t cols, size_t i, T y_i, size_t coeffs_size, T *coeffs) {
   return y_i * (sigmoid(y_i * get_inner_prod(features, cols, i, coeffs_size, coeffs)) - 1);
 }
 

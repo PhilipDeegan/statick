@@ -9,7 +9,7 @@
 #include <malloc.h>
 
 #ifdef TICK_SPARSE_INDICES_INT64
-#define INDICE_TYPE ulong
+#define INDICE_TYPE size_t
 #else
 #define INDICE_TYPE std::uint32_t
 #endif
@@ -27,5 +27,4 @@
 
 constexpr size_t N_ITER = 100;
 
-int mainer() {
-}
+int mainer() {}

@@ -4,14 +4,39 @@
 
 namespace tick {
 
+template <typename T>
+T norm_sq(const T *array, size_t size) {
+  T n_sq{0};
+  for (size_t i = 0; i < size; ++i) n_sq = (array[i] * array[i]) + n_sq;
+  return n_sq;
+}
+
+template <typename T>
+T abs(const T f) {
+  return f < 0 ? f * -1 : f;
+}
+
+template <typename T>
+T sigmoid(const T z) {
+  if (z > 0) return 1 / (1 + exp(-z));
+  const T exp_z = exp(z);
+  return exp_z / (1 + exp_z);
+}
+
+template <typename T>
+T logistic(const T z) {
+  if (z > 0) return log(1 + exp(-z));
+  return -z + log(1 + exp(z));
+}
+
 template <class Archive, class T>
 bool load_array_with_raw_data(Archive &ar, std::vector<T> &data) {
   bool is_sparse = false;
   ar(CEREAL_NVP(is_sparse));
   if (is_sparse) return false;
-  ulong vectorSize = 0;
+  size_t vectorSize = 0;
   ar(cereal::make_size_tag(vectorSize));
-  if(data.size() < vectorSize) data.resize(vectorSize);
+  if (data.size() < vectorSize) data.resize(vectorSize);
   ar(cereal::binary_data(data.data(), static_cast<std::size_t>(vectorSize) * sizeof(T)));
   return true;
 }
@@ -25,23 +50,21 @@ class Array {
 
   T dot(const T *const that) const {
     T result = 0;
-    for (uint64_t i = 0; i < this->m_data.size(); i++) result += this->m_data[i] * that[i];
+    for (size_t i = 0; i < this->m_data.size(); i++) result += this->m_data[i] * that[i];
     return result;
   }
 
   const T &operator[](int i) const { return m_data[i]; }
 
-
-  const T * data() const { return m_data.data(); }
+  const T *data() const { return m_data.data(); }
   const size_t &size() const { return m_data.size(); }
 
-  static std::shared_ptr<Array<T>> FROM_CEREAL(const std::string &file){
+  static std::shared_ptr<Array<T>> FROM_CEREAL(const std::string &file) {
     auto array = std::make_shared<Array<T>>();
     {
       std::ifstream bin_data(file, std::ios::in | std::ios::binary);
       cereal::PortableBinaryInputArchive iarchive(bin_data);
-      if(tick::load_array_with_raw_data(iarchive, array->m_data))
-        return std::move(array);
+      if (tick::load_array_with_raw_data(iarchive, array->m_data)) return std::move(array);
     }
     return nullptr;
   }
@@ -69,7 +92,7 @@ class ArrayRaw {
 
   T dot(const T *const that) const {
     T result = 0;
-    for (uint64_t i = 0; i < this->_size; i++) result += this->v_data[i] * that[i];
+    for (size_t i = 0; i < this->_size; i++) result += this->v_data[i] * that[i];
     return result;
   }
 
@@ -91,13 +114,13 @@ class ArrayRaw {
 template <class Archive, class T>
 bool load_array2d_with_raw_data(Archive &ar, std::vector<T> &data, std::vector<size_t> &info) {
   bool is_sparse = false;
-  ulong cols = 0, rows = 0, vectorSize = 0;
+  size_t cols = 0, rows = 0, vectorSize = 0;
   ar(is_sparse);
   if (is_sparse) return false;
   ar(cols, rows);
   ar(cereal::make_size_tag(vectorSize));
   if ((cols * rows) != vectorSize) return false;
-  if(data.size() < vectorSize) data.resize(vectorSize);
+  if (data.size() < vectorSize) data.resize(vectorSize);
   ar(cereal::binary_data(data.data(), static_cast<std::size_t>(vectorSize) * sizeof(T)));
   info.resize(info.size() + 3);
   info[0] = cols;
@@ -109,10 +132,10 @@ bool load_array2d_with_raw_data(Archive &ar, std::vector<T> &data, std::vector<s
 template <class T>
 class Array2D {
  public:
-  Array2D(){}
-  Array2D(Array2D &&that) : m_data(that.m_data), m_info(that.m_info){}
+  Array2D() {}
+  Array2D(Array2D &&that) : m_data(that.m_data), m_info(that.m_info) {}
 
-  const T * data() const { return m_data.data(); }
+  const T *data() const { return m_data.data(); }
   ArrayRaw<T> row(size_t i) const { return ArrayRaw<T>(&m_data[i * m_info[0]], m_info[0]); }
   const T *row_raw(size_t i) const { return &m_data[i * m_info[0]]; }
 
@@ -122,12 +145,12 @@ class Array2D {
   const size_t &rows() const { return m_info[1]; }
   const size_t &size() const { return m_info[2]; }
 
-  static std::shared_ptr<Array2D<T>> FROM_CEREAL(const std::string &file){
+  static std::shared_ptr<Array2D<T>> FROM_CEREAL(const std::string &file) {
     auto array = std::make_shared<Array2D<T>>();
     {
       std::ifstream bin_data(file, std::ios::in | std::ios::binary);
       cereal::PortableBinaryInputArchive iarchive(bin_data);
-      if(tick::load_array2d_with_raw_data(iarchive, array->m_data, array->m_info))
+      if (tick::load_array2d_with_raw_data(iarchive, array->m_data, array->m_info))
         return std::move(array);
     }
     return nullptr;
@@ -194,13 +217,9 @@ class Array2DList {
   const T *data() const { return m_data.data(); }
   size_t size() const { return m_data.size(); }
 
-  void add_from_cereal(const std::string &file){
+  void add_from_cereal(const std::string &file) {}
 
-  }
-
-  static std::shared_ptr<Array2DList<T>> FROM_CEREAL(const std::string &file){
-
-  }
+  static std::shared_ptr<Array2DList<T>> FROM_CEREAL(const std::string &file) {}
 
  private:
   std::vector<T> m_data;
@@ -234,7 +253,7 @@ class Sparse {
   const size_t &size() const { return _size; }
   T dot(const Sparse<T> &that) const {
     T result = 0;
-    uint64_t i1 = 0, i2 = 0;
+    size_t i1 = 0, i2 = 0;
     while (true) {
       if (i1 >= that._size) break;
       while (i2 < this->_size && this->indices()[i2] < that.indices[i1]) {
@@ -253,7 +272,7 @@ class Sparse {
   }
   T dot(const T *const that) const {
     T result = 0;
-    for (uint64_t i = 0; i < this->_size; i++) result += this->v_data[i] * that[this->indices[i]];
+    for (size_t i = 0; i < this->_size; i++) result += this->v_data[i] * that[this->indices[i]];
     return result;
   }
 
@@ -278,10 +297,10 @@ bool load_sparse2d_with_raw_data(Archive &ar, std::vector<T> &data, std::vector<
   size_t rows = 0, cols = 0, size_sparse, size = 0;
   ar(size_sparse, rows, cols, size);
 
-  if(data.size() < 3) data.resize(size_sparse);
-  if(info.size() < 3) info.resize(3);
-  if(indices.size() < size_sparse) indices.resize(size_sparse);
-  if(row_indices.size() < (rows + 1)) row_indices.resize(rows + 1);
+  if (data.size() < 3) data.resize(size_sparse);
+  if (info.size() < 3) info.resize(3);
+  if (indices.size() < size_sparse) indices.resize(size_sparse);
+  if (row_indices.size() < (rows + 1)) row_indices.resize(rows + 1);
 
   ar(cereal::binary_data(data.data(), sizeof(T) * size_sparse));
   ar(cereal::binary_data(indices.data(), sizeof(INDICE_TYPE) * size_sparse));
@@ -299,7 +318,7 @@ class Sparse2D {
   using INDEX_TYPE = INDICE_TYPE;
 
  public:
-  Sparse2D(){}
+  Sparse2D() {}
   Sparse2D(Sparse2D &&that)
       : m_data(that.m_data),
         m_info(that.m_info),
@@ -321,13 +340,13 @@ class Sparse2D {
   const size_t &rows() const { return m_info[1]; }
   const size_t &size() const { return m_info[2]; }
 
-
-  static std::shared_ptr<Sparse2D<T>> FROM_CEREAL(const std::string &file){
+  static std::shared_ptr<Sparse2D<T>> FROM_CEREAL(const std::string &file) {
     auto array = std::make_shared<Sparse2D<T>>();
     {
       std::ifstream bin_data(file, std::ios::in | std::ios::binary);
       cereal::PortableBinaryInputArchive iarchive(bin_data);
-      if(tick::load_sparse2d_with_raw_data(iarchive, array->m_data, array->m_info, array->m_indices, array->m_row_indices))
+      if (tick::load_sparse2d_with_raw_data(iarchive, array->m_data, array->m_info,
+                                            array->m_indices, array->m_row_indices))
         return std::move(array);
     }
     return nullptr;
@@ -346,7 +365,6 @@ class Sparse2D {
   Sparse2D &operator=(const Sparse2D &that) = delete;
   Sparse2D &operator=(const Sparse2D &&that) = delete;
 };
-
 
 template <class T>
 class Sparse2DRaw {
@@ -403,8 +421,8 @@ class Sparse2DRaw {
 
 template <class Archive, class T>
 bool load_sparse2dlist_with_raw_data(Archive &ar, std::vector<T> &data, std::vector<size_t> &info,
-                                 std::vector<INDICE_TYPE> &indices,
-                                 std::vector<INDICE_TYPE> &row_indices) {
+                                     std::vector<INDICE_TYPE> &indices,
+                                     std::vector<INDICE_TYPE> &row_indices) {
   size_t rows = 0, cols = 0, size_sparse, size = 0;
   ar(size_sparse);
   ar(rows, cols, size);
@@ -474,4 +492,3 @@ class Sparse2DList {
 }  // namespace tick
 
 #endif  //  TICK_ARRAY_ARRAY_HPP_
-

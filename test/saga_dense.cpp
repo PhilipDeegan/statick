@@ -9,7 +9,7 @@
 #include <malloc.h>
 
 #ifdef TICK_SPARSE_INDICES_INT64
-#define INDICE_TYPE ulong
+#define INDICE_TYPE size_t
 #else
 #define INDICE_TYPE std::uint32_t
 #endif
@@ -17,6 +17,7 @@
 #include "cereal/archives/portable_binary.hpp"
 #include "tick/array/array.hpp"
 #include "tick/linear_model/model_logreg.hpp"
+#include "tick/prox/prox_l2.hpp"
 #include "tick/prox/prox_l2sq.hpp"
 #include "tick/solver/saga.hpp"
 
@@ -31,9 +32,10 @@ int main() {
   std::string labels_s("labels.cereal"), features_s("features.cereal");
   auto features = tick::Array2D<double>::FROM_CEREAL(features_s);
   auto labels = tick::Array<double>::FROM_CEREAL(labels_s);
-  const size_t N_FEATURES = features->cols(), N_SAMPLES = features->rows();;
+  const size_t N_FEATURES = features->cols(), N_SAMPLES = features->rows();
 
-  std::vector<double> gradients_average(N_FEATURES), gradients_memory(N_SAMPLES), iterate(N_FEATURES);
+  std::vector<double> gradients_average(N_FEATURES), gradients_memory(N_SAMPLES),
+      iterate(N_FEATURES);
 
   std::mt19937_64 generator;
   std::random_device r;
@@ -46,9 +48,6 @@ int main() {
   const auto BETA = 1e-10;
   const auto STRENGTH = (1. / N_SAMPLES) + BETA;
 
-  auto call_single = [&](ulong i, const double *coeffs, double step, double *out) {
-    tick::prox_l2sq::call_single(i, coeffs, step, out, STRENGTH);
-  };
   auto call = [&](const double *coeffs, double step, double *out, size_t size) {
     tick::prox_l2sq::call(coeffs, step, out, size, STRENGTH);
   };
@@ -59,7 +58,8 @@ int main() {
     tick::saga::dense::solve(*features, labels->data(), gradients_average.data(),
                              gradients_memory.data(), iterate.data(), call, next_i);
 
-    if (j % 10 == 0) objs.emplace_back(tick::logreg::loss(*features, labels->data(), iterate.data()));
+    if (j % 10 == 0)
+      objs.emplace_back(tick::logreg::loss(*features, labels->data(), iterate.data()));
   }
   auto finish = NOW;
   for (auto &o : objs) std::cout << __LINE__ << " " << o << std::endl;
