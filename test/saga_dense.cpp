@@ -8,12 +8,6 @@
 #include <iostream>
 #include <malloc.h>
 
-#ifdef TICK_SPARSE_INDICES_INT64
-#define INDICE_TYPE size_t
-#else
-#define INDICE_TYPE std::uint32_t
-#endif
-
 #include "cereal/archives/portable_binary.hpp"
 #include "tick/array/array.hpp"
 #include "tick/linear_model/model_logreg.hpp"

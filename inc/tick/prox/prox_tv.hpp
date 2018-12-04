@@ -1,12 +1,7 @@
 #ifndef TICK_PROX_PROX_TV_HPP_
 #define TICK_PROX_PROX_TV_HPP_
-
-// License: BSD 3 clause
-
 namespace tick {
-
 namespace prox_tv {
-
 template <bool POSITIVE = true, class T>
 void call(const T *coeffs, T step, T *out, size_t start, size_t end, T strength) {
   size_t width = end - start;
@@ -36,13 +31,14 @@ void call(const T *coeffs, T step, T *out, size_t start, size_t end, T strength)
         do {
           sub_out[k0++] = vmin;
         } while (k0 <= k);
-        if constexpr (POSITIVE) {
-          for (size_t i = start; i < end; i++) {
-            if (out[i] < 0) {
-              out[i] = 0;
+        if
+          constexpr(POSITIVE) {
+            for (size_t i = start; i < end; i++) {
+              if (out[i] < 0) {
+                out[i] = 0;
+              }
             }
           }
-        }
         return;
       }
     }
@@ -100,8 +96,6 @@ T value(const RAWrray &coeffs, size_t start, size_t end, T strength) {
   }
   return strength * tv_norm;
 }
-
 }  // namespace prox_tv
 }  // namespace tick
-
 #endif  // TICK_PROX_PROX_TV_HPP_
