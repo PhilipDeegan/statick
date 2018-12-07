@@ -44,7 +44,7 @@ class NoHistory {
   NoHistory operator+=(size_t iterations) { return *this; }
   NoHistory add_time(double time) { return *this; }
 };
-}
-}
+}  // namespace solver
+}  // namespace tick
 
 #endif  // TICK_SOLVER_HISTORY_HPP_

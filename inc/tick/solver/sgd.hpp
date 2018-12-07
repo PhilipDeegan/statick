@@ -4,8 +4,7 @@ namespace tick {
 namespace sgd {
 namespace dense {
 template <bool INTERCEPT = false, typename T, typename FEATURES, typename PROX, typename NEXT_I>
-void solve(const FEATURES &features, const T *labels, T *iterate, PROX call, NEXT_I _next_i,
-           size_t &t) {
+void solve(const FEATURES &features, const T *labels, T *iterate, PROX call, NEXT_I _next_i, size_t &t) {
   constexpr double step = 1e-5;
   size_t n_samples = features.rows(), n_features = features.cols(), start_t = t;
   std::vector<T> v_grad(n_features, 0);
@@ -23,8 +22,7 @@ void solve(const FEATURES &features, const T *labels, T *iterate, PROX call, NEX
 }  // namespace dense
 namespace sparse {
 template <bool INTERCEPT = false, typename T, typename Sparse2D, typename PROX, typename NEXT_I>
-void solve(const Sparse2D &features, const T *labels, T *iterate, PROX call, NEXT_I _next_i,
-           size_t &t) {
+void solve(const Sparse2D &features, const T *labels, T *iterate, PROX call, NEXT_I _next_i, size_t &t) {
   size_t n_samples = features.rows(), n_features = features.cols(), start_t = t;
   double step = 1e-5;
   for (t = start_t; t < start_t + n_samples; ++t) {
@@ -36,8 +34,9 @@ void solve(const Sparse2D &features, const T *labels, T *iterate, PROX call, NEX
     const INDICE_TYPE *x_indices = features.row_indices(i);
     const size_t row_size = features.row_size(i);
     for (size_t j = 0; j < row_size; j++) iterate[x_indices[j]] += x_i[j] * delta;
-    if
-      constexpr(INTERCEPT) { iterate[n_features + 1] += delta; }
+    if constexpr (INTERCEPT) {
+      iterate[n_features] += delta;
+    }
     call(iterate, step_t, iterate, n_features);
   }
 }

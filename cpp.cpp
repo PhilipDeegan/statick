@@ -20,10 +20,8 @@
 #include "tick/prox/prox_l2sq.hpp"
 #include "tick/solver/sgd.hpp"
 
-#define NOW                                                \
-  std::chrono::duration_cast<std::chrono::milliseconds>(   \
-      std::chrono::system_clock::now().time_since_epoch()) \
-      .count()
+#define NOW \
+  std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count()
 
 constexpr size_t N_ITER = 100;
 

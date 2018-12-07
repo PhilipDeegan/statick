@@ -49,5 +49,9 @@ T value_single(T x) {
   return x * x / 2;
 }
 }  // namespace prox_l2sq
+
+template <typename T>
+class TProxL2Sq {};
+
 }  // namespace tick
 #endif  // TICK_PROX_PROX_L2SQ_HPP_
