@@ -46,7 +46,7 @@ auto solve(typename MODEL::DAO &modao, T *iterate, PROX call, NEXT_I _next_i,
 namespace sparse {
 template <typename MODEL, bool INTERCEPT = false, typename T, typename PROX, typename NEXT_I,
           typename SAGA_DAO = saga::DAO<T>>
-void solve(typename MODEL::DAO &modao, T *iterate, T *steps_correction, PROX call_single, NEXT_I _next_i,
+auto solve(typename MODEL::DAO &modao, T *iterate, T *steps_correction, PROX call_single, NEXT_I _next_i,
            std::shared_ptr<SAGA_DAO> p_dao = nullptr) {
   const size_t n_samples = modao.n_samples(), n_features = modao.n_features();
   if (p_dao == nullptr) p_dao = std::make_shared<SAGA_DAO>(n_samples, n_features);
@@ -75,6 +75,7 @@ void solve(typename MODEL::DAO &modao, T *iterate, T *steps_correction, PROX cal
       call_single(n_features, iterate, step, iterate);
     }
   }
+  return dao;
 }
 template <typename Sparse2D, class T = double>
 std::vector<T> compute_columns_sparsity(const Sparse2D &features) {
