@@ -19,8 +19,8 @@ namespace StepType {
 constexpr uint16_t Fixed = 1, BarzilaiBorwein = 2;
 }
 template <typename MODEL, uint16_t RM = VarianceReductionMethod::Last, uint16_t ST = StepType::Fixed,
-          bool INTERCEPT = false, typename T, typename NEXT_I>
-void prepare_solve(svrg::DAO<T> &dao, typename MODEL::DAO &modao, T *iterate, size_t &t, NEXT_I fn_next_i) {
+          bool INTERCEPT = false, typename T, typename NEXT_I, typename SVRG_DAO = svrg::DAO<T>>
+void prepare_solve(SVRG_DAO &dao, typename MODEL::DAO &modao, T *iterate, size_t &t, NEXT_I fn_next_i) {
   const size_t n_samples = modao.n_samples(), n_features = modao.n_features();
   std::vector<T> previous_iterate, previous_full_gradient;
   size_t iterate_size = n_features + static_cast<uint>(INTERCEPT);
@@ -56,8 +56,8 @@ void prepare_solve(svrg::DAO<T> &dao, typename MODEL::DAO &modao, T *iterate, si
 
 namespace dense {
 template <typename MODEL, uint16_t RM = VarianceReductionMethod::Last, uint16_t ST = StepType::Fixed,
-          bool INTERCEPT = false, typename T, typename PROX, typename NEXT_I>
-void solve_thread(svrg::DAO<T> &dao, typename MODEL::DAO &modao, PROX call, T *iterate, NEXT_I fn_next_i, size_t &t,
+          bool INTERCEPT = false, typename T, typename PROX, typename NEXT_I, typename SVRG_DAO = svrg::DAO<T>>
+void solve_thread(SVRG_DAO &dao, typename MODEL::DAO &modao, PROX call, T *iterate, NEXT_I fn_next_i, size_t &t,
                   size_t n_threads, size_t epoch_size) {
   const size_t n_samples = modao.n_samples(), n_features = modao.n_features();
   size_t iterate_size = n_features + static_cast<uint>(INTERCEPT);
@@ -79,10 +79,10 @@ void solve_thread(svrg::DAO<T> &dao, typename MODEL::DAO &modao, PROX call, T *i
 }
 
 template <typename MODEL, uint16_t RM = VarianceReductionMethod::Last, uint16_t ST = StepType::Fixed,
-          bool INTERCEPT = false, typename PROX, typename T, typename NEXT_I>
+          bool INTERCEPT = false, typename PROX, typename T, typename NEXT_I, typename SVRG_DAO = svrg::DAO<T>>
 auto solve(typename MODEL::DAO &modao, PROX call, T *iterate, NEXT_I fn_next_i, size_t &t, size_t n_threads,
-           size_t epoch_size, std::shared_ptr<svrg::DAO<T>> p_dao = nullptr) {
-  if (p_dao == nullptr) p_dao = std::make_shared<svrg::DAO<T>>();
+           size_t epoch_size, std::shared_ptr<SVRG_DAO> p_dao = nullptr) {
+  if (p_dao == nullptr) p_dao = std::make_shared<SVRG_DAO>();
   auto &dao = *p_dao.get();
   tick::svrg::prepare_solve<MODEL>(dao, modao, iterate, t, fn_next_i);
 

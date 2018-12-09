@@ -20,7 +20,7 @@ inline void set(T *x, Y y, const size_t size) {
 }
 
 template <typename T>
-inline T dot(const T *x, const T *y, const size_t size) {
+inline T dot(const T *const x, const T *const y, const size_t size) {
   T result{0};
   for (size_t i = 0; i < size; i++) result += x[i] * y[i];
   return result;
@@ -30,19 +30,23 @@ template <typename T, typename Y>
 void mult_incr(T *x, const T *const y, const Y a, const size_t size) {
   for (size_t j = 0; j < size; j++) x[j] += y[j] * a;
 }
-
-template <typename T>
-T max(T *x, size_t size) {
-  T m{0};
-  for (size_t i = 0; i < size; i++)
-    if (x[i] > m) m = x[i];
-  return m;
+template <typename T, typename Y>
+void mult_fill(T *x, const T *const y, const Y a, const size_t size) {
+  for (size_t j = 0; j < size; ++j) x[j] = y[j] * a;
 }
 
 template <typename T>
-T sumExpMinusMax(T *x, size_t size, T x_max) {
+T max(const T *x, size_t size) {
+  T _m{0};
+  for (size_t i = 0; i < size; i++)
+    if (x[i] > _m) _m = x[i];
+  return _m;
+}
+
+template <typename T>
+T sumExpMinusMax(const T *x, size_t size, T x_max) {
   T sum = 0;
-  for (ulong i = 0; i < size; ++i) sum += exp(x[i] - x_max);  // overflow-proof
+  for (size_t i = 0; i < size; ++i) sum += exp(x[i] - x_max);  // overflow-proof
   return sum;
 }
 
@@ -56,9 +60,7 @@ template <typename T>
 void softMax(const T *x, T *out, size_t size) {
   T x_max = max(x, size);
   T sum = sumExpMinusMax(x, size, x_max);
-  for (ulong i = 0; i < x.size(); i++) {
-    out[i] = exp(x[i] - x_max) / sum;  // overflow-proof
-  }
+  for (size_t i = 0; i < size; i++) out[i] = exp(x[i] - x_max) / sum;  // overflow-proof
 }
 
 template <typename T>

@@ -1,5 +1,5 @@
-#ifndef TICK_ARRAY_ARRAY_HPP_
-#define TICK_ARRAY_ARRAY_HPP_
+#ifndef TICK_ARRAY_SPARSE_ARRAY_HPP_
+#define TICK_ARRAY_SPARSE_ARRAY_HPP_
 
 namespace tick {
 
@@ -58,4 +58,4 @@ class Sparse {
 
 }  // namespace tick
 
-#endif  //  TICK_ARRAY_ARRAY_HPP_
+#endif  //  TICK_ARRAY_SPARSE_ARRAY_HPP_

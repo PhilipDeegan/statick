@@ -14,9 +14,10 @@ bool load_array_with_raw_data(Archive &ar, std::vector<T> &data) {
   return true;
 }
 
-template <class T>
+template <typename T>
 class Array {
  public:
+  Array() {}
   Array(size_t size) : m_data(size) {}
   Array(Array &&that) : m_data(that.m_data) {}
 
@@ -24,11 +25,7 @@ class Array {
   const size_t &size() const { return m_data.size(); }
   const T &operator[](int i) const { return m_data[i]; }
 
-  T dot(const T *const that) const {
-    T result = 0;
-    for (size_t i = 0; i < this->m_data.size(); i++) result += this->m_data[i] * that[i];
-    return result;
-  }
+  T dot(const T *const that) const { return dot(this->m_data.data(), that.m_data.data(), this->m_data.size()); }
   T dot(const Array<T> &that) const { return dot(that.m_data); }
 
   static std::shared_ptr<Array<T>> FROM_CEREAL(const std::string &file) {
@@ -68,7 +65,7 @@ class Array {
   Array &operator=(const Array &&that) = delete;
 };
 
-template <class T>
+template <typename T>
 class RawArray {
  public:
   RawArray(const T *_data, const size_t _size) : _size(_size), v_data(_data) {}
@@ -78,11 +75,7 @@ class RawArray {
   const size_t &size() const { return _size; }
   const T &operator[](int i) const { return v_data[i]; }
 
-  T dot(const T *const that) const {
-    T result = 0;
-    for (size_t i = 0; i < this->_size; i++) result += this->v_data[i] * that[i];
-    return result;
-  }
+  T dot(const T *const that) const { return tick::dot(this->v_data, that, _size); }
   T dot(const RawArray<T> &that) const { return dot(that.v_data); }
 
  private:
@@ -114,7 +107,7 @@ bool load_arraylist_with_raw_data(Archive &ar, std::vector<T> &data, std::vector
   return true;
 }
 
-template <class T>
+template <typename T>
 class ArrayList {
  private:
   static constexpr size_t INFO_SIZE = 2;
@@ -157,7 +150,7 @@ class ArrayList {
   ArrayList &operator=(const ArrayList &&that) = delete;
 };
 
-template <class T>
+template <typename T, typename ARRAY = Array<T>>
 class SharedArrayList {
  public:
   SharedArrayList() {}
@@ -165,13 +158,13 @@ class SharedArrayList {
 
   size_t size() const { return m_data.size(); }
 
-  void push_back(std::shared_ptr<Array<T>> arr) { m_data.push_back(arr); }
-  void add_at(std::shared_ptr<Array<T>> arr, size_t i) { m_data[i] = arr; }
+  void push_back(std::shared_ptr<ARRAY> arr) { m_data.push_back(arr); }
+  void add_at(std::shared_ptr<ARRAY> arr, size_t i) { m_data[i] = arr; }
 
   auto &operator[](size_t index) { return m_data[index]; }
 
  private:
-  std::vector<std::shared_ptr<Array<T>>> m_data;
+  std::vector<std::shared_ptr<ARRAY>> m_data;
 
   SharedArrayList(SharedArrayList &that) = delete;
   SharedArrayList(const SharedArrayList &that) = delete;
@@ -182,6 +175,8 @@ class SharedArrayList {
   SharedArrayList &operator=(const SharedArrayList &that) = delete;
   SharedArrayList &operator=(const SharedArrayList &&that) = delete;
 };
+template <typename T>
+using SharedRawArrayList = SharedArrayList<T, RawArray<T>>;
 
 }  // namespace tick
 

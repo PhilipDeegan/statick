@@ -21,9 +21,10 @@ bool load_array2d_with_raw_data(Archive &ar, std::vector<T> &data, std::vector<s
   return true;
 }
 
-template <class T>
+template <typename T>
 class Array2D {
  public:
+  Array2D() {}
   Array2D(size_t rows, size_t cols) : m_data(rows * cols), m_info(3) {
     m_info[0] = cols;
     m_info[1] = rows;
@@ -73,7 +74,7 @@ class Array2D {
   Array2D &operator=(const Array2D &&that) = delete;
 };
 
-template <class T>
+template <typename T>
 class RawArray2D {
  public:
   RawArray2D(const T *_data, const size_t *_info)
@@ -122,7 +123,7 @@ bool load_array2dlist_with_raw_data(Archive &ar, std::vector<T> &data, std::vect
   return true;
 }
 
-template <class T>
+template <typename T>
 class Array2DList {
  private:
   static constexpr size_t INFO_SIZE = 4;
@@ -165,7 +166,7 @@ class Array2DList {
   Array2DList &operator=(const Array2DList &&that) = delete;
 };
 
-template <class T>
+template <typename T, typename ARRAY = Array2D<T>>
 class SharedArray2DList {
  public:
   SharedArray2DList() {}
@@ -173,13 +174,13 @@ class SharedArray2DList {
 
   size_t size() const { return m_data.size(); }
 
-  void push_back(std::shared_ptr<Array2D<T>> arr) { m_data.push_back(arr); }
-  void add_at(std::shared_ptr<Array2D<T>> arr, size_t i) { m_data[i] = arr; }
+  void push_back(std::shared_ptr<ARRAY> arr) { m_data.push_back(arr); }
+  void add_at(std::shared_ptr<ARRAY> &arr, size_t i) { m_data[i] = arr; }
 
   auto &operator[](size_t index) { return m_data[index]; }
 
  private:
-  std::vector<std::shared_ptr<Array2D<T>>> m_data;
+  std::vector<std::shared_ptr<ARRAY>> m_data;
 
   SharedArray2DList(SharedArray2DList &that) = delete;
   SharedArray2DList(const SharedArray2DList &that) = delete;
@@ -190,6 +191,9 @@ class SharedArray2DList {
   SharedArray2DList &operator=(const SharedArray2DList &that) = delete;
   SharedArray2DList &operator=(const SharedArray2DList &&that) = delete;
 };
+
+template <typename T>
+using SharedRawArray2DList = SharedArray2DList<T, RawArray2D<T>>;
 
 }  // namespace tick
 

@@ -1,5 +1,5 @@
-#ifndef TICK_ARRAY_ARRAY_HPP_
-#define TICK_ARRAY_ARRAY_HPP_
+#ifndef TICK_ARRAY_SPARSE_ARRAY2D_HPP_
+#define TICK_ARRAY_SPARSE_ARRAY2D_HPP_
 
 namespace tick {
 template <class Archive, class T>
@@ -186,7 +186,6 @@ class Sparse2DList {
   std::vector<size_t> m_info;
   std::vector<INDICE_TYPE> m_indices, m_row_indices;
 
-  Sparse2DList() = delete;
   Sparse2DList(Sparse2DList &that) = delete;
   Sparse2DList(const Sparse2DList &that) = delete;
   Sparse2DList(Sparse2DList &&that) = delete;
@@ -234,4 +233,4 @@ class RawSparse2DList {
 
 }  // namespace tick
 
-#endif  //  TICK_ARRAY_ARRAY_HPP_
+#endif  //  TICK_ARRAY_SPARSE_ARRAY2D_HPP_

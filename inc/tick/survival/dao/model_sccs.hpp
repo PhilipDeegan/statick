@@ -13,7 +13,7 @@ class DAO {
   DAO(size_t _samples, size_t _features)
       : features(_samples), labels(_samples), censoring(_samples), n_lags(_features, 0) {}
 
-  void load() {
+  DAO &load() {
     vars[0] = features[0]->n_rows();
     vars[1] = features->size();
     vars[2] = vars[0] * vars[1];
@@ -49,6 +49,7 @@ class DAO {
 
       if (labels[i]->size() != m_n_intervals) TICK_ERROR("All labels should have " << m_n_intervals << " rows");
     }
+    return *this;
   }
 
   size_t vars[5];

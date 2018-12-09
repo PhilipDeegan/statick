@@ -2,60 +2,76 @@
 #define TICK_SOLVER_SAGA_HPP_
 namespace tick {
 namespace saga {
+template <typename T = double>
+class DAO {
+ public:
+  DAO(size_t n_samples, size_t n_features) : gradients_average(n_features), gradients_memory(n_samples) {}
+  DAO() {}
+  T step{0};
+  std::vector<T> gradients_average, gradients_memory;
+};
+
 namespace dense {
-template <bool INTERCEPT = false, typename T, typename FEATURES, typename PROX, typename NEXT_I>
-void solve(const FEATURES &features, const T *const labels, T *gradients_average, T *gradients_memory, T *iterate,
-           PROX call, NEXT_I _next_i) {
-  size_t N_SAMPLES = features.rows(), N_FEATURES = features.cols();
-  T N_SAMPLES_inverse = ((double)1 / (double)N_SAMPLES);
+template <typename MODEL, bool INTERCEPT = false, typename T, typename PROX, typename NEXT_I,
+          typename SAGA_DAO = saga::DAO<T>>
+auto solve(typename MODEL::DAO &modao, T *iterate, PROX call, NEXT_I _next_i,
+           std::shared_ptr<SAGA_DAO> p_dao = nullptr) {
+  const size_t n_samples = modao.n_samples(), n_features = modao.n_features();
+  if (p_dao == nullptr) p_dao = std::make_shared<SAGA_DAO>(n_samples, n_features);
+  auto &dao = *p_dao.get();
+  auto *features = modao.features().data();
+  T n_samples_inverse = ((double)1 / (double)n_samples);
   double step = 0.00257480411965l;
-  size_t n_features = N_FEATURES;
-  for (size_t t = 0; t < N_SAMPLES; ++t) {
+  for (size_t t = 0; t < n_samples; ++t) {
     INDICE_TYPE i = _next_i();
-    T grad_i_factor = labels[i] * (sigmoid(labels[i] * features.row(i).dot(iterate)) - 1);
-    T grad_i_factor_old = gradients_memory[i];
-    gradients_memory[i] = grad_i_factor;
+    T grad_i_factor = MODEL::grad_i_factor(modao, iterate, i);
+    T grad_i_factor_old = dao.gradients_memory[i];
+    dao.gradients_memory[i] = grad_i_factor;
     T grad_factor_diff = grad_i_factor - grad_i_factor_old;
-    const T *const x_i = &features[N_FEATURES * i];
+    const T *const x_i = &features[n_features * i];
     for (size_t j = 0; j < n_features; ++j) {
-      T grad_avg_j = gradients_average[j];
+      T grad_avg_j = dao.gradients_average[j];
       iterate[j] -= step * (grad_factor_diff * x_i[j] + grad_avg_j);
-      gradients_average[j] += grad_factor_diff * x_i[j] * N_SAMPLES_inverse;
+      dao.gradients_average[j] += grad_factor_diff * x_i[j] * n_samples_inverse;
     }
     if constexpr (INTERCEPT) {
-      iterate[n_features] -= step * (grad_factor_diff + gradients_average[n_features]);
-      gradients_average[n_features] += grad_factor_diff * N_SAMPLES_inverse;
+      iterate[n_features] -= step * (grad_factor_diff + dao.gradients_average[n_features]);
+      dao.gradients_average[n_features] += grad_factor_diff * n_samples_inverse;
     }
     call(iterate, step, iterate, n_features);
   }
+  return dao;
 }
 }  // namespace dense
 namespace sparse {
-template <bool INTERCEPT = false, typename T, typename Sparse2D, typename PROX, typename NEXT_I>
-void solve(const Sparse2D &features, const T *labels, T *gradients_average, T *gradients_memory, T *iterate,
-           T *steps_correction, PROX call_single, NEXT_I _next_i) {
-  size_t n_samples = features.rows();
-  size_t n_features = features.cols();
+template <typename MODEL, bool INTERCEPT = false, typename T, typename PROX, typename NEXT_I,
+          typename SAGA_DAO = saga::DAO<T>>
+void solve(typename MODEL::DAO &modao, T *iterate, T *steps_correction, PROX call_single, NEXT_I _next_i,
+           std::shared_ptr<SAGA_DAO> p_dao = nullptr) {
+  const size_t n_samples = modao.n_samples(), n_features = modao.n_features();
+  if (p_dao == nullptr) p_dao = std::make_shared<SAGA_DAO>(n_samples, n_features);
+  auto &dao = *p_dao.get();
   T n_samples_inverse = ((double)1 / (double)n_samples);
   double step = 0.00257480411965l;
+  auto &features = modao.features();
   for (size_t t = 0; t < n_samples; ++t) {
     INDICE_TYPE i = _next_i();
     size_t x_i_size = features.row_size(i);
     const T *x_i = features.row_raw(i);
     const INDICE_TYPE *x_i_indices = features.row_indices(i);
-    T grad_i_factor = labels[i] * (sigmoid(labels[i] * features.row(i).dot(iterate)) - 1);
-    T grad_i_factor_old = gradients_memory[i];
-    gradients_memory[i] = grad_i_factor;
+    T grad_i_factor = MODEL::grad_i_factor(modao, iterate, i);
+    T grad_i_factor_old = dao.gradients_memory[i];
+    dao.gradients_memory[i] = grad_i_factor;
     T grad_factor_diff = grad_i_factor - grad_i_factor_old;
     for (size_t idx_nnz = 0; idx_nnz < x_i_size; ++idx_nnz) {
       const INDICE_TYPE &j = x_i_indices[idx_nnz];
-      iterate[j] -= step * (grad_factor_diff * x_i[idx_nnz] + steps_correction[j] * gradients_average[j]);
-      gradients_average[j] += grad_factor_diff * x_i[idx_nnz] * n_samples_inverse;
+      iterate[j] -= step * (grad_factor_diff * x_i[idx_nnz] + steps_correction[j] * dao.gradients_average[j]);
+      dao.gradients_average[j] += grad_factor_diff * x_i[idx_nnz] * n_samples_inverse;
       call_single(j, iterate, step * steps_correction[j], iterate);
     }
     if constexpr (INTERCEPT) {
-      iterate[n_features] -= step * (grad_factor_diff + gradients_average[n_features]);
-      gradients_average[n_features] += grad_factor_diff * n_samples_inverse;
+      iterate[n_features] -= step * (grad_factor_diff + dao.gradients_average[n_features]);
+      dao.gradients_average[n_features] += grad_factor_diff * n_samples_inverse;
       call_single(n_features, iterate, step, iterate);
     }
   }
