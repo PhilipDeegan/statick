@@ -13,8 +13,10 @@
 #include "tick/prox/prox_tv.hpp"
 #include "tick/solver/svrg.hpp"
 
-#define NOW \
-  std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count()
+#define NOW                                                \
+  std::chrono::duration_cast<std::chrono::milliseconds>(   \
+      std::chrono::system_clock::now().time_since_epoch()) \
+      .count()
 
 constexpr bool INTERCEPT = false;
 constexpr size_t N_SAMPLES = 50, N_FEATURES = 20, N_PERIODS = 10, N_ITER = 10, SEED = 1933;
@@ -23,9 +25,11 @@ int main() {
   KLOG(INF);
   tick::TModelSCCS<double>::DAO dao(N_SAMPLES, N_FEATURES);
 
-  for (size_t i = 0; i < N_SAMPLES; ++i) dao.features[i] = tick::Array2D<double>::RANDOM(N_PERIODS, N_FEATURES, SEED);
+  for (size_t i = 0; i < N_SAMPLES; ++i)
+    dao.features[i] = tick::Array2D<double>::RANDOM(N_PERIODS, N_FEATURES, SEED);
   KLOG(INF);
-  for (size_t i = 0; i < N_SAMPLES; ++i) dao.labels[i] = tick::Array<size_t>::RANDOM(N_PERIODS, SEED);
+  for (size_t i = 0; i < N_SAMPLES; ++i)
+    dao.labels[i] = tick::Array<size_t>::RANDOM(N_PERIODS, SEED);
   KLOG(INF);
 
   std::vector<double> iterate(N_FEATURES + static_cast<uint>(INTERCEPT)), objs;
@@ -46,7 +50,8 @@ int main() {
   KLOG(INF);
   for (size_t j = 0; j < N_ITER; ++j) {
     KLOG(INF);
-    tick::svrg::dense::solve<tick::TModelSCCS<double>>(dao, call, iterate.data(), next_i, t, 4, N_SAMPLES);
+    tick::svrg::dense::solve<tick::TModelSCCS<double>>(dao, call, iterate.data(), next_i, t, 4,
+                                                       N_SAMPLES);
     KLOG(INF);
     if (j % 10 == 0) objs.emplace_back(tick::TModelSCCS<double>::loss(dao, iterate.data()));
   }

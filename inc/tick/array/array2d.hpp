@@ -46,7 +46,8 @@ class Array2D {
     {
       std::ifstream bin_data(file, std::ios::in | std::ios::binary);
       cereal::PortableBinaryInputArchive iarchive(bin_data);
-      if (tick::load_array2d_with_raw_data(iarchive, array->m_data, array->m_info)) return std::move(array);
+      if (tick::load_array2d_with_raw_data(iarchive, array->m_data, array->m_info))
+        return std::move(array);
     }
     return nullptr;
   }
@@ -79,7 +80,8 @@ class RawArray2D {
  public:
   RawArray2D(const T *_data, const size_t *_info)
       : v_data(_data), m_cols(&_info[0]), m_rows(&_info[1]), m_size(&_info[2]) {}
-  RawArray2D(RawArray2D &&that) : v_data(that.v_data), m_cols(that.m_cols), m_rows(that.m_rows), m_size(that.m_size) {}
+  RawArray2D(RawArray2D &&that)
+      : v_data(that.v_data), m_cols(that.m_cols), m_rows(that.m_rows), m_size(that.m_size) {}
 
   const T &operator[](int i) { return v_data[i]; }
   const T *data() const { return v_data; }

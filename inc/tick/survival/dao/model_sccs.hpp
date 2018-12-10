@@ -47,7 +47,8 @@ class DAO {
       if (features[i]->n_cols() != m_n_lagged_features)
         TICK_ERROR("All feature matrices should have " << m_n_lagged_features << " cols");
 
-      if (labels[i]->size() != m_n_intervals) TICK_ERROR("All labels should have " << m_n_intervals << " rows");
+      if (labels[i]->size() != m_n_intervals)
+        TICK_ERROR("All labels should have " << m_n_intervals << " rows");
     }
     return *this;
   }

@@ -31,13 +31,14 @@ void call(const T *coeffs, T step, T *out, size_t start, size_t end, T strength)
         do {
           sub_out[k0++] = vmin;
         } while (k0 <= k);
-        if constexpr (POSITIVE) {
-          for (size_t i = start; i < end; i++) {
-            if (out[i] < 0) {
-              out[i] = 0;
+        if
+          constexpr(POSITIVE) {
+            for (size_t i = start; i < end; i++) {
+              if (out[i] < 0) {
+                out[i] = 0;
+              }
             }
           }
-        }
         return;
       }
     }

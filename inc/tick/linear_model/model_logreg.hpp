@@ -11,12 +11,13 @@ T loss(const FEATURES &features, const T *const labels, T *coeffs) {
   return t / rows;
 }
 template <typename T, typename FEATURES>
-T get_inner_prod(const FEATURES &features, T *coeffs, const size_t cols, const size_t rows, const size_t i) {
+T get_inner_prod(const FEATURES &features, T *coeffs, const size_t cols, const size_t rows,
+                 const size_t i) {
   return features.row(i).dot(coeffs);
 }
 template <typename T, typename FEATURES>
-T grad_i_factor(const FEATURES &features, const T *labels, T *coeffs, const size_t cols, const size_t rows,
-                const size_t i) {
+T grad_i_factor(const FEATURES &features, const T *labels, T *coeffs, const size_t cols,
+                const size_t rows, const size_t i) {
   const T y_i = labels[i];
   return y_i * (sigmoid(y_i * get_inner_prod(features, coeffs, cols, rows, i)) - 1);
 }
@@ -54,7 +55,8 @@ class TModelLogReg {
  public:
   using DAO = LOGREG_DAO;
   static T grad_i_factor(DAO &dao, T *coeffs, const size_t i) {
-    return logreg::grad_i_factor(dao.features(), dao.labels().data(), coeffs, dao.vars[0], dao.vars[1], i);
+    return logreg::grad_i_factor(dao.features(), dao.labels().data(), coeffs, dao.vars[0],
+                                 dao.vars[1], i);
   }
 
   template <bool INTERCEPT = false, bool FILL = true, class K>
@@ -66,16 +68,17 @@ class TModelLogReg {
   void compute_grad_i(DAO &dao, const size_t i, const K *coeffs, T *out, const bool fill) {
     auto *x_i = dao.get_features(i);
     const T alpha_i = grad_i_factor(i, coeffs);
-    if constexpr (FILL)
-      mult_fill(out, x_i, alpha_i, dao.n_features());
+    if
+      constexpr(FILL) mult_fill(out, x_i, alpha_i, dao.n_features());
     else
       mult_incr(out, x_i, alpha_i, dao.n_features());
-    if constexpr (INTERCEPT) {
-      if constexpr (FILL)
-        out[dao.n_features()] = alpha_i;
-      else
-        out[dao.n_features()] += alpha_i;
-    }
+    if
+      constexpr(INTERCEPT) {
+        if
+          constexpr(FILL) out[dao.n_features()] = alpha_i;
+        else
+          out[dao.n_features()] += alpha_i;
+      }
   }
 
   static void grad(DAO &dao, const T *coeffs, T *out, const size_t size) {

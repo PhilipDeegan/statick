@@ -11,11 +11,17 @@ class TModelSCCS {
  public:
   using DAO = SCCS_DAO;
 
-  static size_t get_max_interval(DAO &dao, size_t i) { return std::min(dao.censoring[i], dao.n_intervals()); }
+  static size_t get_max_interval(DAO &dao, size_t i) {
+    return std::min(dao.censoring[i], dao.n_intervals());
+  }
 
-  static const T *get_longitudinal_features(DAO &dao, size_t i, size_t t) { return dao.features[i]->row_raw(t); }
+  static const T *get_longitudinal_features(DAO &dao, size_t i, size_t t) {
+    return dao.features[i]->row_raw(t);
+  }
 
-  static const size_t get_longitudinal_label(DAO &dao, size_t i, size_t t) { return (*dao.labels[i])[t]; }
+  static const size_t get_longitudinal_label(DAO &dao, size_t i, size_t t) {
+    return (*dao.labels[i])[t];
+  }
 
   static T get_inner_prod(DAO &dao, const T *const coeffs, const size_t i, const size_t t) {
     return dao.features[i]->row(t).dot(coeffs);
@@ -29,7 +35,8 @@ class TModelSCCS {
 
     for (size_t t = 0; t < max_interval; t++) inner_prod[t] = get_inner_prod(dao, coeffs, i, t);
 
-    if (max_interval < dao.n_intervals()) set(inner_prod.data() + max_interval, dao.n_intervals() - max_interval, 0);
+    if (max_interval < dao.n_intervals())
+      set(inner_prod.data() + max_interval, dao.n_intervals() - max_interval, 0);
 
     T x_max = max(inner_prod.data(), inner_prod.size());
     T sum_exp = sumExpMinusMax(inner_prod.data(), inner_prod.size(), x_max);
@@ -73,11 +80,13 @@ class TModelSCCS {
     size_t max_interval = get_max_interval(dao, i);
 
     for (size_t t = 0; t < max_interval; t++) inner_prod[t] = get_inner_prod(dao, coeffs, i, t);
-    if (max_interval < dao.n_intervals()) set(inner_prod.data() + max_interval, dao.n_intervals() - max_interval, 0);
+    if (max_interval < dao.n_intervals())
+      set(inner_prod.data() + max_interval, dao.n_intervals() - max_interval, 0);
 
     softMax(inner_prod.data(), softmax.data(), dao.n_intervals());
 
-    for (size_t t = 0; t < max_interval; t++) loss -= get_longitudinal_label(dao, i, t) * log(softmax[t]);
+    for (size_t t = 0; t < max_interval; t++)
+      loss -= get_longitudinal_label(dao, i, t) * log(softmax[t]);
 
     return loss;
   }

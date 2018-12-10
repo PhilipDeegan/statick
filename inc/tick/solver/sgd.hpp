@@ -11,8 +11,9 @@ class DAO {
 
 namespace dense {
 template <typename MODEL, bool INTERCEPT = false, typename T, typename PROX, typename NEXT_I,
-typename SGD_DAO = sgd::DAO<T>>
-auto solve(typename MODEL::DAO &modao, T *iterate, PROX call, NEXT_I _next_i, size_t &t, std::shared_ptr<SGD_DAO> p_dao = nullptr) {
+          typename SGD_DAO = sgd::DAO<T>>
+auto solve(typename MODEL::DAO &modao, T *iterate, PROX call, NEXT_I _next_i, size_t &t,
+           std::shared_ptr<SGD_DAO> p_dao = nullptr) {
   const size_t n_samples = modao.n_samples(), n_features = modao.n_features(), start_t = t;
   if (p_dao == nullptr) p_dao = std::make_shared<SGD_DAO>();
   auto &dao = *p_dao.get();
@@ -35,8 +36,9 @@ auto solve(typename MODEL::DAO &modao, T *iterate, PROX call, NEXT_I _next_i, si
 }  // namespace dense
 namespace sparse {
 template <typename MODEL, bool INTERCEPT = false, typename T, typename PROX, typename NEXT_I,
-typename SGD_DAO = sgd::DAO<T>>
-auto solve(typename MODEL::DAO &modao, T *iterate, PROX call, NEXT_I _next_i, size_t &t, std::shared_ptr<SGD_DAO> p_dao = nullptr) {
+          typename SGD_DAO = sgd::DAO<T>>
+auto solve(typename MODEL::DAO &modao, T *iterate, PROX call, NEXT_I _next_i, size_t &t,
+           std::shared_ptr<SGD_DAO> p_dao = nullptr) {
   const size_t n_samples = modao.n_samples(), n_features = modao.n_features(), start_t = t;
   if (p_dao == nullptr) p_dao = std::make_shared<SGD_DAO>();
   auto &dao = *p_dao.get();
@@ -52,9 +54,8 @@ auto solve(typename MODEL::DAO &modao, T *iterate, PROX call, NEXT_I _next_i, si
     const INDICE_TYPE *x_indices = features.row_indices(i);
     const size_t row_size = features.row_size(i);
     for (size_t j = 0; j < row_size; j++) iterate[x_indices[j]] += x_i[j] * delta;
-    if constexpr (INTERCEPT) {
-      iterate[n_features] += delta;
-    }
+    if
+      constexpr(INTERCEPT) { iterate[n_features] += delta; }
     call(iterate, step_t, iterate, n_features);
   }
   return p_dao;

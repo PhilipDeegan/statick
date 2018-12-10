@@ -4,7 +4,8 @@
 namespace tick {
 template <class Archive, class T>
 bool load_sparse2d_with_raw_data(Archive &ar, std::vector<T> &data, std::vector<size_t> &info,
-                                 std::vector<INDICE_TYPE> &indices, std::vector<INDICE_TYPE> &row_indices) {
+                                 std::vector<INDICE_TYPE> &indices,
+                                 std::vector<INDICE_TYPE> &row_indices) {
   size_t rows = 0, cols = 0, size_sparse, size = 0;
   ar(size_sparse, rows, cols, size);
 
@@ -28,7 +29,10 @@ class Sparse2D {
  public:
   Sparse2D() {}
   Sparse2D(Sparse2D &&that)
-      : m_data(that.m_data), m_info(that.m_info), m_indices(that.m_indices), m_row_indices(that.m_row_indices) {}
+      : m_data(that.m_data),
+        m_info(that.m_info),
+        m_indices(that.m_indices),
+        m_row_indices(that.m_row_indices) {}
 
   const T *data() const { return m_data.data(); }
   const T *row_raw(size_t i) const { return m_data.data() + m_row_indices[i]; }
@@ -51,8 +55,8 @@ class Sparse2D {
     {
       std::ifstream bin_data(file, std::ios::in | std::ios::binary);
       cereal::PortableBinaryInputArchive iarchive(bin_data);
-      if (tick::load_sparse2d_with_raw_data(iarchive, array->m_data, array->m_info, array->m_indices,
-                                            array->m_row_indices))
+      if (tick::load_sparse2d_with_raw_data(iarchive, array->m_data, array->m_info,
+                                            array->m_indices, array->m_row_indices))
         return std::move(array);
     }
     return nullptr;
@@ -75,7 +79,8 @@ class Sparse2D {
 template <class T>
 class RawSparse2D {
  public:
-  RawSparse2D(const T *_data, const size_t *_info, const INDICE_TYPE *_indices, const INDICE_TYPE *_row_indices)
+  RawSparse2D(const T *_data, const size_t *_info, const INDICE_TYPE *_indices,
+              const INDICE_TYPE *_row_indices)
       : v_data(_data),
         m_cols(&_info[0]),
         m_rows(&_info[1]),
@@ -98,7 +103,8 @@ class RawSparse2D {
   const INDICE_TYPE *row_indices() const { return v_row_indices; }
 
   Sparse<T> row(size_t i) const {
-    return Sparse<T>(v_data + v_row_indices[i], v_row_indices[i + 1] - v_row_indices[i], v_indices + v_row_indices[i]);
+    return Sparse<T>(v_data + v_row_indices[i], v_row_indices[i + 1] - v_row_indices[i],
+                     v_indices + v_row_indices[i]);
   }
 
   const size_t &cols() const { return *m_cols; }
@@ -122,7 +128,8 @@ class RawSparse2D {
 
 template <class Archive, class T>
 bool load_sparse2dlist_with_raw_data(Archive &ar, std::vector<T> &data, std::vector<size_t> &info,
-                                     std::vector<INDICE_TYPE> &indices, std::vector<INDICE_TYPE> &row_indices) {
+                                     std::vector<INDICE_TYPE> &indices,
+                                     std::vector<INDICE_TYPE> &row_indices) {
   size_t rows = 0, cols = 0, size_sparse, size = 0;
   ar(size_sparse);
   ar(rows, cols, size);
@@ -202,13 +209,17 @@ class RawSparse2DList {
   static constexpr size_t INFO_SIZE = 5;
 
  public:
-  RawSparse2DList(std::vector<T> &data, std::vector<size_t> &info, std::vector<INDICE_TYPE> &_indices,
-                  std::vector<INDICE_TYPE> &_rows_indices)
-      : v_data(data.data()), v_info(info.data()), v_indices(_indices.data()), v_row_indices(_rows_indices.data()) {}
+  RawSparse2DList(std::vector<T> &data, std::vector<size_t> &info,
+                  std::vector<INDICE_TYPE> &_indices, std::vector<INDICE_TYPE> &_rows_indices)
+      : v_data(data.data()),
+        v_info(info.data()),
+        v_indices(_indices.data()),
+        v_row_indices(_rows_indices.data()) {}
 
   RawSparse2D<T> operator[](size_t i) const {
     return RawSparse2D<T>(v_data + (v_info[(i * INFO_SIZE) + 3]), &v_info[i * INFO_SIZE],
-                          v_indices + (v_info[(i * INFO_SIZE) + 3]), v_row_indices + (v_info[(i * INFO_SIZE) + 4]));
+                          v_indices + (v_info[(i * INFO_SIZE) + 3]),
+                          v_row_indices + (v_info[(i * INFO_SIZE) + 4]));
   }
 
   const INDICE_TYPE *indices() const { return v_indices; }

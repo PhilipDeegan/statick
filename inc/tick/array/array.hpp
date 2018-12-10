@@ -25,7 +25,9 @@ class Array {
   const size_t &size() const { return m_data.size(); }
   const T &operator[](int i) const { return m_data[i]; }
 
-  T dot(const T *const that) const { return dot(this->m_data.data(), that.m_data.data(), this->m_data.size()); }
+  T dot(const T *const that) const {
+    return dot(this->m_data.data(), that.m_data.data(), this->m_data.size());
+  }
   T dot(const Array<T> &that) const { return dot(that.m_data); }
 
   static std::shared_ptr<Array<T>> FROM_CEREAL(const std::string &file) {
@@ -43,10 +45,12 @@ class Array {
     std::random_device r;
     std::seed_seq seed_seq{r(), r(), r(), r(), r(), r(), r(), r()};
     std::mt19937_64 generator(seed_seq);
-    if constexpr (std::is_floating_point<T>::value) {
-      std::uniform_real_distribution<T> uniform_dist;
-      for (size_t i = 0; i < size; i++) arr->m_data[i] = uniform_dist(generator);
-    } else {
+    if
+      constexpr(std::is_floating_point<T>::value) {
+        std::uniform_real_distribution<T> uniform_dist;
+        for (size_t i = 0; i < size; i++) arr->m_data[i] = uniform_dist(generator);
+      }
+    else {
       std::uniform_int_distribution<T> uniform_dist;
       for (size_t i = 0; i < size; i++) arr->m_data[i] = uniform_dist(generator);
     }

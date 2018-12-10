@@ -8,16 +8,18 @@
 #include "tick/linear_model/model_logreg.hpp"
 #include "tick/prox/prox_l2sq.hpp"
 #include "tick/solver/sgd.hpp"
-#define NOW \
-  std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count()
+#define NOW                                                \
+  std::chrono::duration_cast<std::chrono::milliseconds>(   \
+      std::chrono::system_clock::now().time_since_epoch()) \
+      .count()
 constexpr size_t N_ITER = 1;
 constexpr bool INTERCEPT = false;
 int main() {
   using namespace tick::logreg::sparse;
   using namespace tick::sgd::sparse;
   std::string labels_s("url.labels.cereal"), features_s("url.features.cereal");
-  tick::TModelLogReg<double, DAO<double>>::DAO modao(tick::Sparse2D<double>::FROM_CEREAL(features_s),
-                                                     tick::Array<double>::FROM_CEREAL(labels_s));
+  tick::TModelLogReg<double, DAO<double>>::DAO modao(
+      tick::Sparse2D<double>::FROM_CEREAL(features_s), tick::Array<double>::FROM_CEREAL(labels_s));
   const size_t n_samples = modao.n_samples(), n_features = modao.n_features();
   std::vector<double> iterate(n_features + static_cast<uint>(INTERCEPT)), objs;
   std::mt19937_64 generator;
@@ -34,9 +36,10 @@ int main() {
   size_t t = 0;
   auto start = NOW;
   for (size_t j = 0; j < N_ITER; ++j) {
-    solve<tick::TModelLogReg<double, DAO<double>>>(modao, iterate.data(), call,
-                                                   next_i, t);
-    if (j % 10 == 0) objs.emplace_back(tick::logreg::loss(modao.features(), modao.labels().data(), iterate.data()));
+    solve<tick::TModelLogReg<double, DAO<double>>>(modao, iterate.data(), call, next_i, t);
+    if (j % 10 == 0)
+      objs.emplace_back(
+          tick::logreg::loss(modao.features(), modao.labels().data(), iterate.data()));
   }
   auto finish = NOW;
   for (auto &o : objs) std::cout << __LINE__ << " " << o << std::endl;
