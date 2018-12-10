@@ -1,5 +1,6 @@
 #ifndef TICK_SOLVER_ASAGA_HPP_
 #define TICK_SOLVER_ASAGA_HPP_
+
 #include "history.hpp"
 #include <thread>
 namespace tick {
@@ -14,6 +15,8 @@ class DAO {
   std::vector<std::atomic<T>> gradients_average, gradients_memory;
 };
 namespace sparse {
+
+constexpr size_t N_ITER = 10;
 template <typename MODEL, bool INTERCEPT, typename HISTORY, typename T, typename PROX,
           typename NEXT_I, typename ASAGA_DAO>
 void threaded_solve(typename MODEL::DAO &modao, T *iterate, T *steps_correction, PROX call_single,
@@ -27,7 +30,7 @@ void threaded_solve(typename MODEL::DAO &modao, T *iterate, T *steps_correction,
   auto *gradients_memory = dao.gradients_memory.data();
   auto *gradients_average = dao.gradients_average.data();
   const size_t n_samples = features.rows(), n_features = features.cols();
-  constexpr size_t n_epochs = 1;
+  constexpr size_t n_epochs = N_ITER;
   size_t epoch_size = n_samples;
   T n_samples_inverse = ((double)1 / (double)n_samples);
   T x_ij = 0, step_correction = 0;

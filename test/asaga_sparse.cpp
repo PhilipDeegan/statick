@@ -14,9 +14,9 @@
   std::chrono::duration_cast<std::chrono::milliseconds>(   \
       std::chrono::system_clock::now().time_since_epoch()) \
       .count()
-constexpr size_t N_ITER = 1, THREADS = 12;
 constexpr bool INTERCEPT = false;
 int main() {
+constexpr size_t N_ITER = 1, THREADS = 12;
 
   using namespace tick::logreg::sparse;
   using namespace tick::asaga::sparse;
