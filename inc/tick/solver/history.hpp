@@ -8,18 +8,17 @@ template <typename T>
 class History {
  public:
   History &save_history(double time, size_t epoch, T *iterate, size_t size) {
-    time_history.emplace_back(last_record_time + time);
-    epoch_history.emplace_back(last_record_epoch + epoch);
-
-    iterate_history.emplace_back(size);
-    T *last = iterate_history.back().data();
+    time_history[i] = last_record_time + time;
+    epoch_history[i] = last_record_epoch + epoch;
+    iterate_history[i] = std::vector<T>(size);
+    T *last = iterate_history[i].data();
     for (ulong i = 0; i < size; ++i) last[i] = iterate[i];
     return *this;
   }
   History operator+=(size_t iterations) { return *this; }
   History add_time(double time) { return *this; }
 
-  size_t record_every = 10, last_record_epoch = 0;
+  size_t record_every = 10, last_record_epoch = 0, i = 0;
   double last_record_time = 0;
   std::vector<double> time_history;
   std::vector<size_t> epoch_history;

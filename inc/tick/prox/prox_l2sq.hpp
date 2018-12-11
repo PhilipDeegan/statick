@@ -3,6 +3,12 @@
 namespace tick {
 namespace prox_l2sq {
 namespace np {
+
+template <class T>
+T call_single(T x, T step, T strength) {
+  return x / (1 + step * strength);
+}
+
 template <typename T>
 void call_single(size_t i, const T *coeffs, T step, T *out, T strength) {
   out[i] = coeffs[i] / (1 + step * strength);
@@ -20,6 +26,12 @@ void call(const T *coeffs, T step, T *out, size_t start, size_t end, T strength)
   for (size_t i = start; i < end; i++) call_single(i, coeffs, step, out, strength);
 }
 }  // namespace np
+
+template <class T>
+T call_single(T x, T step, T strength) {
+  if (x < 0) return 0;
+  return np::call_single(x, step, strength);
+}
 template <typename T>
 void call_single(size_t i, const T *coeffs, T step, T *out, T strength) {
   if (coeffs[i] < 0)

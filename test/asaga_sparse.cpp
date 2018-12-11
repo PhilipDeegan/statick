@@ -15,16 +15,14 @@
       std::chrono::system_clock::now().time_since_epoch()) \
       .count()
 constexpr bool INTERCEPT = false;
-int main() {
 constexpr size_t N_ITER = 1, THREADS = 12;
-
+int main() {
   using namespace tick::logreg::sparse;
   using namespace tick::asaga::sparse;
   std::string labels_s("url.labels.cereal"), features_s("url.features.cereal");
   tick::TModelLogReg<double, DAO<double>>::DAO modao(
       tick::Sparse2D<double>::FROM_CEREAL(features_s), tick::Array<double>::FROM_CEREAL(labels_s));
   const size_t n_samples = modao.n_samples(), n_features = modao.n_features();
-  std::vector<std::atomic<double>> gradients_average(n_features), gradients_memory(n_samples);
   std::vector<double> iterate(n_features + static_cast<uint>(INTERCEPT)), objs,
       steps_corrections(tick::saga::sparse::compute_step_corrections(modao.features()));
   std::mt19937_64 generator;
@@ -35,16 +33,17 @@ constexpr size_t N_ITER = 1, THREADS = 12;
   std::uniform_int_distribution<size_t>::param_type p(0, n_samples - 1);
   auto next_i = [&]() { return uniform_dist(generator, p); };
   const double STRENGTH = (1. / n_samples) + 1e-10;
-  auto call_single = [&](size_t i, const double *coeffs, double step, double *out) {
-    tick::prox_l2sq::call_single(i, coeffs, step, out, STRENGTH);
+  auto call_single = [&](const double x, double step) {
+    return tick::prox_l2sq::call_single(x, step, STRENGTH);
   };
   KLOG(INF) << n_samples;
   KLOG(INF) << n_features;
+  auto dao = std::make_shared<tick::asaga::DAO<double>>(n_samples, n_features);
   auto start = NOW;
-  tick::solver::NoHistory<double> history;
+  tick::solver::History<double> history;
   for (size_t j = 0; j < N_ITER; ++j) {
-    solve<tick::TModelLogReg<double, DAO<double>>>(modao, iterate.data(), steps_corrections.data(),
-                                                   call_single, next_i, THREADS, history);
+    dao = solve<tick::TModelLogReg<double, DAO<double>>>(modao, iterate.data(), steps_corrections.data(),
+                                                   call_single, next_i, THREADS, history, dao);
     // if (j % 10 == 0)
     //   objs.emplace_back(
     //       tick::logreg::loss(modao.features(), modao.labels().data(), iterate.data()));
