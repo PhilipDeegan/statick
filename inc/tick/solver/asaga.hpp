@@ -28,14 +28,19 @@ template <typename MODEL, bool INTERCEPT, typename HISTORY, typename T, typename
 void threaded_solve(typename MODEL::DAO &modao, T *iterate, T *steps_correction, PROX call_single,
                     NEXT_I _next_i, size_t n_threads, size_t n_thread, HISTORY &history,
                     ASAGA_DAO &dao) {
-  auto &step = dao.step;
   auto &features = modao.features();
   auto *labels = modao.labels().data();
   auto *gradients_memory = dao.gradients_memory.data();
   auto *gradients_average = dao.gradients_average.data();
-  const size_t n_samples = features.rows(), n_features = features.cols();
-  size_t &n_epochs = dao.n_epochs;
-  size_t epoch_size = dao.epoch_size != 0 ? dao.epoch_size : n_samples;
+  const auto &step = dao.step;
+  const auto &n_epochs = dao.n_epochs;
+  const auto n_samples = features.rows(), n_features = features.cols();
+  const auto epoch_size = dao.epoch_size != 0 ? dao.epoch_size : n_samples;
+
+  const auto &record_every = history.record_every;
+  auto &last_record_time = history.last_record_time;
+  auto &last_record_epoch = history.last_record_epoch;
+
   T n_samples_inverse = ((double)1 / (double)n_samples);
   T x_ij = 0, step_correction = 0;
   T grad_factor_diff = 0, grad_avg_j = 0, grad_i_factor = 0, grad_i_factor_old = 0;
@@ -46,15 +51,8 @@ void threaded_solve(typename MODEL::DAO &modao, T *iterate, T *steps_correction,
   auto &record_every = history.record_every;
   auto &last_record_time = history.last_record_time;
   auto &last_record_epoch = history.last_record_epoch;
-  if
-    constexpr(std::is_same<HISTORY, tick::solver::History<T>>::value) {
-      if (n_thread == 0) {
-        history.time_history.resize(n_epochs / record_every + 1);
-        history.epoch_history.resize(n_epochs / record_every + 1);
-        history.iterate_history.resize(n_epochs / record_every + 1);
-      }
-    }
-  auto start = std::chrono::steady_clock::now();
+  const auto start = std::chrono::steady_clock::now();
+
   for (size_t epoch = 1; epoch < (n_epochs + 1); ++epoch) {
     for (size_t t = 0; t < thread_epoch_size; ++t) {
       INDICE_TYPE i = _next_i();
@@ -123,6 +121,14 @@ std::shared_ptr<ASAGA_DAO> solve(typename MODEL::DAO &modao, T *iterate, T *step
   const size_t n_samples = modao.n_samples(), n_features = modao.n_features();
   if (p_dao == nullptr) p_dao = std::make_shared<ASAGA_DAO>(n_samples, n_features);
   auto &dao = *p_dao.get();
+
+  if
+    constexpr(std::is_same<HISTORY, tick::solver::History<T>>::value) {
+      history.time_history.resize(dao.n_epochs / history.record_every + 1);
+      history.epoch_history.resize(dao.n_epochs / history.record_every + 1);
+      history.iterate_history.resize(dao.n_epochs / history.record_every + 1);
+  }
+
   std::vector<std::thread> threads;
   for (size_t i = 0; i < n_threads; i++) {
     threads.emplace_back(
