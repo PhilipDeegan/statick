@@ -33,10 +33,10 @@ void prepare_solve(SVRG_DAO &dao, typename MODEL::DAO &modao, T *iterate, size_t
         previous_full_gradient = dao.full_gradient;
       }
     }
-  dao.next_iterate = std::vector<T>(iterate_size);
+  dao.next_iterate = std::vector<T>(iterate_size, 0);
   copy(iterate, dao.next_iterate.data(), iterate_size);
   dao.fixed_w = dao.next_iterate;
-  dao.full_gradient = std::vector<T>(iterate_size);
+  dao.full_gradient = std::vector<T>(iterate_size, 0);
   MODEL::grad(modao, dao.fixed_w.data(), dao.full_gradient.data(), dao.full_gradient.size());
   if
     constexpr(ST == StepType::BarzilaiBorwein) {
@@ -93,13 +93,13 @@ template <typename MODEL, uint16_t RM = VarianceReductionMethod::Last,
           typename NEXT_I, typename SVRG_DAO = svrg::DAO<T>>
 auto solve(typename MODEL::DAO &modao, PROX call, T *iterate, NEXT_I fn_next_i, size_t &t,
            size_t n_threads, size_t epoch_size, std::shared_ptr<SVRG_DAO> p_dao = nullptr) {
+  const size_t n_samples = modao.n_samples(), n_features = modao.n_features();
+  double step = 0.00257480411965l;
+  const size_t iterate_size = n_features + static_cast<uint>(INTERCEPT);
   if (p_dao == nullptr) p_dao = std::make_shared<SVRG_DAO>();
   auto &dao = *p_dao.get();
   tick::svrg::prepare_solve<MODEL>(dao, modao, iterate, t, fn_next_i);
 
-  double step = 0.00257480411965l;
-  const size_t n_samples = modao.n_samples(), n_features = modao.n_features();
-  const size_t iterate_size = n_features + static_cast<uint>(INTERCEPT);
   if (n_threads > 1) {
     std::vector<std::thread> threadsV;
     for (size_t i = 0; i < n_threads; i++)

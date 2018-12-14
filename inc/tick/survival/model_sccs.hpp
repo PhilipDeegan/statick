@@ -30,7 +30,7 @@ class TModelSCCS {
   static void grad_i(DAO &dao, const T *const coeffs, T *out, const size_t size, const size_t i) {
     set(out, T{0}, size);
     std::vector<T> inner_prod(dao.n_intervals());
-    std::vector<T> buffer(dao.n_intervals(), 0);
+    std::vector<T> buffer(dao.n_lagged_features(), 0);
     size_t max_interval = get_max_interval(dao, i);
     for (size_t t = 0; t < max_interval; t++) inner_prod[t] = get_inner_prod(dao, coeffs, i, t);
     if (max_interval < dao.n_intervals())

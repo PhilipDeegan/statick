@@ -9,7 +9,6 @@ namespace sccs {
 template <typename T = double>
 class DAO {
  public:
-  // DAO() {}
   DAO(size_t _samples, size_t _features)
       : features(_samples), labels(_samples), censoring(_samples, 1), n_lags(_features, 0) {}
 
