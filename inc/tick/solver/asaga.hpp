@@ -9,7 +9,10 @@ template <typename T = double>
 class DAO {
  public:
   DAO(size_t n_samples, size_t n_features, size_t _n_epochs = 200, size_t _epoch_size = 0)
-      : n_epochs(_n_epochs), epoch_size(_epoch_size), gradients_average(n_features), gradients_memory(n_samples) {
+      : n_epochs(_n_epochs),
+        epoch_size(_epoch_size),
+        gradients_average(n_features),
+        gradients_memory(n_samples) {
     for (size_t i = 0; i < n_samples; i++) gradients_memory[i].store(0);
     for (size_t i = 0; i < n_features; i++) gradients_average[i].store(0);
   }
@@ -45,12 +48,12 @@ void threaded_solve(typename MODEL::DAO &modao, T *iterate, T *steps_correction,
   auto &last_record_epoch = history.last_record_epoch;
   if
     constexpr(std::is_same<HISTORY, tick::solver::History<T>>::value) {
-    if (n_thread == 0) {
-      history.time_history.resize(n_epochs / record_every + 1);
-      history.epoch_history.resize(n_epochs / record_every + 1);
-      history.iterate_history.resize(n_epochs / record_every + 1);
+      if (n_thread == 0) {
+        history.time_history.resize(n_epochs / record_every + 1);
+        history.epoch_history.resize(n_epochs / record_every + 1);
+        history.iterate_history.resize(n_epochs / record_every + 1);
+      }
     }
-  }
   auto start = std::chrono::steady_clock::now();
   for (size_t epoch = 1; epoch < (n_epochs + 1); ++epoch) {
     for (size_t t = 0; t < thread_epoch_size; ++t) {

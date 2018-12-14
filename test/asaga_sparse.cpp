@@ -42,8 +42,9 @@ int main() {
   auto start = NOW;
   tick::solver::History<double> history;
   for (size_t j = 0; j < N_ITER; ++j) {
-    dao = solve<tick::TModelLogReg<double, DAO<double>>>(modao, iterate.data(), steps_corrections.data(),
-                                                   call_single, next_i, THREADS, history, dao);
+    dao = solve<tick::TModelLogReg<double, DAO<double>>>(modao, iterate.data(),
+                                                         steps_corrections.data(), call_single,
+                                                         next_i, THREADS, history, dao);
     // if (j % 10 == 0)
     //   objs.emplace_back(
     //       tick::logreg::loss(modao.features(), modao.labels().data(), iterate.data()));

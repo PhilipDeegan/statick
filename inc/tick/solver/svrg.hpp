@@ -9,7 +9,7 @@ template <typename T = double>
 class DAO {
  public:
   size_t rand_index = 0;
-  T step{0};
+  T step = 0.00257480411965;
   std::vector<T> full_gradient, fixed_w, grad_i, grad_i_fixed_w, next_iterate;
 };
 namespace VarianceReductionMethod {
@@ -104,15 +104,13 @@ auto solve(typename MODEL::DAO &modao, PROX call, T *iterate, NEXT_I fn_next_i, 
     std::vector<std::thread> threadsV;
     for (size_t i = 0; i < n_threads; i++)
       threadsV.emplace_back([&]() {
-        for (size_t j = 0; j < (epoch_size / n_threads); ++j)
-          solve_thread<MODEL, RM, ST, INTERCEPT>(dao, modao, call, iterate, fn_next_i, t, n_threads,
-                                                 epoch_size);
+        solve_thread<MODEL, RM, ST, INTERCEPT>(dao, modao, call, iterate, fn_next_i, t, n_threads,
+                                               epoch_size);
       });
     for (size_t i = 0; i < n_threads; i++) threadsV[i].join();
   } else {
-    for (size_t i = 0; i < epoch_size; ++i)
-      solve_thread<MODEL, RM, ST, INTERCEPT>(dao, modao, call, iterate, fn_next_i, t, n_threads,
-                                             epoch_size);
+    solve_thread<MODEL, RM, ST, INTERCEPT>(dao, modao, call, iterate, fn_next_i, t, n_threads,
+                                           epoch_size);
   }
   if
     constexpr(RM == VarianceReductionMethod::Last) {

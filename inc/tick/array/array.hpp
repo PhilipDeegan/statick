@@ -22,8 +22,8 @@ class Array {
   Array(Array &&that) : m_data(that.m_data) {}
 
   const T *data() const { return m_data.data(); }
-  const size_t &size() const { return m_data.size(); }
-  const T &operator[](int i) const { return m_data[i]; }
+  const size_t size() const { return m_data.size(); }
+  T &operator[](size_t i) { return m_data[i]; }
 
   T dot(const T *const that) const {
     return dot(this->m_data.data(), that.m_data.data(), this->m_data.size());

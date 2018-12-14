@@ -65,7 +65,7 @@ class TModelLogReg {
   }
 
   template <bool INTERCEPT = false, bool FILL = true, class K>
-  void compute_grad_i(DAO &dao, const size_t i, const K *coeffs, T *out, const bool fill) {
+  static void compute_grad_i(DAO &dao, const size_t i, const K *coeffs, T *out, const bool fill) {
     auto *x_i = dao.get_features(i);
     const T alpha_i = grad_i_factor(i, coeffs);
     if

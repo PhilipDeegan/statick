@@ -32,21 +32,16 @@ class TModelSCCS {
     std::vector<T> inner_prod(dao.n_intervals());
     std::vector<T> buffer(dao.n_intervals(), 0);
     size_t max_interval = get_max_interval(dao, i);
-
     for (size_t t = 0; t < max_interval; t++) inner_prod[t] = get_inner_prod(dao, coeffs, i, t);
-
     if (max_interval < dao.n_intervals())
       set(inner_prod.data() + max_interval, dao.n_intervals() - max_interval, 0);
-
     T x_max = max(inner_prod.data(), inner_prod.size());
     T sum_exp = sumExpMinusMax(inner_prod.data(), inner_prod.size(), x_max);
-
     T multiplier = 0;  // need a double instead of long double for mult_incr
     for (size_t t = 0; t < max_interval; t++) {
       multiplier = exp(inner_prod[t] - x_max) / sum_exp;  // overflow-proof
       mult_incr(buffer.data(), get_longitudinal_features(dao, i, t), multiplier, buffer.size());
     }
-
     T label = 0;
     for (size_t t = 0; t < max_interval; t++) {
       label = get_longitudinal_label(dao, i, t);
