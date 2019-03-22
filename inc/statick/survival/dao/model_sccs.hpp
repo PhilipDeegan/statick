@@ -6,12 +6,12 @@
 namespace statick {
 namespace sccs {
 
-template <typename T>
+template <typename T, typename _F_ = statick::Array2D<T>, typename _L_ = statick::Array<int32_t>>
 class DAO {
  public:
   using value_type = T;
-  using FEATURES = std::vector<std::shared_ptr<statick::Array2D<T>>>;
-  using LABELS = std::vector<std::shared_ptr<statick::Array<int32_t>>>;
+  using FEATURES = std::vector<std::shared_ptr<_F_>>;
+  using LABELS = std::vector<std::shared_ptr<_L_>>;
   DAO(){}
   DAO(FEATURES &_features, LABELS &_labels) : features(_features), labels(_labels){
     censoring.m_data = std::vector<size_t>(_features.size(), 1);

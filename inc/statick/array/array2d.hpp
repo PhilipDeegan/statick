@@ -13,10 +13,10 @@ void save(Archive &ar, const A2D &a2d) {
 }
 
 template <typename T, class A2D>
-void save(const A2D &a2d, const std::string &_file) {
+void save_to(const A2D &a2d, const std::string &_file) {
   std::ofstream ss(_file, std::ios::out | std::ios::binary);
   cereal::PortableBinaryOutputArchive ar(ss);
-  ar(a2d);
+  save(ar, a2d);
 }
 }  // namespace dense_2d
 
@@ -102,27 +102,35 @@ class Array2D {
   Array2D &operator=(const Array2D &&that) = delete;
 };
 
-template <typename T>
+template <typename T, typename I = size_t>
 class RawArray2D {
  public:
   using value_type = T;
-  RawArray2D(const T *_data, const size_t *_info)
-      : v_data(_data), m_cols(&_info[0]), m_rows(&_info[1]), m_size(&_info[2]) {}
-  RawArray2D(RawArray2D &&that)
-      : v_data(that.v_data), m_cols(that.m_cols), m_rows(that.m_rows), m_size(that.m_size) {}
+  RawArray2D(const T *_data, const I *_info) : v_data(_data), m_info(3) {
+    m_info[0] = _info[0];
+    m_info[1] = _info[1];
+    m_info[2] = _info[0] * _info[1];
+  }
+  RawArray2D(RawArray2D &&that) : v_data(that.v_data), m_info(that.m_info) {}
 
   const T &operator[](int i) { return v_data[i]; }
   const T *data() const { return v_data; }
-  const T *row_raw(size_t i) const { return &v_data[i * (*m_cols)]; }
-  RawArray<T> row(size_t i) const { return RawArray<T>(&v_data[i * (*m_cols)], *m_cols); }
+  const T *row_raw(size_t i) const { return &v_data[i * (m_info[0])]; }
+  RawArray<T> row(size_t i) const { return RawArray<T>(&v_data[i * (m_info[0])], m_info[0]); }
 
-  const size_t &cols() const { return *m_cols; }
-  const size_t &rows() const { return *m_rows; }
-  const size_t &size() const { return *m_size; }
+  const I &cols() const { return m_info[0]; }
+  const I &rows() const { return m_info[1]; }
+  const I &size() const { return m_info[2]; }
+
+  template <class Archive>
+  void load(Archive &ar) { load_array2d_with_raw_data(ar, v_data, m_info); }
+
+  template <class Archive>
+  void save(Archive &ar) const { dense_2d::save<T>(ar, *this); }
 
  private:
   const T *v_data;
-  const size_t *m_cols, *m_rows, *m_size;
+  std::vector<I> m_info;
 
   RawArray2D() = delete;
   RawArray2D(RawArray2D &that) = delete;

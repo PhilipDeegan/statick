@@ -3,17 +3,17 @@
 
 namespace statick {
 namespace dense {
-template <typename T, class ARCHIVE, class A1D>
+template <class ARCHIVE, class A1D>
 void save(ARCHIVE &ar, const A1D &a1D) {
   ar(CEREAL_NVP(false));
   ar(cereal::make_size_tag(a1D.size()));
-  ar(cereal::binary_data(a1D.data(), a1D.size() * sizeof(T)));
+  ar(cereal::binary_data(a1D.data(), a1D.size() * sizeof(typename A1D::value_type)));
 }
 template <typename T, class A1D>
-void save(const A1D &a1D, const std::string &_file) {
+void save_to(const A1D &a1D, const std::string &_file) {
   std::ofstream ss(_file, std::ios::out | std::ios::binary);
   cereal::PortableBinaryOutputArchive ar(ss);
-  save<T>(ar, a1D);
+  save(ar, a1D);
 }
 }  // namespace dense
 
@@ -86,14 +86,10 @@ class Array {
   }
 
   template <class Archive>
-  void load(Archive &ar) {
-    load_array_with_raw_data(ar, m_data);
-  }
+  void load(Archive &ar) { load_array_with_raw_data(ar, m_data); }
 
   template <class Archive>
-  void save(Archive &ar) const {
-    dense::save<T>(ar, *this);
-  }
+  void save(Archive &ar) const { dense::save<T>(ar, *this); }
 
   std::vector<T> m_data;
  private:
@@ -109,6 +105,7 @@ class Array {
 template <typename T>
 class RawArray {
  public:
+  using value_type = T;
   RawArray(const std::vector<T> &_data) : _size(_data.size()), v_data(_data.data()) {}
   RawArray(const T *_data, const size_t _size) : _size(_size), v_data(_data) {}
   RawArray(RawArray &&that) : _size(that._size), v_data(that.v_data) {}
@@ -119,6 +116,12 @@ class RawArray {
 
   T dot(const T *const that) const { return statick::dot(this->v_data, that, _size); }
   T dot(const RawArray<T> &that) const { return dot(that.v_data); }
+
+  template <class Archive>
+  void load(Archive &ar) { load_array_with_raw_data(ar, v_data); }
+
+  template <class Archive>
+  void save(Archive &ar) const { dense::save<T>(ar, *this); }
 
  private:
   const size_t _size;

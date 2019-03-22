@@ -6,6 +6,7 @@ namespace statick {
 template <class T>
 class Sparse {
  public:
+  using value_type = T;
   Sparse(const T *data, const size_t _size, const INDICE_TYPE *indices)
       : v_data(data), _size(_size), indices(indices) {}
   Sparse(Sparse &&that) : _size(that._size) {

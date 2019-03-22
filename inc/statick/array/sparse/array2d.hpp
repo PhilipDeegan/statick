@@ -195,6 +195,7 @@ class Sparse2DList {
   }
 
  public:
+  using value_type = T;
   Sparse2DList() {}
   RawSparse2D<T> operator[](size_t i) const {
     return RawSparse2D<T>(m_data.data() + (m_info[(i * INFO_SIZE) + 3]), &m_info[i * INFO_SIZE],
@@ -235,6 +236,7 @@ class RawSparse2DList {
   static constexpr size_t INFO_SIZE = 5;
 
  public:
+  using value_type = T;
   RawSparse2DList(const T *data, const size_t *info, const INDICE_TYPE *_indices,
                   const INDICE_TYPE *_rows_indices)
       : v_data(data), v_info(info), v_indices(_indices), v_row_indices(_rows_indices) {}
@@ -290,7 +292,7 @@ void inner_save(Archive &ar, const S2D &s2d) {
 }
 
 template <class S2D>
-void save(const S2D &s2d, const std::string &_file) {
+void save_to(const S2D &s2d, const std::string &_file) {
   std::ofstream ss(_file, std::ios::out | std::ios::binary);
   cereal::PortableBinaryOutputArchive ar(ss);
   ar(s2d.size());
