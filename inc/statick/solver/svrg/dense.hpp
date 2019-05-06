@@ -60,11 +60,7 @@ void solve(DAO &dao, typename MODEL::DAO &modao, PROX call, NEXT_I fn_next_i) {
   using T = typename MODEL::value_type;
   auto &history = dao.history;
   const size_t n_samples = modao.n_samples(), n_features = modao.n_features();
-  if constexpr(std::is_same<typename DAO::HISTORY, statick::solver::History<T>>::value) {
-    history.time_history.resize(dao.n_epochs / history.record_every + 1);
-    history.epoch_history.resize(dao.n_epochs / history.record_every + 1);
-    history.iterate_history.resize(dao.n_epochs / history.record_every + 1);
-  }
+  history.init(dao.n_epochs / history.record_every + 1, dao.iterate.size());
   const auto &n_epochs = dao.n_epochs, &n_threads = dao.n_threads;
   const auto epoch_size = dao.epoch_size != 0 ? dao.epoch_size : n_samples;
   const auto &record_every = history.record_every;

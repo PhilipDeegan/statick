@@ -1,12 +1,8 @@
-#ifndef STATICK_PROX_PROX_L2SQ_HPP_
-#define STATICK_PROX_PROX_L2SQ_HPP_
-
-#include "statick/prox/prox_separable.hpp"
-
+#ifndef STATICK_PROX_PROX_SEPARABLE_HPP_
+#define STATICK_PROX_PROX_SEPARABLE_HPP_
 namespace statick {
-namespace prox_l2sq {
+namespace prox_separable {
 namespace np {
-
 template <class T>
 T call_single(T x, T step, T strength) {
   return x / (1 + step * strength);
@@ -64,19 +60,12 @@ T value_single(T x) {
   return x * x / 2;
 }
 
-template <class T> inline
-T value(const T *coeffs, size_t size, T strength) {
-  return statick::prox_separable::value(coeffs, 0, size, strength);
-}
-template <class T> inline
+template <class T>  inline
 T value(const T *coeffs, size_t start, size_t end, T strength) {
-  return statick::prox_separable::value(coeffs, start, end, strength);
+  T val = 0;
+  for (size_t i = start; i < end; i++) val += value_single(coeffs[i]);
+  return strength * val;
 }
-
-}  // namespace prox_l2sq
-
-template <typename T>
-class TProxL2Sq {};
-
+}  // namespace prox_separable
 }  // namespace statick
-#endif  // STATICK_PROX_PROX_L2SQ_HPP_
+#endif  // STATICK_PROX_PROX_SEPARABLE_HPP_

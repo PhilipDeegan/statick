@@ -10,9 +10,8 @@ class History {
   History &save_history(double time, size_t epoch, T *iterate, size_t size) {
     time_history[i] = last_record_time + time;
     epoch_history[i] = last_record_epoch + epoch;
-    iterate_history[i] = std::vector<T>(size);
-    T *last = iterate_history[i].data();
-    for (size_t i = 0; i < size; ++i) last[i] = iterate[i];
+    std::copy(iterate, iterate+size, iterate_history[i].data());
+    this->i++;
     return *this;
   }
   History &operator+=(size_t iterations) {
@@ -29,6 +28,11 @@ class History {
 
   History(){};
   ~History(){};
+  void init(size_t v_size, size_t i_size){
+    time_history.resize(v_size);
+    epoch_history.resize(v_size);
+    for(size_t vi = 0; vi < v_size; vi++) iterate_history.emplace_back(i_size);
+  }
 
   History(History &that) = delete;
   History(const History &that) = delete;
@@ -46,6 +50,7 @@ class NoHistory {
   NoHistory &save_history() { return *this; }
   NoHistory operator+=(size_t iterations) { return *this; }
   NoHistory add_time(double time) { return *this; }
+  void init(size_t, size_t){}
 };
 }  // namespace solver
 }  // namespace statick

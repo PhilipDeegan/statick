@@ -107,7 +107,7 @@ int main() {
   for (int i = 0; i < N; i++) {
     if (fabs(host_y[i] - host_result_y[i]) > fabs(host_result_y[i] * 0.0001f)) errors++;
   }
-  // std::cout << errors << " errors" << std::endl;
+  std::cout << errors << " errors" << std::endl;
 
   return errors;
 }

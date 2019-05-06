@@ -112,11 +112,7 @@ void solve(DAO &dao, typename MODEL::DAO &modao, PROX call_single, NEXT_I _next_
   using T = typename MODEL::value_type;
   auto n_threads = dao.n_threads;
   auto &history = dao.history;
-  if constexpr(std::is_same<typename DAO::HISTORY, statick::solver::History<T>>::value) {
-    history.time_history.resize(dao.n_epochs / history.record_every + 1);
-    history.epoch_history.resize(dao.n_epochs / history.record_every + 1);
-    history.iterate_history.resize(dao.n_epochs / history.record_every + 1);
-  }
+  history.init(dao.n_epochs / history.record_every + 1, dao.iterate.size());
   std::vector<std::thread> threads;
   for (size_t i = 1; i < n_threads; i++) {
     threads.emplace_back(

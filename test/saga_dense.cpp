@@ -1,12 +1,4 @@
-#include <chrono>
-#include <random>
-#include <vector>
-#include <fstream>
-#include <iostream>
-#include "cereal/archives/portable_binary.hpp"
-#include "statick/array.hpp"
-#include "statick/linear_model/model_logreg.hpp"
-#include "statick/prox/prox_l2sq.hpp"
+#include "ipp.ipp"
 #include "statick/solver/saga.hpp"
 #define NOW                                                \
   std::chrono::duration_cast<std::chrono::milliseconds>(   \
