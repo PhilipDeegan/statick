@@ -24,9 +24,8 @@ std::vector<T> compute_step_corrections(const Sparse2D &features) {
   return steps_correction;
 }
 
-template <typename MODAO, bool INTERCEPT = false,
-          typename T = typename MODAO::value_type,
-          typename HISTOIR = statick::solver::History<T>>
+template <typename MODAO, typename HISTOIR, bool INTERCEPT = false,
+          typename T = typename MODAO::value_type>
 class DAO {
  public:
   using HISTORY = HISTOIR;
@@ -46,7 +45,7 @@ class DAO {
 template <typename MODEL, uint16_t RM, uint16_t ST, bool INTERCEPT,
           typename PROX, typename NEXT_I,
           typename DAO, typename T = typename MODEL::value_type>
-void solve_thread(DAO &dao, typename MODEL::DAO &modao, PROX call,
+void solve_thread(DAO &dao, typename MODEL::DAO &modao, PROX prox,
                   NEXT_I fn_next_i,size_t n_thread) {
 
   auto is_in_range = [](size_t){ return 1; }; // TODO - TODO
@@ -69,22 +68,14 @@ void solve_thread(DAO &dao, typename MODEL::DAO &modao, PROX call,
     const size_t x_i_size = features.row_size(i);
     const T *x_i = features.row_raw(i);
     const INDICE_TYPE *x_i_indices = features.row_indices(i);
-    // // Gradients factors (model is a GLM)
-    // // TODO: a grad_i_factor(i, array1, array2) to loop once on the features
     T grad_i_diff = MODEL::grad_i_factor(modao, iterate, i) - MODEL::grad_i_factor(modao, dao.fixed_w.data(), i);
-    // T grad_i_diff = model->grad_i_factor(i, iterate) - model->grad_i_factor(i, fixed_w);
-    // We update the iterate within the support of the features vector, with the probabilistic correction
     for (size_t idx_nnz = 0; idx_nnz < x_i_size; ++idx_nnz) {
-      // Get the index of the idx-th sparse feature of x_i
       size_t j = x_i_indices[idx_nnz];
       T full_gradient_j = full_gradient[j];
-      // Step-size correction for coordinate j
       T step_correction = steps_corrections[j];
-      // Gradient descent with probabilistic step-size correction
       T descent_direction = step * (x_i[idx_nnz] * grad_i_diff +
           step_correction * full_gradient_j);
-      if (is_in_range(j)) call(j, iterate[j] - descent_direction, step * step_correction, iterate);
-      else iterate[j] -= descent_direction;
+      iterate[j] = PROX::call_single(prox, iterate[j] - descent_direction, step * step_correction);
     }
     // And let's not forget to update the intercept as well. It's updated at each
     // step, so no step-correction. Note that we call the prox, in order to be
@@ -92,11 +83,8 @@ void solve_thread(DAO &dao, typename MODEL::DAO &modao, PROX call,
     // desire to to regularize the intercept)
     if constexpr (INTERCEPT) {
       T descent_direction = step * (grad_i_diff + full_gradient[n_features]);
-      if (is_in_range(n_features))
-        iterate[n_features] = call(
-            iterate[n_features] - descent_direction, step, n_features);
-      else
-        iterate[n_features] -= descent_direction;
+        iterate[n_features] = PROX::call_single(prox,
+            iterate[n_features] - descent_direction, step);
     }
     // Note that the average option for variance reduction with sparse data is a
     // very bad idea, but this is caught in the python class
@@ -109,8 +97,9 @@ template <typename MODEL,
           uint16_t RM = VarianceReductionMethod::Last,
           uint16_t ST = StepType::Fixed, bool INTERCEPT = false,
           typename PROX, typename NEXT_I, typename DAO>
-void solve(DAO &dao, typename MODEL::DAO &modao, PROX call, NEXT_I fn_next_i) {
+void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox, NEXT_I fn_next_i) {
   using T = typename MODEL::value_type;
+  using TOL = typename DAO::HISTORY::TOLERANCE;
   auto &history = dao.history;
   const size_t n_samples = modao.n_samples(), n_features = modao.n_features();
   history.init(dao.n_epochs / history.record_every + 1, dao.iterate.size());
@@ -124,7 +113,7 @@ void solve(DAO &dao, typename MODEL::DAO &modao, PROX call, NEXT_I fn_next_i) {
   std::vector<std::function<void()>> funcs;
   for (size_t i = 1; i < n_threads; i++)
     funcs.emplace_back([&](){
-      solve_thread<MODEL, RM, ST, INTERCEPT>(dao, modao, call, fn_next_i, i); });
+      solve_thread<MODEL, RM, ST, INTERCEPT>(dao, modao, prox, fn_next_i, i); });
 
   auto start = std::chrono::steady_clock::now();
   auto log_history = [&](size_t epoch){
@@ -140,7 +129,7 @@ void solve(DAO &dao, typename MODEL::DAO &modao, PROX call, NEXT_I fn_next_i) {
   for (size_t epoch = 1; epoch < (n_epochs + 1); ++epoch) {
     statick::svrg::prepare_solve<MODEL>(dao, modao, dao.t, fn_next_i);
     pool.async(funcs);
-    solve_thread<MODEL, RM, ST, INTERCEPT>(dao, modao, call, fn_next_i, 0);
+    solve_thread<MODEL, RM, ST, INTERCEPT>(dao, modao, prox, fn_next_i, 0);
     pool.sync();
     log_history(epoch);
     if constexpr(RM == VarianceReductionMethod::Last)
@@ -149,7 +138,7 @@ void solve(DAO &dao, typename MODEL::DAO &modao, PROX call, NEXT_I fn_next_i) {
   }
 
   dao.t += epoch_size;
-  if constexpr(std::is_same<typename DAO::HISTORY, statick::solver::History<T>>::value) {
+  if constexpr(std::is_same<typename DAO::HISTORY, statick::solver::History<T, TOL>>::value) {
     auto end = std::chrono::steady_clock::now();
     double time = ((end - start).count()) * std::chrono::steady_clock::period::num /
                   static_cast<double>(std::chrono::steady_clock::period::den);

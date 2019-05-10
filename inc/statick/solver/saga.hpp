@@ -18,7 +18,7 @@ class DAO {
 template <typename MODEL, bool INTERCEPT = false, typename PROX, typename NEXT_I,
           typename T = typename MODEL::value_type,
           typename DAO = statick::saga::dense::DAO<T>>
-void solve(DAO &dao, typename MODEL::DAO &modao, PROX call, NEXT_I _next_i) {
+void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox, NEXT_I _next_i) {
   const size_t n_samples = modao.n_samples(), n_features = modao.n_features();
   auto *features = modao.features().data();
   T n_samples_inverse = ((double)1 / (double)n_samples), step = dao.step;
@@ -39,7 +39,7 @@ void solve(DAO &dao, typename MODEL::DAO &modao, PROX call, NEXT_I _next_i) {
       iterate[n_features] -= step * (grad_factor_diff + dao.gradients_average[n_features]);
       dao.gradients_average[n_features] += grad_factor_diff * n_samples_inverse;
     }
-    call(iterate, step, iterate, n_features);
+    PROX::call(prox, iterate, step, iterate, n_features);
   }
 }
 }  // namespace dense
@@ -81,7 +81,7 @@ class DAO {
 template <typename MODEL, bool INTERCEPT = false, typename PROX, typename NEXT_I,
           typename T = typename MODEL::value_type,
           typename DAO = statick::saga::sparse::DAO<T>>
-void solve(DAO &dao, typename MODEL::DAO &modao, PROX call_single, NEXT_I _next_i) {
+void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox, NEXT_I _next_i) {
   const size_t n_samples = modao.n_samples(), n_features = modao.n_features();
   (void) n_features;  // possibly unused if constexpr
   T n_samples_inverse = ((double)1 / (double)n_samples), step = dao.step;
@@ -102,12 +102,12 @@ void solve(DAO &dao, typename MODEL::DAO &modao, PROX call_single, NEXT_I _next_
       iterate[j] -=
           step * (grad_factor_diff * x_i[idx_nnz] + steps_corrections[j] * dao.gradients_average[j]);
       dao.gradients_average[j] += grad_factor_diff * x_i[idx_nnz] * n_samples_inverse;
-      call_single(j, iterate, step * steps_corrections[j], iterate);
+      iterate[j] = PROX::call_single(prox, iterate[j], step * steps_corrections[j]);
     }
     if constexpr(INTERCEPT) {
       iterate[n_features] -= step * (grad_factor_diff + dao.gradients_average[n_features]);
       dao.gradients_average[n_features] += grad_factor_diff * n_samples_inverse;
-      call_single(n_features, iterate, step, iterate);
+      iterate[n_features] = PROX::call_single(prox, iterate[n_features], step);
     }
   }
 }

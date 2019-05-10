@@ -18,7 +18,7 @@ namespace dense {
 template <typename MODEL, bool INTERCEPT = false, typename PROX, typename NEXT_I,
           typename T = typename MODEL::value_type,
           typename DAO = sgd::DAO<T>>
-void solve(DAO &dao, typename MODEL::DAO &modao, PROX call, NEXT_I _next_i) {
+void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox, NEXT_I _next_i) {
   auto &t = dao.t;
   const size_t n_samples = modao.n_samples(), n_features = modao.n_features(), start_t = t;
   auto &features = modao.features();
@@ -34,7 +34,7 @@ void solve(DAO &dao, typename MODEL::DAO &modao, PROX call, NEXT_I _next_i) {
     T grad_i_factor = labels[i] * (sigmoid(labels[i] * features.row(i).dot(iterate)) - 1);
     for (size_t j = 0; j < n_features; ++j) grad[j] = x_i[j] * grad_i_factor;
     for (size_t j = 0; j < n_features; j++) iterate[j] += grad[j] * -step_t;
-    call(iterate, step_t, iterate, n_features);
+    PROX::call(prox, iterate, step_t, iterate, n_features);
   }
 }
 }  // namespace dense
@@ -42,7 +42,7 @@ namespace sparse {
 template <typename MODEL, bool INTERCEPT = false, typename PROX, typename NEXT_I,
           typename T = typename MODEL::value_type,
           typename DAO = sgd::DAO<T>>
-void solve(DAO &dao, typename MODEL::DAO &modao, PROX call, NEXT_I _next_i) {
+void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox, NEXT_I _next_i) {
   auto &t = dao.t;
   const size_t n_samples = modao.n_samples(), n_features = modao.n_features(), start_t = t;
   const T step = dao.step;
@@ -59,7 +59,7 @@ void solve(DAO &dao, typename MODEL::DAO &modao, PROX call, NEXT_I _next_i) {
     const size_t row_size = features.row_size(i);
     for (size_t j = 0; j < row_size; j++) iterate[x_indices[j]] += x_i[j] * delta;
     if constexpr(INTERCEPT) { iterate[n_features] += delta; }
-    call(iterate, step_t, iterate, n_features);
+    PROX::call(prox, iterate, step_t, iterate, n_features);
   }
 }
 }  // namespace sparse

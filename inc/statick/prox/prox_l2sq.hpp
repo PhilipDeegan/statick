@@ -1,82 +1,55 @@
 #ifndef STATICK_PROX_PROX_L2SQ_HPP_
 #define STATICK_PROX_PROX_L2SQ_HPP_
-
-#include "statick/prox/prox_separable.hpp"
-
 namespace statick {
-namespace prox_l2sq {
-namespace np {
-
-template <class T>
+namespace prox_l2sq{
+namespace p0 { // > 0
+template <class T> static inline
 T call_single(T x, T step, T strength) {
   return x / (1 + step * strength);
 }
-
-template <typename T>
-void call_single(size_t i, const T *coeffs, T step, T *out, T strength) {
-  out[i] = coeffs[i] / (1 + step * strength);
-}
-template <typename T>
-void call_single(size_t i, const T *coeffs, T step, T *out, T strength, size_t n_times) {
-  out[i] = coeffs[i] / std::pow(1 + step * strength, n_times);
-}
-template <typename T>
-void call(const T *coeffs, T step, T *out, size_t size, T strength) {
-  for (size_t i = 0; i < size; i++) call_single(i, coeffs, step, out, strength);
-}
-template <typename T>
-void call(const T *coeffs, T step, T *out, size_t start, size_t end, T strength) {
-  for (size_t i = start; i < end; i++) call_single(i, coeffs, step, out, strength);
-}
-}  // namespace np
-
+}  // namespace p0 { // > 0
 template <class T>
 T call_single(T x, T step, T strength) {
   if (x < 0) return 0;
-  return np::call_single(x, step, strength);
+  return p0::call_single(x, step, strength);
 }
-template <typename T>
-void call_single(size_t i, const T *coeffs, T step, T *out, T strength) {
-  if (coeffs[i] < 0)
-    out[i] = 0;
-  else
-    np::call_single(i, coeffs, step, out, strength);
-}
-template <typename T>
-void call_single(size_t i, const T *coeffs, T step, T *out, T strength, size_t n_times) {
-  if (coeffs[i] < 0)
-    out[i] = 0;
-  else
-    np::call_single(i, coeffs, step, out, strength, n_times);
-}
-template <typename T>
-void call(const T *coeffs, T step, T *out, size_t size, T strength) {
-  for (size_t i = 0; i < size; i++) call_single(i, coeffs, step, out, strength);
-}
-
-template <typename T>
-void call(const T *coeffs, T step, T *out, size_t start, size_t end, T strength) {
-  for (size_t i = start; i < end; i++) call_single(i, coeffs, step, out, strength);
-}
-
-template <typename T>
+template <typename T> static inline
 T value_single(T x) {
   return x * x / 2;
 }
-
-template <class T> inline
+template <class T> static inline
 T value(const T *coeffs, size_t size, T strength) {
-  return statick::prox_separable::value(coeffs, 0, size, strength);
+  T val = 0;
+  for (size_t i = 0; i < size; i++) val += value_single(coeffs[i]);
+  return strength * val;
 }
-template <class T> inline
-T value(const T *coeffs, size_t start, size_t end, T strength) {
-  return statick::prox_separable::value(coeffs, start, end, strength);
-}
-
 }  // namespace prox_l2sq
+template <typename T, bool POSITIVE = 0>
+class ProxL2Sq {
+ public:
+  ProxL2Sq(T _strength) : strength(_strength){}
+  static inline T value(ProxL2Sq &prox, const T *coeffs, const size_t size) {
+    return statick::prox_l2sq::value(coeffs, size, prox.strength);
+  }
+  static inline T call_single(ProxL2Sq &prox, const T x, T step) {
+    if constexpr (POSITIVE)
+      return statick::prox_l2sq::call_single(x, step, prox.strength);
+    else
+      return statick::prox_l2sq::p0::call_single(x, step, prox.strength);
+  }
 
-template <typename T>
-class TProxL2Sq {};
+  static inline void call(ProxL2Sq &prox, const T* coeffs, T step, T *out, size_t size) {
+    if constexpr (POSITIVE)
+      for (size_t i = 0; i < size; i++)
+        out[i] = prox_l2sq::call_single(coeffs[i], step, prox.strength);
+    else
+      for (size_t i = 0; i < size; i++)
+        out[i] = prox_l2sq::p0::call_single(coeffs[i], step, prox.strength);
+  }
+  static inline void call(const T *coeffs, T step, T *out, size_t size) {
 
+}
+  T strength {0};
+};
 }  // namespace statick
 #endif  // STATICK_PROX_PROX_L2SQ_HPP_

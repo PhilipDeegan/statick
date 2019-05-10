@@ -7,9 +7,8 @@
 namespace statick {
 namespace asaga {
 
-template <typename MODAO, bool INTERCEPT = false,
-          typename T = typename MODAO::value_type,
-          typename HISTOIR = statick::solver::History<T>>
+template <typename MODAO, typename HISTOIR, bool INTERCEPT = false,
+          typename T = typename MODAO::value_type>
 class DAO {
  public:
   using HISTORY = HISTOIR;
@@ -32,8 +31,9 @@ class DAO {
 namespace sparse {
 
 template <typename MODEL, bool INTERCEPT, typename PROX, typename NEXT_I, typename DAO>
-void threaded_solve(DAO &dao, typename MODEL::DAO &modao, PROX call_single, NEXT_I _next_i, size_t n_thread) {
+void threaded_solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox, NEXT_I _next_i, size_t n_thread) {
   using T = typename MODEL::value_type;
+  using TOL = typename DAO::HISTORY::TOLERANCE;
   auto &features = modao.features();
   auto *gradients_memory = dao.gradients_memory.data();
   auto *gradients_average = dao.gradients_average.data();
@@ -70,7 +70,7 @@ void threaded_solve(DAO &dao, typename MODEL::DAO &modao, PROX call_single, NEXT
         while (!gradients_average[j].compare_exchange_weak(
             grad_avg_j, grad_avg_j + (grad_factor_diff * x_ij * n_samples_inverse))) {
         }
-        iterate[j] = call_single(
+        iterate[j] = PROX::call_single(prox,
             iterate[j] - (step * (grad_factor_diff * x_ij + step_correction * grad_avg_j)),
             step * step_correction);
       }
@@ -80,12 +80,11 @@ void threaded_solve(DAO &dao, typename MODEL::DAO &modao, PROX call_single, NEXT
         while (!gradients_average[n_features].compare_exchange_weak(
             gradients_average_j, gradients_average_j + (grad_factor_diff * n_samples_inverse))) {
         }
-        iterate[n_features] = call_single(iterate[n_features], step);
+        iterate[n_features] = PROX::call_single(prox, iterate[n_features], step);
       }
     }
-    if constexpr(std::is_same<typename DAO::HISTORY, statick::solver::History<T>>::value) {
+    if constexpr(std::is_same<typename DAO::HISTORY, statick::solver::History<T, TOL>>::value) {
       if (n_thread == 0) {
-        history += epoch_size;
         if ((last_record_epoch + epoch) == 1 ||
             ((last_record_epoch + epoch) % record_every == 0)) {
           auto end = std::chrono::steady_clock::now();
@@ -96,7 +95,7 @@ void threaded_solve(DAO &dao, typename MODEL::DAO &modao, PROX call_single, NEXT
       }
     }
   }
-  if constexpr(std::is_same<typename DAO::HISTORY, statick::solver::History<T>>::value) {
+  if constexpr(std::is_same<typename DAO::HISTORY, statick::solver::History<T, TOL>>::value) {
     if (n_thread == 0) {
       auto end = std::chrono::steady_clock::now();
       double time = ((end - start).count()) * std::chrono::steady_clock::period::num /
@@ -108,7 +107,7 @@ void threaded_solve(DAO &dao, typename MODEL::DAO &modao, PROX call_single, NEXT
 }
 
 template <typename MODEL, bool INTERCEPT = false, typename PROX, typename NEXT_I, typename DAO>
-void solve(DAO &dao, typename MODEL::DAO &modao, PROX call_single, NEXT_I _next_i) {
+void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox, NEXT_I _next_i) {
   using T = typename MODEL::value_type;
   auto n_threads = dao.n_threads;
   auto &history = dao.history;
@@ -117,10 +116,10 @@ void solve(DAO &dao, typename MODEL::DAO &modao, PROX call_single, NEXT_I _next_
   for (size_t i = 1; i < n_threads; i++) {
     threads.emplace_back(
       [&](size_t n_thread) {
-        threaded_solve<MODEL, INTERCEPT>(dao, modao, call_single, _next_i, n_thread);
+        threaded_solve<MODEL, INTERCEPT>(dao, modao, prox, _next_i, n_thread);
       }, i);
   }
-  threaded_solve<MODEL, INTERCEPT>(dao, modao, call_single, _next_i, 0);
+  threaded_solve<MODEL, INTERCEPT>(dao, modao, prox, _next_i, 0);
   for (auto & thread : threads) thread.join();
 }
 

@@ -419,18 +419,18 @@ public:
       auto *obj_data = (PyArrayObject *) PyObject_GetAttrString(obj,"data");
 
       if (obj_shape == NULL || obj_indptr == NULL || obj_indices == NULL || obj_data == NULL) {
-          PyErr_SetString(PyExc_ValueError,"Expecting a 2d sparse numpy array (i.e., a python object with 3 fields 'indptr', 'indices' and 'data')");
-          if (obj_shape) Py_DECREF(obj_shape);
-          if (obj_indptr) Py_DECREF(obj_indptr);
-          if (obj_indices) Py_DECREF(obj_indices);
-          if (obj_data) Py_DECREF(obj_data);
-          throw std::runtime_error("ERROR 1");
+        PyErr_SetString(PyExc_ValueError,"Expecting a 2d sparse numpy array (i.e., a python object with 3 fields 'indptr', 'indices' and 'data')");
+        if (obj_shape) Py_DECREF(obj_shape);
+        if (obj_indptr) Py_DECREF(obj_indptr);
+        if (obj_indices) Py_DECREF(obj_indices);
+        if (obj_data) Py_DECREF(obj_data);
+        throw std::runtime_error("ERROR 1");
       }
 
       if (!PyArray_IS_C_CONTIGUOUS(obj_data) || !PyArray_IS_C_CONTIGUOUS(obj_indptr) || !PyArray_IS_C_CONTIGUOUS(obj_indices)) {
-          PyErr_SetString(PyExc_ValueError,"The fields indptr, indices and data of sparse matrix must be contiguous numpy arrays.");
-          Py_DECREF(obj_indptr);Py_DECREF(obj_indices);Py_DECREF(obj_data);Py_DECREF(obj_shape);
-          throw std::runtime_error("ERROR 2");
+        PyErr_SetString(PyExc_ValueError,"The fields indptr, indices and data of sparse matrix must be contiguous numpy arrays.");
+        Py_DECREF(obj_indptr);Py_DECREF(obj_indices);Py_DECREF(obj_data);Py_DECREF(obj_shape);
+        throw std::runtime_error("ERROR 2");
       }
 
       PyObject *obj_nrows = PyTuple_GET_ITEM(obj_shape,0);

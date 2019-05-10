@@ -60,7 +60,7 @@ namespace svrg {
 
 // template <typename DAO>
 // void log_history(DAO & dao, size_t epoch){
-//   if constexpr(std::is_same<typename DAO::HISTORY, statick::solver::History<T>>::value) {
+//   if constexpr(std::is_same<typename DAO::HISTORY, statick::solver::History<T, TOL>>::value) {
 //     dao.history += epoch_size;
 //     if ((dao.last_record_epoch + epoch) == 1 ||
 //         ((dao.last_record_epoch + epoch) % record_every == 0)) {

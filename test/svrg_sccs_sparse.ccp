@@ -1,22 +1,7 @@
-#include "kul/log.hpp"
-
-#include <chrono>
-#include <random>
-#include <vector>
-#include <fstream>
-#include <iostream>
-#include "cereal/archives/portable_binary.hpp"
-#include "statick/array.hpp"
+#include "ipp.ipp"
+#include "statick/base_model/dao/model_lipschitz.hpp"
 #include "statick/survival/model_sccs.hpp"
-#include "statick/prox/prox_l2.hpp"
-#include "statick/prox/prox_l2sq.hpp"
-#include "statick/prox/prox_tv.hpp"
 #include "statick/solver/svrg.hpp"
-
-#define NOW                                                \
-  std::chrono::duration_cast<std::chrono::milliseconds>(   \
-      std::chrono::system_clock::now().time_since_epoch()) \
-      .count()
 
 constexpr bool INTERCEPT = false;
 constexpr size_t N_SAMPLES = 50, N_FEATURES = 20, N_PERIODS = 10, N_ITER = 10, SEED = 1933;
