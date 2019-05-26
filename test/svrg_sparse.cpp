@@ -18,9 +18,9 @@ int main() {
   const size_t n_samples = modao.n_samples(); // is used in "random_seq.ipp"
 #include "random_seq.ipp"
   const auto STRENGTH = (1. / n_samples) + 1e-10;
-  DAO dao(modao, N_ITER, n_samples, THREADS); PROX prox(STRENGTH);auto start = NOW;
+  DAO dao(modao, N_ITER, n_samples, THREADS); PROX prox(STRENGTH); auto start = NOW;
+  dao.history.tol.val = 1e-5;
   statick::svrg::sparse::solve<MODEL>(dao, modao, prox, next_i);
-  auto finish = NOW;
-  std::cout << (finish - start) / 1e3 << std::endl;
+  std::cout << (NOW - start) / 1e3 << std::endl;
   return 0;
 }

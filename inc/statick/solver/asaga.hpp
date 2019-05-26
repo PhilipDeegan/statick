@@ -7,18 +7,16 @@
 namespace statick {
 namespace asaga {
 
-template <typename MODAO, typename HISTOIR, bool INTERCEPT = false,
-          typename T = typename MODAO::value_type>
+template <typename MODAO, typename HISTOIR = statick::solver::NoHistory,
+          bool INTERCEPT = false, typename T = typename MODAO::value_type>
 class DAO {
  public:
   using HISTORY = HISTOIR;
   DAO(MODAO &modao, size_t _n_epochs, size_t _epoch_size, size_t _threads)
-      : n_epochs(_n_epochs),
-        epoch_size(_epoch_size), n_threads(_threads),
+      : n_epochs(_n_epochs), epoch_size(_epoch_size), n_threads(_threads),
         iterate(modao.n_features() + static_cast<size_t>(INTERCEPT)),
         steps_corrections(statick::saga::sparse::compute_step_corrections(modao.features())),
-        gradients_average(modao.n_features()),
-        gradients_memory(modao.n_samples()) {
+        gradients_average(modao.n_features()), gradients_memory(modao.n_samples()) {
     for (size_t i = 0; i < modao.n_samples(); i++) gradients_memory[i].store(0);
     for (size_t i = 0; i < modao.n_features(); i++) gradients_average[i].store(0);
   }
@@ -109,11 +107,10 @@ void threaded_solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox, NEXT_I _ne
 template <typename MODEL, bool INTERCEPT = false, typename PROX, typename NEXT_I, typename DAO>
 void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox, NEXT_I _next_i) {
   using T = typename MODEL::value_type;
-  auto n_threads = dao.n_threads;
   auto &history = dao.history;
   history.init(dao.n_epochs / history.record_every + 1, dao.iterate.size());
   std::vector<std::thread> threads;
-  for (size_t i = 1; i < n_threads; i++) {
+  for (size_t i = 1; i < dao.n_threads; i++) {
     threads.emplace_back(
       [&](size_t n_thread) {
         threaded_solve<MODEL, INTERCEPT>(dao, modao, prox, _next_i, n_thread);

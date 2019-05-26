@@ -32,8 +32,7 @@ int main() {
     solve<statick::TModelSCCS<double>>(dao, call, iterate.data(), next_i, t, 4, N_SAMPLES);
     if (j % 10 == 0) objs.emplace_back(statick::TModelSCCS<double>::loss(dao, iterate.data()));
   }
-  auto finish = NOW;
   for (auto &o : objs) std::cout << __LINE__ << " " << o << std::endl;
-  std::cout << (finish - start) / 1e3 << std::endl;
+  std::cout << (NOW - start) / 1e3 << std::endl;
   return 0;
 }

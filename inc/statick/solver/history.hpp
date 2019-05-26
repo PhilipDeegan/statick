@@ -69,11 +69,11 @@ class History {
   History &operator=(const History &&that) = delete;
 };
 
-template <typename T>
 class NoHistory {
  public:
   NoHistory &save_history() { return *this; }
   void init(size_t, size_t){}
+  template <typename T>
   void set_f_objective(std::function<T(T*, size_t)> &){}
 };
 }  // namespace solver

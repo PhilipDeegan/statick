@@ -15,15 +15,16 @@ int main() {
   MODAO modao(FEATURES::FROM_CEREAL(features_s), LABELS::FROM_CEREAL(labels_s));
   const size_t n_samples = modao.n_samples(), n_features = modao.n_features();
 #include "random_seq.ipp"
-  const double STRENGTH = (1. / modao.n_samples()) + 1e-10;
+  const T STRENGTH = (1. / modao.n_samples()) + 1e-10;
   DAO dao(modao, N_ITER, n_samples, THREADS); PROX prox(STRENGTH);
   std::function<T(T*, size_t)> objectife = [&](T* iterate, size_t size){
     return statick::logreg::loss(modao.features(), modao.labels().data(), iterate)
               + statick::prox_l2sq::value(iterate, size, STRENGTH);;
   };
-  dao.history.set_f_objective(objectife);
+  dao.history.tol.val = 1e-5;
+  dao.history.f_objective = objectife;
   statick::asaga::sparse::solve<MODEL>(dao, modao, prox, next_i);
-  std::vector<double> &objs(dao.history.objectives);
+  std::vector<T> &objs(dao.history.objectives);
   auto min_objective = *std::min_element(std::begin(objs), std::end(objs));
   auto history = dao.history.time_history;
   auto record_every = dao.history.record_every;

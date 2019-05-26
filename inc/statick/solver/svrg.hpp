@@ -55,25 +55,4 @@ void prepare_solve(DAO &dao, typename MODEL::DAO &modao, size_t &t, NEXT_I fn_ne
 #include "statick/solver/svrg/dense.hpp"
 #include "statick/solver/svrg/sparse.hpp"
 
-namespace statick {
-namespace svrg {
-
-// template <typename DAO>
-// void log_history(DAO & dao, size_t epoch){
-//   if constexpr(std::is_same<typename DAO::HISTORY, statick::solver::History<T, TOL>>::value) {
-//     dao.history += epoch_size;
-//     if ((dao.last_record_epoch + epoch) == 1 ||
-//         ((dao.last_record_epoch + epoch) % record_every == 0)) {
-//       auto end = std::chrono::steady_clock::now();
-//       double time = ((end - start).count()) * std::chrono::steady_clock::period::num /
-//                     static_cast<double>(std::chrono::steady_clock::period::den);
-//       history.save_history(time, epoch, iterate, n_features);
-//     }
-//   }
-// }
-
-
-}  // namespace svrg
-}  // namespace statick
-
 #endif  // STATICK_SOLVER_SVRG_HPP_

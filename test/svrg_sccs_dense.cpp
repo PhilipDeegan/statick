@@ -29,8 +29,7 @@ int main() {
   const double STRENGTH = (1. / N_SAMPLES) + 1e-10;
   DAO dao(madao, N_ITER, N_SAMPLES, N_THREADS); PROX prox(STRENGTH); auto start = NOW;
   statick::svrg::dense::solve<MODEL>(dao, madao, prox, next_i);
-  auto finish = NOW;
-  std::cout << (finish - start) / 1e3 << std::endl;
+  std::cout << (NOW - start) / 1e3 << std::endl;
   kul::File tick_interop("sccs.cereal");
   if(tick_interop) statick::sccs::load_from<T>(tick_interop.real());
   return 0;

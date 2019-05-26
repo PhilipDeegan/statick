@@ -41,7 +41,7 @@ class TModelSCCS {
     T sum_exp = sumExpMinusMax(inner_prod.data(), inner_prod.size(), x_max);
     T multiplier = 0;  // need a double instead of long double for mult_incr
     for (size_t t = 0; t < max_interval; t++) {
-      multiplier = exp(inner_prod[t] - x_max) / sum_exp;  // overflow-proof
+      multiplier = exp(inner_prod[t] - x_max) / sum_exp;
       mult_incr(buffer.data(), get_longitudinal_features(dao, i, t), multiplier, buffer.size());
     }
     T label = 0;
@@ -66,9 +66,8 @@ class TModelSCCS {
   }
 
   static T loss(DAO &dao, const T *coeffs) {
-    T loss = 0;
+    T loss{0};
     for (size_t i = 0; i < dao.n_samples(); ++i) loss += loss_i(dao, coeffs, i);
-
     return loss / dao.n_samples();
   }
 

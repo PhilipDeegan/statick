@@ -56,7 +56,6 @@ using DAO = logreg::DAO<std::shared_ptr<FEATURES>,
 }  // namespace sparse
 }  // namespace logreg
 
-
 template <typename MODAO>
 class TModelLogReg {
  public:

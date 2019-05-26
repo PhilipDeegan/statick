@@ -23,7 +23,7 @@ int main() {
           statick::logreg::loss(modao.features(), modao.labels().data(), dao.iterate.data()));
   }
   auto finish = NOW;
+  std::cout << (NOW - start) / 1e3 << std::endl;
   for (auto &o : objs) std::cout << __LINE__ << " " << o << std::endl;
-  std::cout << (finish - start) / 1e3 << std::endl;
   return 0;
 }

@@ -62,7 +62,6 @@ class DAO {
     ar(cereal::make_nvp("ModelSCCS", *this->dao_lip.get()));
     ar(vars[1], vars[4], vars[2], vars[3], vars[0]);
     ar(n_lags, col_offset);
-    // this->labels = std::make_shared<std::vector<Array<int32_t>>>();
     for(size_t i = 0; i < vars[1]; i++)
       ar(*labels.emplace_back(std::make_shared<Array<int32_t>>()));
     for(size_t i = 0; i < vars[1]; i++)
