@@ -7,7 +7,7 @@
 #include "numpy/npy_math.h"
 #include "cereal/archives/portable_binary.hpp"
 #include "statick/array.hpp"
-#include "numpy.h"
+#include "statick/pybind/numpy.hpp"
 
 namespace py = pybind11;
 
@@ -62,7 +62,8 @@ std::tuple<std::vector<int>&, std::vector<int>&> take_tuple_vector(std::tuple<st
   return std::move(vt); // need to return or vt doesn't change
 }
 
-PYBIND11_MODULE(example, m) {
+namespace statick{
+PYBIND11_MODULE(statick, m) {
   m.def("make_array", &make_array, py::return_value_policy::move);
   m.def("add_arrays", &add_arrays, "Adding two numpy arrays");
   m.def("take_sparse2d", &take_sparse2d, "take_sparse2d");
@@ -72,4 +73,4 @@ PYBIND11_MODULE(example, m) {
   m.def("save_double_sparse2d", &save_double_sparse2d, "save_double_sparse2d");
   m.def("save_double_array", &save_double_array, "save_double_array");
 }
-
+}

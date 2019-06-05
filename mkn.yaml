@@ -22,12 +22,12 @@ profile:
     link:
       delete: -Wl,-stack_size,1000000
 
-- name: example
-  mode: none
-  install: .
+- name: statick.py
   parent: base
-  out: example
-  src: example.cpp
+  install: statick/bin
+  out: statick
+  src: src/pybind/statick.cpp
+  mode: none
   mod:
   - name: lang.pybind11
   test: example.py

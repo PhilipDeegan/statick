@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-import example
+import statick
 import numpy as np
 from scipy.sparse import csr_matrix, random
 from scipy.stats import rv_continuous
@@ -15,12 +15,12 @@ d1 = csr_matrix(
      np.array([0, 5])), shape=(1, 12))
 
 print(d1)
-example.take_sparse2d(d1)
+statick.take_sparse2d(d1)
 print(d1)
 
-v = example.make_vector()
+v = statick.make_vector()
 print(v)
 
-vt = example.make_tuple_vector()
+vt = statick.make_tuple_vector()
 print(vt)
-print(example.take_tuple_vector(vt))
+print(statick.take_tuple_vector(vt))

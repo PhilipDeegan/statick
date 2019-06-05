@@ -6,7 +6,6 @@ bin
 *.dll
 *.so
 *.pyd
-__init__.py
 __pycache__
 tick
 get_data.py

@@ -1,0 +1,2 @@
+from .bin.statick import *
+
