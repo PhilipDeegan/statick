@@ -9,29 +9,21 @@ constexpr size_t N_THREADS = 1;
 int main() {
   using T        = double;
   using HISTORY  = statick::solver::History<T, statick::solver::Tolerance<T>>;
-  using FEATURES = statick::Array2D<T>;
+  using FEATURES = statick::Sparse2D<T>;
   using LABELS   = statick::Array<int32_t>;
   using PROX     = statick::ProxL2Sq<T>;
-  using MODAO    = statick::sccs::DAO<typename FEATURES::value_type>;
+  using MODAO    = statick::sccs::DAO<typename FEATURES::value_type, FEATURES>;
   using MODEL    = statick::TModelSCCS<MODAO>;
   using DAO      = statick::svrg::dense::DAO<MODAO, HISTORY>;
-  std::vector<std::shared_ptr<statick::Array2D<T>>> features(N_SAMPLES);
-  std::vector<std::shared_ptr<statick::Array<int32_t>>>  labels(N_SAMPLES);
-  for (size_t i = 0; i < N_SAMPLES; ++i)
-    features[i] = FEATURES::RANDOM(N_PERIODS, N_FEATURES, SEED);
-  for (size_t i = 0; i < N_SAMPLES; ++i) {
-    labels[i] = LABELS::RANDOM(N_PERIODS, SEED);
-    for (size_t j = 0; j < N_PERIODS; ++j) (*labels[i])[j] = (*labels[i])[j] % 2 == 0 ? 1 : 0;
-  }
-  MODAO madao(features, labels);
+  kul::File tick_interop("sccs.cereal");
+  std::shared_ptr<MODAO> pmadao = statick::sccs::load_from<MODAO>(tick_interop.real());
+  auto &madao = *pmadao.get();
   const size_t n_samples = madao.n_samples();
 #include "random_seq.ipp"
   const double STRENGTH = (1. / N_SAMPLES) + 1e-10;
   DAO dao(madao, N_ITER, N_SAMPLES, N_THREADS); PROX prox(STRENGTH); auto start = NOW;
+  MODEL::compute_lip_consts(madao, 8);
   dao.step = MODEL::lip_max(madao);
-  statick::svrg::dense::solve<MODEL>(dao, madao, prox, next_i);
-  std::cout << (NOW - start) / 1e3 << std::endl;
-  kul::File tick_interop("sccs.cereal");
-  if(tick_interop) statick::sccs::load_from<T>(tick_interop.real());
+  KLOG(INF) << dao.step;
   return 0;
 }

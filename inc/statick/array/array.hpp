@@ -40,22 +40,29 @@ bool load_array_with_raw_data(Archive &ar, std::vector<T> &data) {
   return true;
 }
 
+template <typename T> class RawArray;
+
 template <typename T>
 class Array {
  public:
   using value_type = T;
+  using real_type  = Array<T>;
+  using raw_type   = RawArray<T>;
+  static constexpr bool is_sparse = 0;
+
   Array(size_t size = 0) : m_data(size) {}
   Array(Array &&that) : m_data(that.m_data) {}
 
   const T *data() const { return m_data.data(); }
   size_t size() const { return m_data.size(); }
+  bool empty() const { return !m_data.size(); }
+  void resize(size_t s) { m_data.resize(s);}
+  void resize(size_t s, T val) { m_data.resize(s, val);}
   T &operator[](size_t i) { return m_data[i]; }
-
 
   static std::shared_ptr<Array<T>> FROM_CEREAL(const std::string &file) {
     auto array = std::make_shared<Array<T>>();
-    {
-      std::ifstream bin_data(file, std::ios::in | std::ios::binary);
+    { std::ifstream bin_data(file, std::ios::in | std::ios::binary);
       cereal::PortableBinaryInputArchive iarchive(bin_data);
       if (statick::load_array_with_raw_data(iarchive, array->m_data)) return std::move(array);
     }
@@ -65,9 +72,8 @@ class Array {
   static std::shared_ptr<Array<T>> RANDOM(size_t size, T seed = -1) {
     auto arr = std::make_shared<Array<T>>(size);
     std::mt19937_64 generator;
-    if(seed > 0)
-      generator = std::mt19937_64(seed);
-    else{
+    if(seed > 0) generator = std::mt19937_64(seed);
+    else {
       std::random_device r;
       std::seed_seq seed_seq{r(), r(), r(), r(), r(), r(), r(), r()};
       generator = std::mt19937_64(seed_seq);
@@ -126,13 +132,27 @@ class Array {
 template <typename T>
 class RawArray {
  public:
+  using value_type = T;
+  using real_type  = Array<T>;
+  using raw_type   = RawArray<T>;
+  static constexpr bool is_sparse =  0;
+
+  RawArray(){}
   RawArray(const std::vector<T> &_data) : _size(_data.size()), v_data(_data.data()) {}
   RawArray(const T *_data, const size_t _size) : _size(_size), v_data(_data) {}
   RawArray(RawArray &&that) : _size(that._size), v_data(that.v_data) {}
+  RawArray &operator=(const RawArray &&that) {
+    if(&that != this){
+      const_cast<size_t&>(this->_size) =  that._size;
+      this->v_data =  that.v_data;
+    }
+    return *this;
+  };
 
   const T *data() const { return v_data; }
   const size_t &size() const { return _size; }
-  const T &operator[](int i) const { return v_data[i]; }
+  T &operator[](size_t i) const { return v_data[i]; }
+  T value(size_t i) const { return v_data[i]; }
 
   template <typename K>
   void operator*=(const K a) { kul::math::scale(_size, a, v_data); }
@@ -159,16 +179,14 @@ class RawArray {
   }
 
  private:
-  const size_t _size;
-  const T *v_data;
-  RawArray() = delete;
+  const size_t _size = 0;
+  const T *v_data = nullptr;
   RawArray(RawArray &that) = delete;
   RawArray(const RawArray &that) = delete;
   RawArray(const RawArray &&that) = delete;
   RawArray &operator=(RawArray &that) = delete;
   RawArray &operator=(RawArray &&that) = delete;
   RawArray &operator=(const RawArray &that) = delete;
-  RawArray &operator=(const RawArray &&that) = delete;
 };
 
 template <class Archive, class T>

@@ -5,13 +5,17 @@
 
 namespace statick {
 namespace sccs {
+class Exception : public kul::Exception {
+ public:
+  Exception(const char *f, const size_t &l, const std::string &s) : kul::Exception(f, l, s) {}
+};
 
-template <typename T>
+template <typename T, typename F_T = statick::Array2D<T>, typename L_T = statick::Array<int32_t>>
 class DAO {
  public:
   using value_type = T;
-  using FEATURES = std::vector<std::shared_ptr<statick::Array2D<T>>>;
-  using LABELS = std::vector<std::shared_ptr<statick::Array<int32_t>>>;
+  using T_F = F_T; using FEATURES = std::vector<std::shared_ptr<T_F>>;
+  using T_L = L_T; using LABELS   = std::vector<std::shared_ptr<T_L>>;
   DAO(){}
   DAO(FEATURES &_features, LABELS &_labels) : features(_features), labels(_labels){
     censoring.m_data = std::vector<size_t>(_features.size(), 1);
@@ -48,7 +52,7 @@ class DAO {
   statick::Array<size_t> col_offset, n_lags, censoring;
   FEATURES features;
   LABELS labels;
-  std::shared_ptr<model::lipschitz::DAO<T>> dao_lip;
+  model::lipschitz::DAO<T> lip_dao;
 
   inline const auto &n_intervals() const { return vars[0]; }
   inline const auto &n_samples() const { return vars[1]; }
@@ -58,21 +62,30 @@ class DAO {
 
   template <class Archive>
   void load(Archive &ar) {
-    if(!this->dao_lip) this->dao_lip = std::make_shared<model::lipschitz::DAO<T>>();
-    ar(cereal::make_nvp("ModelSCCS", *this->dao_lip.get()));
+    this->lip_dao.serialize(ar);
+    bool sparse_features = 1;
+    ar(sparse_features);
+    if constexpr (T_F::is_sparse){
+      if(!sparse_features) KEXCEPTION("Found dense features when expected sparse");
+    }
+    else  //    !T_F::is_sparse)
+      if( sparse_features) KEXCEPTION("Found sparse features when expected dense");
+
     ar(vars[1], vars[4], vars[2], vars[3], vars[0]);
     ar(n_lags, col_offset);
     for(size_t i = 0; i < vars[1]; i++)
-      ar(*labels.emplace_back(std::make_shared<Array<int32_t>>()));
+      ar(*labels.emplace_back(std::make_shared<L_T>()));
     for(size_t i = 0; i < vars[1]; i++)
-      ar(*features.emplace_back(std::make_shared<Array2D<T>>()));
+      ar(*features.emplace_back(std::make_shared<T_F>()));
     ar(cereal::make_nvp("censoring", this->censoring));
   }
 
   template <class Archive>
   void save(Archive &ar) const {
-    if(!this->dao_lip) this->dao_lip = std::make_shared<model::lipschitz::DAO<T>>();
-    ar(cereal::make_nvp("ModelSCCS", *this->dao_lip.get()));
+    this->lip_dao.serialize(ar);
+    bool sparse_features = 0;
+    if constexpr (T_F::is_sparse) sparse_features = true;
+    ar(sparse_features);
     ar(vars[1], vars[4], vars[2], vars[3], vars[0], n_lags, col_offset);
     for(auto &l : labels) ar(*l);
     for(auto &f : features) ar(*f);
@@ -80,11 +93,11 @@ class DAO {
   }
 };
 
-template <class T>
-std::shared_ptr<DAO<T>> load_from(std::string file){
+template <class MODAO>
+std::shared_ptr<MODAO> load_from(std::string file){
   std::ifstream bin_data(file, std::ios::in | std::ios::binary);
   cereal::PortableBinaryInputArchive ar(bin_data);
-  auto dao = std::make_shared<DAO<T>>();
+  auto dao = std::make_shared<MODAO>();
   ar(*dao.get());
   return dao;
 }

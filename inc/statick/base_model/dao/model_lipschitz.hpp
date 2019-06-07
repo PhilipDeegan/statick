@@ -29,6 +29,10 @@ class DAO {
   bool b_vars[3]{false};
   T t_vars[2]{0};
   statick::Array<T> lip_consts;
+
+  size_t size_of() const {
+    return (sizeof(T) * 2) + 24 + lip_consts.size();
+  }
 };
 
 template <class ARCHIVE, class T>

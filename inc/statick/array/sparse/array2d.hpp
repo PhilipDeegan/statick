@@ -2,6 +2,29 @@
 #define STATICK_ARRAY_SPARSE_ARRAY2D_HPP_
 
 namespace statick {
+namespace sparse_2d {
+  // Non-atomic data, BinaryInputArchive
+template <typename T, class Archive, typename S2D>
+void inner_save(Archive &ar, const S2D &s2d) {
+  ar(cereal::binary_data(s2d.data(), sizeof(T) * s2d.size()));
+  ar(cereal::binary_data(s2d.indices(), sizeof(INDICE_TYPE) * s2d.size()));
+  ar(cereal::binary_data(s2d.row_indices(), sizeof(INDICE_TYPE) * (s2d.rows() + 1)));
+}
+template <class Archive, class S2D>
+void save(Archive &ar, const S2D &s2d) {
+  ar(s2d.size());
+  ar(s2d.rows());
+  ar(s2d.cols());
+  ar(s2d.cols() * s2d.rows());
+  inner_save<typename S2D::value_type>(ar,s2d);
+}
+template <class S2D>
+void save(const S2D &s2d, const std::string &_file) {
+  std::ofstream ss(_file, std::ios::out | std::ios::binary);
+  cereal::PortableBinaryOutputArchive ar(ss);
+  ar(s2d);
+}
+}
 
 template <class Archive, class T>
 bool load_sparse2d_with_presized_data(Archive &ar, std::vector<T> &data, std::vector<size_t> &info,
@@ -37,10 +60,17 @@ bool load_sparse2d_with_raw_data(Archive &ar, std::vector<T> &data, std::vector<
   return true;
 }
 
+template <class T> class RawSparse2D;
+
 template <class T>
 class Sparse2D {
  public:
   using value_type = T;
+  using real_type  = Sparse2D<T>;
+  using raw_type   = RawSparse2D<T>;
+  using raw1d_type = Sparse<T>;
+  static constexpr bool is_sparse =  1;
+
   Sparse2D() {}
   Sparse2D(Sparse2D &&that)
       : m_data(that.m_data),
@@ -75,6 +105,11 @@ class Sparse2D {
     }
     return nullptr;
   }
+
+  template <class Archive> void load(Archive &ar) {
+    load_sparse2d_with_raw_data(ar, m_data, m_info, m_indices, m_row_indices);
+  }
+  template <class Archive> void save(Archive &ar) const { sparse_2d::save<T>(ar, *this); }
 
   // static std::shared_ptr<Sparse2D<T>> RANDOM(size_t rows, size_t cols, T density, T seed = -1) {
   //   if(density < 0 || density > 1) std::runtime_error("NO");
@@ -115,6 +150,11 @@ template <class T>
 class RawSparse2D {
  public:
   using value_type = T;
+  using real_type  = Sparse2D<T>;
+  using raw_type   = RawSparse2D<T>;
+  using raw1d_type = Sparse<T>;
+  static constexpr bool is_sparse =  1;
+
   RawSparse2D(T * const _data, const size_t *_info, const INDICE_TYPE *_indices,
               const INDICE_TYPE *_row_indices)
       : v_data(_data), m_cols(&_info[0]), m_rows(&_info[1]), m_size(&_info[2]),
@@ -175,9 +215,7 @@ bool load_sparse2dlist_with_raw_data(Archive &ar, std::vector<T> &data, std::vec
   ar(cereal::binary_data(s_indices, sizeof(INDICE_TYPE) * size_sparse));
   ar(cereal::binary_data(s_row_indices, sizeof(INDICE_TYPE) * (rows + 1)));
 
-  s_info[0] = cols;
-  s_info[1] = rows;
-  s_info[2] = size_sparse;
+  s_info[0] = cols; s_info[1] = rows; s_info[2] = size_sparse;
   s_info[3] = data.size() - size_sparse;
   s_info[4] = row_indices.size() - (rows + 1);
   return true;
@@ -190,8 +228,8 @@ class Sparse2DList {
   static bool FROM_FILE(Sparse2DList &list, const std::string &&file) {
     std::ifstream bin_data(file, std::ios::in | std::ios::binary);
     cereal::PortableBinaryInputArchive iarchive(bin_data);
-    return statick::load_sparse2dlist_with_raw_data(iarchive, list.m_data, list.m_info, list.m_indices,
-                                                 list.m_row_indices);
+    return statick::load_sparse2dlist_with_raw_data(
+      iarchive, list.m_data, list.m_info, list.m_indices, list.m_row_indices);
   }
 
  public:
@@ -281,24 +319,7 @@ namespace sparse_2d {
 //   ar(cereal::binary_data(s2d.row_indices(), sizeof(INDICE_TYPE) * (info[1] + 1)));
 // }
 
-// Non-atomic data, BinaryInputArchive
-template <typename T, class Archive, typename S2D>
-void inner_save(Archive &ar, const S2D &s2d) {
-  ar(cereal::binary_data(s2d.data(), sizeof(T) * s2d.size()));
-  ar(cereal::binary_data(s2d.indices(), sizeof(INDICE_TYPE) * s2d.size()));
-  ar(cereal::binary_data(s2d.row_indices(), sizeof(INDICE_TYPE) * (s2d.rows() + 1)));
-}
 
-template <class S2D>
-void save(const S2D &s2d, const std::string &_file) {
-  std::ofstream ss(_file, std::ios::out | std::ios::binary);
-  cereal::PortableBinaryOutputArchive ar(ss);
-  ar(s2d.size());
-  ar(s2d.rows());
-  ar(s2d.cols());
-  ar(s2d.cols() * s2d.rows());
-  inner_save<typename S2D::value_type>(ar,s2d);
-}
 
 }  // namespace sparse
 }  // namespace statick

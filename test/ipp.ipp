@@ -4,6 +4,7 @@
 #include <vector>
 #include <fstream>
 #include "cereal/archives/portable_binary.hpp"
+#include "cereal/types/vector.hpp"
 #include "kul/cpu.hpp"
 #include "statick/array.hpp"
 #include "statick/linear_model/model_logreg.hpp"

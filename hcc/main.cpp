@@ -10,6 +10,7 @@
 #include "kul/signal.hpp"
 
 #include "cereal/archives/portable_binary.hpp"
+#include "cereal/types/vector.hpp"
 
 #include "array.hpp"
 #include "log_reg.hpp"

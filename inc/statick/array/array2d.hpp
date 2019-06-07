@@ -40,10 +40,17 @@ bool load_array2d_with_raw_data(Archive &ar, std::vector<T> &data, std::vector<s
   return true;
 }
 
+template <typename T> class RawArray2D;
+
 template <typename T>
 class Array2D {
  public:
   using value_type = T;
+  using real_type  = Array2D<T>;
+  using raw_type   = RawArray2D<T>;
+  using raw1d_type = RawArray<T>;
+  static constexpr bool is_sparse =  0;
+
   Array2D() {}
   Array2D(size_t rows, size_t cols) : m_data(rows * cols), m_info(3) {
     m_info[0] = cols;
@@ -107,6 +114,11 @@ template <typename T>
 class RawArray2D {
  public:
   using value_type = T;
+  using real_type  = Array2D<T>;
+  using raw_type   = RawArray2D<T>;
+  using raw1d_type = RawArray<T>;
+  static constexpr bool is_sparse =  0;
+
   RawArray2D(const T *_data, const size_t *_info)
       : v_data(_data), m_cols(&_info[0]), m_rows(&_info[1]), m_size(&_info[2]) {}
   RawArray2D(RawArray2D &&that)
