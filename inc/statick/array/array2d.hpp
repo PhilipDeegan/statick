@@ -40,6 +40,7 @@ bool load_array2d_with_raw_data(Archive &ar, std::vector<T> &data, std::vector<s
   return true;
 }
 
+template <class T>    class Sparse2D;
 template <typename T> class RawArray2D;
 
 template <typename T>
@@ -98,6 +99,8 @@ class Array2D {
   template <class Archive> void load(Archive &ar) { load_array2d_with_raw_data(ar, m_data, m_info); }
   template <class Archive> void save(Archive &ar) const { dense_2d::save<T>(ar, *this); }
 
+  Sparse2D<T> toSparse2D();
+
   std::vector<T> m_data;
   std::vector<size_t> m_info;
  private:
@@ -132,6 +135,8 @@ class RawArray2D {
   const size_t &cols() const { return *m_cols; }
   const size_t &rows() const { return *m_rows; }
   const size_t &size() const { return *m_size; }
+
+  Sparse2D<T> toSparse2D();
 
  private:
   const T *v_data;

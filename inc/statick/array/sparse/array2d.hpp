@@ -11,7 +11,7 @@ void inner_save(Archive &ar, const S2D &s2d) {
   ar(cereal::binary_data(s2d.row_indices(), sizeof(INDICE_TYPE) * (s2d.rows() + 1)));
 }
 template <class Archive, class S2D>
-void save(Archive &ar, const S2D &s2d) {
+void save_to(Archive &ar, const S2D &s2d) {
   ar(s2d.size());
   ar(s2d.rows());
   ar(s2d.cols());
@@ -22,7 +22,7 @@ template <class S2D>
 void save(const S2D &s2d, const std::string &_file) {
   std::ofstream ss(_file, std::ios::out | std::ios::binary);
   cereal::PortableBinaryOutputArchive ar(ss);
-  ar(s2d);
+  save_to(ar, s2d);
 }
 }
 
@@ -132,11 +132,11 @@ class Sparse2D {
   //   return arr;
   // }
 
- private:
   std::vector<T> m_data;
   std::vector<size_t> m_info;
   std::vector<INDICE_TYPE> m_indices, m_row_indices;
 
+ private:
   Sparse2D(Sparse2D &that) = delete;
   Sparse2D(const Sparse2D &that) = delete;
   Sparse2D(const Sparse2D &&that) = delete;
@@ -176,14 +176,15 @@ class RawSparse2D {
                      v_indices + v_row_indices[i]);
   }
 
-  const size_t &cols() const { return *m_cols; } const size_t &rows() const { return *m_rows; }
+  const size_t &cols() const { return *m_cols; }
+  const size_t &rows() const { return *m_rows; }
   const size_t &size() const { return *m_size; }
 
- private:
   T *v_data;
   const size_t *m_cols, *m_rows, *m_size;
   const INDICE_TYPE *v_indices, *v_row_indices;
 
+ private:
   RawSparse2D() = delete;
   RawSparse2D(RawSparse2D &that) = delete;
   RawSparse2D(const RawSparse2D &that) = delete;
@@ -308,19 +309,41 @@ class RawSparse2DList {
   RawSparse2DList &operator=(const RawSparse2DList &&that) = delete;
 };
 
-namespace sparse_2d {
-// // Atomic data, BinaryInputArchive
-// template <class Archive, typename T, class S2D, typename Y = T>
-// typename std::enable_if<std::is_same<Y, typename std::atomic<T>::value_type>::value>::value_type
-// inner_save(Archive &ar, const S2D &s2d) {
-//   auto *info = s2d.info();
-//   for (size_t i = 0; i < info[2]; i++) ar(s2d.data()[i].load());
-//   ar(cereal::binary_data(s2d.indices(), sizeof(INDICE_TYPE) * info[2]));
-//   ar(cereal::binary_data(s2d.row_indices(), sizeof(INDICE_TYPE) * (info[1] + 1)));
-// }
+template <typename T, typename A2D/* != is_sparse*/>
+Sparse2D<T> to_sparse2d(const A2D &a2d){
+  constexpr T zero {0};
+  size_t _n_rows = a2d.rows(), _n_cols = a2d.cols(), nnz = 0;
 
+  Sparse2D<T> sparse;
+  auto &data = sparse.m_data;
+  auto &indices = sparse.m_indices;
+  auto &row_indices = sparse.m_row_indices;
+  row_indices.resize(_n_rows + 1);
+  row_indices[0] = 0;
+  for (size_t r = 0; r < _n_rows; r++) {
+    size_t nnz_row = 0;
+    for (size_t c = 0; c < _n_cols; c++) {
+      T val {0};
+      if ((val = a2d.data()[(r * _n_cols) + c]) != zero) {
+        nnz++;
+        nnz_row++;
+        data.push_back(val);
+        indices.push_back(c);
+      }
+    }
+    row_indices[r + 1] = row_indices[r] + nnz_row;
+  }
+  sparse.m_info.resize(3);
+  sparse.m_info[0] = _n_cols;
+  sparse.m_info[1] = _n_rows;
+  sparse.m_info[2] = data.size();
+  return sparse;
+}
+}
 
+template <typename T>
+statick::Sparse2D<T> statick::Array2D<T>::toSparse2D()   { return statick::to_sparse2d<T>(*this); }
+template <typename T>
+statick::Sparse2D<T> statick::RawArray2D<T>::toSparse2D(){ return statick::to_sparse2d<T>(*this); }
 
-}  // namespace sparse
-}  // namespace statick
 #endif  //  TICK_ARRAY_SPARSE_ARRAY2D_HPP_

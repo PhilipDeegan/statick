@@ -15,7 +15,7 @@ class Sparse {
 
   const T *data() const { return v_data; }
   size_t size() const { return _size; }
-  T &operator[](size_t i) const { return v_data[i]; }
+  T operator[](size_t i) const { return v_data[i]; }
   T value(size_t j) const {
     for (size_t i = 0; i < _size; i++) {
       if (indices[i] > j) return 0;
@@ -23,7 +23,6 @@ class Sparse {
     }
     return 0;
   }
-
 
   T dot(const Sparse<T> &that) const {
     T result = 0;

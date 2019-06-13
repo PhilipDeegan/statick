@@ -442,6 +442,7 @@ public:
       auto *data = (T *) PyArray_DATA(obj_data);
       auto *indices = (INDICE_TYPE *) PyArray_DATA(obj_indices);
       auto *row_indices = (INDICE_TYPE *) PyArray_DATA(obj_indptr);
+      std::cout << data[0] << std::endl;
 
       m_data_ptr = std::make_shared<statick::RawSparse2D<T>>(data, _info.data(), indices, row_indices);
     }
