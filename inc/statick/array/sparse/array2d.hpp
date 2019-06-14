@@ -118,7 +118,7 @@ class Sparse2D {
   template <class Archive> void save(Archive &ar) const { sparse_2d::save<T>(ar, *this); }
 
 
-  statick::Array2D<T> toSparse2D() const;
+  statick::Array2D<T> toArray2D() const;
 
   static std::shared_ptr<Sparse2D<T>> RANDOM(size_t rows, size_t cols, T density, T seed = -1) {
     if(density < 0 || density > 1)
@@ -221,7 +221,7 @@ class RawSparse2D {
                      v_indices + v_row_indices[i]);
   }
 
-  statick::Array2D<T> toSparse2D() const;
+  statick::Array2D<T> toArray2D() const;
 
   const size_t &cols() const { return *m_cols; }
   const size_t &rows() const { return *m_rows; }
@@ -409,9 +409,9 @@ statick::Array2D<T> to_array2d(const S2D &s2d){
 }
 
 template <typename T>
-statick::Array2D<T> statick::Sparse2D<T>::toSparse2D()    const { return statick::to_array2d<T>(*this); }
+statick::Array2D<T> statick::Sparse2D<T>::toArray2D()    const { return statick::to_array2d<T>(*this); }
 template <typename T>
-statick::Array2D<T> statick::RawSparse2D<T>::toSparse2D() const { return statick::to_array2d<T>(*this); }
+statick::Array2D<T> statick::RawSparse2D<T>::toArray2D() const { return statick::to_array2d<T>(*this); }
 
 }
 
