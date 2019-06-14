@@ -3,6 +3,7 @@
 #include <random>
 #include <vector>
 #include <fstream>
+#include <algorithm>
 #include "cereal/archives/portable_binary.hpp"
 #include "cereal/types/vector.hpp"
 #include "kul/cpu.hpp"

@@ -68,7 +68,7 @@ void print_sparse(py_csr_double &v){
     std::cout << s_sparse.data()[i] << std::endl;
 }
 
-void compare(py_array_double &dense, py_csr_double &sparse){
+bool compare(py_array_double &dense, py_csr_double &sparse){
   using T = double;
   py::buffer_info dbinfo = dense.request();
   std::vector<size_t> dinfo(3);
@@ -79,12 +79,10 @@ void compare(py_array_double &dense, py_csr_double &sparse){
   auto d_sparse = arr.toSparse2D();
   auto &s_sparse = *sparse.raw();
 
-  for(size_t i = 0; i < d_sparse.m_data.size(); i++) std::cout << d_sparse.m_data[i] << " " << s_sparse.v_data[i] << std::endl;
-  std::cout << ( s_sparse.size() == d_sparse.m_data.size()) << std::endl;
-  std::cout << (std::vector<T>(s_sparse.v_data, s_sparse.v_data + s_sparse.size()) == d_sparse.m_data) << std::endl;
-  std::cout << (std::vector<INDICE_TYPE>(s_sparse.v_indices, s_sparse.v_indices + s_sparse.size()) == d_sparse.m_indices) << std::endl;
-  std::cout << (std::vector<INDICE_TYPE>(s_sparse.v_row_indices, s_sparse.v_row_indices + s_sparse.rows() + 1) == d_sparse.m_row_indices) << std::endl;
-
+  return ( s_sparse.size() == d_sparse.m_data.size()) &&
+         (std::vector<T>(s_sparse.v_data, s_sparse.v_data + s_sparse.size()) == d_sparse.m_data) &&
+         (std::vector<INDICE_TYPE>(s_sparse.v_indices, s_sparse.v_indices + s_sparse.size()) == d_sparse.m_indices) &&
+         (std::vector<INDICE_TYPE>(s_sparse.v_row_indices, s_sparse.v_row_indices + s_sparse.rows() + 1) == d_sparse.m_row_indices);
 }
 
 namespace statick{
