@@ -14,7 +14,7 @@ profile:
   if_link:
     nix: -pthread
   dep: io.cereal mkn.kul lang.pybind11
-  test: test/svrg_sccs.cpp #(\w).cpp
+  test: test/(\w).cpp
   mod:
   - name: lang.python3
     compile:
