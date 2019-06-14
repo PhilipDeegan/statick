@@ -3,7 +3,13 @@
 
 namespace statick {
 namespace sparse_2d {
-  // Non-atomic data, BinaryInputArchive
+
+class Exception : public kul::Exception {
+ public:
+  Exception(const char *f, const size_t &l, const std::string &s) : kul::Exception(f, l, s) {}
+};
+
+// Non-atomic data, BinaryInputArchive
 template <typename T, class Archive, typename S2D>
 void inner_save(Archive &ar, const S2D &s2d) {
   ar(cereal::binary_data(s2d.data(), sizeof(T) * s2d.size()));
@@ -111,26 +117,65 @@ class Sparse2D {
   }
   template <class Archive> void save(Archive &ar) const { sparse_2d::save<T>(ar, *this); }
 
-  // static std::shared_ptr<Sparse2D<T>> RANDOM(size_t rows, size_t cols, T density, T seed = -1) {
-  //   if(density < 0 || density > 1) std::runtime_error("NO");
 
-  //   std::random_device r;
-  //   std::seed_seq seed_seq{r(), r(), r(), r(), r(), r(), r(), r()};
-  //   std::mt19937_64 generator(seed_seq);
-  //   std::uniform_real_distribution<T> uniform_dist;
-  //   std::uniform_int_distribution<size_t>::param_type ind_pick(0, (rows * cols) - 1);
-  //   size_t ind = uniform_dist(generator, ind_pick);
+  statick::Array2D<T> toSparse2D() const;
 
-  //   indices = std::floor(ind * (1. / cols));
-  //   row_indices = (ind - j * m),
+  static std::shared_ptr<Sparse2D<T>> RANDOM(size_t rows, size_t cols, T density, T seed = -1) {
+    if(density < 0 || density > 1)
+      KEXCEPT(sparse_2d::Exception, "Invalid sparse density, must be between 0 and 1");
 
-  //   auto arr = std::make_shared<Sparse2D<T>>();
-  //   size_t size = std::floor(rows * cols * density);
-  //   for (size_t i = 0; i < size; i++) arr->m_data[i] = uniform_dist(generator, ind_pick);
-  //   for (size_t i = 0; i < size; i++) arr->m_indices[i] = uniform_dist(generator);
-  //   for (size_t i = 0; i < rows + 1; i++) arr->m_row_indices[i] = uniform_dist(generator);
-  //   return arr;
-  // }
+    std::mt19937_64 generator;
+    if(seed > 0) generator = std::mt19937_64(seed);
+    else{
+      std::random_device r;
+      std::seed_seq seed_seq{r(), r(), r(), r(), r(), r(), r(), r()};
+      generator = std::mt19937_64(seed_seq);
+    }
+    std::uniform_real_distribution<T> dist;
+
+    auto arr = std::make_shared<Sparse2D<T>>();
+    size_t size = std::floor(rows * cols * density);
+
+    arr->m_data.resize(size);
+    arr->m_indices.resize(size);
+
+    for (size_t i = 0; i < size; i++) arr->m_data[i] = dist(generator);
+
+    size_t nnz = size;
+    std::vector<size_t> nnz_row(rows, 0);
+
+    size_t index = 0;
+    while (nnz > 0) {
+      std::uniform_int_distribution<size_t> dist_int(1, 100);//to do 50 50
+      if (dist_int(generator) > 50) {
+        nnz_row[index]++;
+        nnz--;
+      }
+      index++;
+      if (index >= rows) index = 0;
+    }
+
+    index = 0;
+    for (size_t i : nnz_row) {
+      std::vector<size_t> indice_comb;
+      for (size_t j = 0; j < cols; j++) indice_comb.emplace_back(j);
+      std::random_shuffle(indice_comb.begin(), indice_comb.end());
+      for (size_t j = 0; j < i; j++) {
+        arr->m_indices[index] = indice_comb[j];
+        index++;
+      }
+    }
+
+    if (index != arr->m_indices.size() - 1)
+      std::runtime_error("Uh something is wrong");
+
+    arr->m_row_indices.resize(rows + 1);
+    arr->m_row_indices[0] = 0;
+    for (size_t i = 1; i < rows + 1; i++)
+      arr->m_row_indices[i] = arr->m_row_indices[i - 1] + nnz_row[i - 1];
+
+    return arr;
+  }
 
   std::vector<T> m_data;
   std::vector<size_t> m_info;
@@ -175,6 +220,8 @@ class RawSparse2D {
     return Sparse<T>(v_data + v_row_indices[i], v_row_indices[i + 1] - v_row_indices[i],
                      v_indices + v_row_indices[i]);
   }
+
+  statick::Array2D<T> toSparse2D() const;
 
   const size_t &cols() const { return *m_cols; }
   const size_t &rows() const { return *m_rows; }
@@ -339,11 +386,33 @@ Sparse2D<T> to_sparse2d(const A2D &a2d){
   sparse.m_info[2] = data.size();
   return sparse;
 }
+
+template <typename T>
+statick::Sparse2D<T> statick::Array2D<T>::toSparse2D()    const { return statick::to_sparse2d<T>(*this); }
+template <typename T>
+statick::Sparse2D<T> statick::RawArray2D<T>::toSparse2D() const { return statick::to_sparse2d<T>(*this); }
+
+template <typename T, typename S2D/* == is_sparse*/>
+statick::Array2D<T> to_array2d(const S2D &s2d){
+  size_t rows = s2d.rows(), cols = s2d.cols();
+  auto &data = s2d.m_data;
+  auto &indices = s2d.m_indices;
+  auto &row_indices = s2d.m_row_indices;
+
+  statick::Array2D<T> c(rows, cols);
+  c.m_data.fill(0);
+  auto &c_data = c.m_data.data();
+  for (size_t i = 0; i < rows; i++)
+    for (size_t j = row_indices[i]; j < row_indices[i + 1]; j++)
+      c_data[i * cols + indices[j]] = data[j];
+  return c;
 }
 
 template <typename T>
-statick::Sparse2D<T> statick::Array2D<T>::toSparse2D()   { return statick::to_sparse2d<T>(*this); }
+statick::Array2D<T> statick::Sparse2D<T>::toSparse2D()    const { return statick::to_array2d<T>(*this); }
 template <typename T>
-statick::Sparse2D<T> statick::RawArray2D<T>::toSparse2D(){ return statick::to_sparse2d<T>(*this); }
+statick::Array2D<T> statick::RawSparse2D<T>::toSparse2D() const { return statick::to_array2d<T>(*this); }
+
+}
 
 #endif  //  TICK_ARRAY_SPARSE_ARRAY2D_HPP_

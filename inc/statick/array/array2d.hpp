@@ -3,6 +3,12 @@
 
 namespace statick {
 namespace dense_2d {
+
+class Exception : public kul::Exception {
+ public:
+  Exception(const char *f, const size_t &l, const std::string &s) : kul::Exception(f, l, s) {}
+};
+
 template <class Archive, class A2D>
 void save(Archive &ar, const A2D &a2d) {
   ar(CEREAL_NVP(false));
@@ -60,8 +66,31 @@ class Array2D {
   }
   Array2D(Array2D &&that) : m_data(that.m_data), m_info(that.m_info) {}
 
+  Array2D(const std::vector<std::vector<T>> &data) { allocVector2D_Data(data); }
+
+  Array2D<T>& operator=(const std::vector<std::vector<T>> &data) {
+    allocVector2D_Data(data);
+    return *this;
+  }
+
+  void allocVector2D_Data(const std::vector<std::vector<T>> &data) {
+    if (data.size() == 0){
+      m_data.clear();
+      return;
+    }
+    m_info.resize(3);
+    m_info[0] = data[0].size();
+    for(auto &row : data)
+      if(row.size() != m_info[0])
+        KEXCEPT(dense_2d::Exception, "Invalid data vector, inconsistent column number");
+    m_info[1] = data.size();
+    m_info[2] = m_info[0]  * m_info[1] ;
+    m_data.resize(m_info[2]);
+    for (auto &row  : data) m_data.insert(m_data.end(), row.begin(), row.end());
+  }
+
   const T *data() const { return m_data.data(); }
-  RawArray<T> row(size_t i) const { return RawArray<T>(&m_data[i * m_info[0]], m_info[0]); }
+  RawArray<T> row(size_t i)  const { return RawArray<T>(&m_data[i * m_info[0]], m_info[0]); }
   const T *row_raw(size_t i) const { return &m_data[i * m_info[0]]; }
   const T &operator[](int i) const { return m_data[i]; }
 
@@ -99,7 +128,7 @@ class Array2D {
   template <class Archive> void load(Archive &ar) { load_array2d_with_raw_data(ar, m_data, m_info); }
   template <class Archive> void save(Archive &ar) const { dense_2d::save<T>(ar, *this); }
 
-  Sparse2D<T> toSparse2D();
+  Sparse2D<T> toSparse2D() const;
 
   std::vector<T> m_data;
   std::vector<size_t> m_info;
@@ -136,7 +165,7 @@ class RawArray2D {
   const size_t &rows() const { return *m_rows; }
   const size_t &size() const { return *m_size; }
 
-  Sparse2D<T> toSparse2D();
+  Sparse2D<T> toSparse2D() const;
 
  private:
   const T *v_data;
