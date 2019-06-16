@@ -159,7 +159,7 @@ class Sparse2D {
     for (size_t i : nnz_row) {
       std::vector<size_t> indice_comb;
       for (size_t j = 0; j < cols; j++) indice_comb.emplace_back(j);
-      std::random_shuffle(indice_comb.begin(), indice_comb.end());
+      std::shuffle(indice_comb.begin(), indice_comb.end(), generator);
       for (size_t j = 0; j < i; j++) {
         arr->m_indices[index] = indice_comb[j];
         index++;

@@ -1,9 +1,5 @@
 version: 0.1.{build}
 
-branches:
-  only:
-    - master
-
 max_jobs: 1
 
 image:
