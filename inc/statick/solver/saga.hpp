@@ -114,5 +114,20 @@ void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox, NEXT_I _next_i) {
 
 }  // namespace sparse
 }  // namespace saga
+namespace solver {
+template <typename MODEL, bool INTERCEPT = false>
+class SAGA {
+ public:
+  using DAO = typename std::conditional<MODEL::DAO::FEATURE::is_sparse, statick::saga::sparse::DAO<typename MODEL::DAO, INTERCEPT>, statick::saga::dense::DAO<typename MODEL::DAO, INTERCEPT>>::type;
+
+  template <typename PROX, typename NEXT_I>
+  static inline void SOLVE(DAO &dao, typename MODEL::DAO &modao, PROX &prox, NEXT_I next_i) {
+    if constexpr (MODEL::DAO::FEATURE::is_sparse)
+      statick::saga::sparse::solve<MODEL>(dao, modao, prox, next_i);
+    else
+      statick::saga::dense::solve<MODEL>(dao, modao, prox, next_i);
+  }
+};
+}
 }  // namespace statick
 #endif  // STATICK_SOLVER_SAGA_HPP_

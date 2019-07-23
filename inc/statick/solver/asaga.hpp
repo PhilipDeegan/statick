@@ -122,6 +122,21 @@ void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox, NEXT_I _next_i) {
 
 }  // namespace sparse
 }  // namespace asaga
+namespace solver {
+template <typename MODEL, typename HISTOIR = statick::solver::NoHistory, bool INTERCEPT = false>
+class ASAGA {
+ public:
+  using DAO = typename statick::asaga::DAO<typename MODEL::DAO, HISTOIR, INTERCEPT>;
+
+  template <typename PROX, typename NEXT_I>
+  static inline void SOLVE(DAO &dao, typename MODEL::DAO &modao, PROX &prox, NEXT_I next_i) {
+    if constexpr (MODEL::DAO::FEATURE::is_sparse)
+      statick::asaga::sparse::solve<MODEL>(dao, modao, prox, next_i);
+    else
+      throw std::runtime_error("Only sparse features are support for ASAGA");
+  }
+};
+}
 }  // namespace statick
 
 #endif  // STATICK_SOLVER_ASAGA_HPP_

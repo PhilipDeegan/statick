@@ -24,7 +24,7 @@ int main() {
     for (size_t j = 0; j < N_PERIODS; ++j) (*labels[i])[j] = (*labels[i])[j] % 2 == 0 ? 1 : 0;
   }
   MODAO madao(features, labels);
-  const size_t n_samples = madao.n_samples();
+  const size_t n_samples = madao.n_samples(); // is used in "random_seq.ipp"
 #include "random_seq.ipp"
   const double STRENGTH = (1. / N_SAMPLES) + 1e-10;
   DAO dao(madao, N_ITER, N_SAMPLES, N_THREADS); PROX prox(STRENGTH); auto start = NOW;

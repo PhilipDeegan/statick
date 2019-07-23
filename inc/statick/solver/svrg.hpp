@@ -55,4 +55,23 @@ void prepare_solve(DAO &dao, typename MODEL::DAO &modao, size_t &t, NEXT_I fn_ne
 #include "statick/solver/svrg/dense.hpp"
 #include "statick/solver/svrg/sparse.hpp"
 
+
+namespace statick {
+namespace solver {
+template <typename MODEL, typename _H = statick::solver::NoHistory, bool _I = false>
+class SVRG {
+ public:
+  using DAO = typename std::conditional<MODEL::DAO::FEATURE::is_sparse, statick::svrg::sparse::DAO<typename MODEL::DAO, _H, _I>, statick::svrg::dense::DAO<typename MODEL::DAO, _H, _I>>::type;
+
+  template <typename PROX, typename NEXT_I>
+  static inline void SOLVE(DAO &dao, typename MODEL::DAO &modao, PROX &prox, NEXT_I next_i) {
+    if constexpr (MODEL::DAO::FEATURE::is_sparse)
+      statick::svrg::sparse::solve<MODEL>(dao, modao, prox, next_i);
+    else
+      statick::svrg::dense::solve<MODEL>(dao, modao, prox, next_i);
+  }
+};
+}
+}
+
 #endif  // STATICK_SOLVER_SVRG_HPP_

@@ -7,6 +7,14 @@
 #define INDICE_TYPE std::uint32_t
 #endif
 
+namespace statick {
+template<class T>
+struct is_shared_ptr : std::false_type {};
+
+template<class T>
+struct is_shared_ptr<std::shared_ptr<T>> : std::true_type {};
+}
+
 #include "statick/array/math.hpp"
 #include "statick/array/array.hpp"
 #include "statick/array/array2d.hpp"

@@ -64,5 +64,20 @@ void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox, NEXT_I _next_i) {
 }
 }  // namespace sparse
 }  // namespace sgd
+namespace solver {
+template <typename MODEL, bool INTERCEPT = false>
+class SGD {
+ public:
+  using DAO = typename statick::sgd::DAO<typename MODEL::DAO, INTERCEPT>;
+
+  template <typename PROX, typename NEXT_I>
+  static inline void SOLVE(DAO &dao, typename MODEL::DAO &modao, PROX &prox, NEXT_I next_i) {
+    if constexpr (MODEL::DAO::FEATURE::is_sparse)
+      statick::sgd::sparse::solve<MODEL>(dao, modao, prox, next_i);
+    else
+      statick::sgd::dense::solve<MODEL>(dao, modao, prox, next_i);
+  }
+};
+}
 }  // namespace statick
 #endif  // STATICK_SOLVER_SGD_HPP_

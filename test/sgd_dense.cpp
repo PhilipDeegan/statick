@@ -7,17 +7,16 @@ int main() {
   using FEATURES = statick::Array2D<T>;
   using LABELS   = statick::Array<T>;
   using PROX     = statick::ProxL2Sq<T>;
-  using MODAO    = statick::logreg::dense::DAO<FEATURES, LABELS>;
-  using MODEL    = statick::TModelLogReg<MODAO>;
-  using DAO      = statick::sgd::DAO<MODAO>;
-  MODAO modao(FEATURES::RANDOM(N_SAMPLES, N_FEATURES, SEED),
+  using MODEL    = statick::ModelLogReg<std::shared_ptr<FEATURES>, std::shared_ptr<LABELS>>;
+  using SOLVER   = statick::solver::SGD<MODEL>;
+  MODEL::DAO modao(FEATURES::RANDOM(N_SAMPLES, N_FEATURES, SEED),
               LABELS::RANDOM(N_FEATURES, SEED));
-  const size_t n_samples = modao.n_samples();
+  const size_t n_samples = modao.n_samples();  // is used in "random_seq.ipp"
 #include "random_seq.ipp"
   const T STRENGTH = (1. / n_samples) + 1e-10;
-  DAO dao(modao); PROX prox(STRENGTH); std::vector<T> objs; auto start = NOW;
+  SOLVER::DAO dao(modao); PROX prox(STRENGTH); std::vector<T> objs; auto start = NOW;
   for (size_t j = 0; j < N_ITER; ++j) {
-    statick::sgd::dense::solve<MODEL>(dao, modao, prox, next_i);
+    SOLVER::SOLVE(dao, modao, prox, next_i);
     if (j % 10 == 0)
       objs.emplace_back(
           statick::logreg::loss(modao.features(), modao.labels().data(), dao.iterate.data()));

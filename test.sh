@@ -10,7 +10,7 @@ SB="tick/dataset/download_helper.py";   S2="${R}${SB}";
 ARF="adult.features.cereal"; ARL="adult.labels.cereal"
 URF="url.features.cereal";   URL="url.labels.cereal"
 mkn clean build -dStOp statick.py $XTRA; ls -l .
-mkdir -p tick/dataset; touch __init__.py; touch tick/__init__.py; touch tick/dataset/__init__.py;
+mkdir -p tick/dataset; touch tick/__init__.py; touch tick/dataset/__init__.py;
 [ ! -f "${SA}" ] && curl "${S1}" -Lo ${SA}; [ ! -f "${SB}" ] && curl "${S2}" -Lo ${SB}
 cat > $CWD/${PYGET} << EOL
 import statick
