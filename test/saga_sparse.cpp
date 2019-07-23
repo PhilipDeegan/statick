@@ -9,8 +9,8 @@ int main() {
   using PROX     = statick::ProxL2Sq<T>;
   using MODEL    = statick::ModelLogReg<std::shared_ptr<FEATURES>, std::shared_ptr<LABELS>>;
   using SOLVER   = statick::solver::SAGA<MODEL>;
-  const std::string features_s("url.features.cereal"), labels_s("url.labels.cereal");
-  MODEL::DAO modao(FEATURES::FROM_CEREAL(features_s), LABELS::FROM_CEREAL(labels_s));
+  MODEL::DAO modao(FEATURES::FROM_CEREAL("url.features.cereal"),
+                   LABELS::FROM_CEREAL("url.labels.cereal"));
   const size_t n_samples = modao.n_samples(); // is used in "random_seq.ipp"
 #include "random_seq.ipp"
   const T STRENGTH = (1. / n_samples) + 1e-10;

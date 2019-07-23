@@ -19,7 +19,7 @@ int main() {
   const auto STRENGTH = (1. / n_samples) + 1e-10;
   SOLVER::DAO dao(modao, N_ITER, n_samples, THREADS); PROX prox(STRENGTH); auto start = NOW;
   dao.history.tol.val = 1e-5;
-  statick::svrg::sparse::solve<MODEL>(dao, modao, prox, next_i);
+  SOLVER::SOLVE(dao, modao, prox, next_i);
   std::cout << (NOW - start) / 1e3 << std::endl;
   return 0;
 }

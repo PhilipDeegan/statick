@@ -10,7 +10,7 @@ int main() {
   using MODEL    = statick::ModelLogReg<std::shared_ptr<FEATURES>, std::shared_ptr<LABELS>>;
   using SOLVER   = statick::solver::SAGA<MODEL>;
   MODEL::DAO modao(FEATURES::RANDOM(N_SAMPLES, N_FEATURES, SEED),
-      LABELS::RANDOM(N_FEATURES, SEED));
+                   LABELS::RANDOM(N_FEATURES, SEED));
   const size_t n_samples = modao.n_samples(); // is used in "random_seq.ipp"
 #include "random_seq.ipp"
   const T STRENGTH = (1. / n_samples) + 1e-10;
