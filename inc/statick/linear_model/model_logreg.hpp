@@ -69,7 +69,7 @@ class ModelLogReg {
 
   template <bool INTERCEPT = false, bool FILL = true, class K>
   static T grad_i_factor(DAO &dao, K*coeffs, const size_t i) {
-    return logreg::grad_i_factor<T>(dao.features(), dao.labels().data(), coeffs, i);
+    return logreg::grad_i_factor(dao.features(), dao.labels().data(), coeffs, i);
   }
 
   template <bool INTERCEPT = false, bool FILL = true, class K>
@@ -98,6 +98,10 @@ class ModelLogReg {
       mult_incr(out, buffer.data(), 1, size);
     }
     for (size_t j = 0; j < size; ++j) out[j] /= dao.n_samples();
+  }
+
+  static T LOSS(DAO &dao, T *coeffs) {
+    return logreg::loss(dao.features(), dao.labels().data(), coeffs);
   }
 };
 }  // namespace statick

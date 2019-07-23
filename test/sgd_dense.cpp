@@ -17,9 +17,7 @@ int main() {
   SOLVER::DAO dao(modao); PROX prox(STRENGTH); std::vector<T> objs; auto start = NOW;
   for (size_t j = 0; j < N_ITER; ++j) {
     SOLVER::SOLVE(dao, modao, prox, next_i);
-    if (j % 10 == 0)
-      objs.emplace_back(
-          statick::logreg::loss(modao.features(), modao.labels().data(), dao.iterate.data()));
+    if (j % 10 == 0) objs.emplace_back(MODEL::LOSS(modao, dao.iterate.data()));
   }
   auto finish = NOW;
   std::cout << (NOW - start) / 1e3 << std::endl;
