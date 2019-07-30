@@ -139,35 +139,35 @@ class Sparse2D {
 };
 
 template <class T>
-class Sparse2DRaw {
+class Sparse2DView {
  private:
   using INDEX_TYPE = INDICE_TYPE;
 
  public:
-  Sparse2DRaw(const T *_data, const size_t *_info, const INDEX_TYPE *_indices,
+  Sparse2DView(const T *_data, const size_t *_info, const INDEX_TYPE *_indices,
               const INDEX_TYPE *_row_indices) __CPU__ __HC__ : v_data(_data),
-                                                               m_cols(&_info[0]),
-                                                               m_rows(&_info[1]),
-                                                               m_size(&_info[2]),
+                                                               m_info[0](_info[0]),
+                                                               m_info[1](_info[1]),
+                                                               m_info[2](_info[2]),
                                                                v_indices(_indices),
                                                                v_row_indices(_row_indices) {}
-  Sparse2DRaw(const Sparse2DRaw &that) __CPU__ __HC__ : v_data(that.v_data),
-                                                        m_cols(that.m_cols),
-                                                        m_rows(that.m_rows),
-                                                        m_size(that.m_size),
+  Sparse2DView(const Sparse2DView &that) __CPU__ __HC__ : v_data(that.v_data),
+                                                               m_info[0](_info[0]),
+                                                               m_info[1](_info[1]),
+                                                               m_info[2](_info[2]),
                                                         v_indices(that.v_indices),
                                                         v_row_indices(that.v_row_indices) {}
 
-  Sparse2DRaw(Sparse2DRaw &&that) __CPU__ __HC__ : v_data(that.v_data),
-                                                   m_cols(that.m_cols),
-                                                   m_rows(that.m_rows),
-                                                   m_size(that.m_size),
+  Sparse2DView(Sparse2DView &&that) __CPU__ __HC__ : v_data(that.v_data),
+                                                             m_info[0](_info[0]),
+                                                             m_info[1](_info[1]),
+                                                             m_info[2](_info[2]),
                                                    v_indices(that.v_indices),
                                                    v_row_indices(that.v_row_indices) {}
-  Sparse2DRaw(const Sparse2DRaw &&that) __CPU__ __HC__ : v_data(that.v_data),
-                                                         m_cols(that.m_cols),
-                                                         m_rows(that.m_rows),
-                                                         m_size(that.m_size),
+  Sparse2DView(const Sparse2DView &&that) __CPU__ __HC__ : v_data(that.v_data),
+                                                               m_info[0](_info[0]),
+                                                               m_info[1](_info[1]),
+                                                               m_info[2](_info[2]),
                                                          v_indices(that.v_indices),
                                                          v_row_indices(that.v_row_indices) {}
 
@@ -189,22 +189,22 @@ class Sparse2DRaw {
   const INDEX_TYPE *row_indices() const __CPU__ __HC__ { return v_row_indices; }
   const INDEX_TYPE *indices() const __CPU__ __HC__ { return v_indices; }
 
-  size_t cols() const __CPU__ __HC__ { return *m_cols; }
-  size_t rows() const __CPU__ __HC__ { return *m_rows; }
-  size_t size() const __CPU__ __HC__ { return *m_size; }
+  size_t cols() const __CPU__ __HC__ { return m_info[0]; }
+  size_t rows() const __CPU__ __HC__ { return m_info[1]; }
+  size_t size() const __CPU__ __HC__ { return m_info[2]; }
   const T *data() const __CPU__ __HC__ { return v_data; }
 
  private:
   const T *v_data;
-  const size_t *m_cols, *m_rows, *m_size;
+  const size_t m_info[3];
   const INDEX_TYPE *v_indices, *v_row_indices;
 
-  Sparse2DRaw() = delete;
-  Sparse2DRaw(Sparse2DRaw &that) __CPU__ __HC__ = delete;
-  Sparse2DRaw &operator=(Sparse2DRaw &that) __CPU__ __HC__ = delete;
-  Sparse2DRaw &operator=(Sparse2DRaw &&that) __CPU__ __HC__ = delete;
-  Sparse2DRaw &operator=(const Sparse2DRaw &that) __CPU__ __HC__ = delete;
-  Sparse2DRaw &operator=(const Sparse2DRaw &&that) __CPU__ __HC__ = delete;
+  Sparse2DView() = delete;
+  Sparse2DView(Sparse2DView &that) __CPU__ __HC__ = delete;
+  Sparse2DView &operator=(Sparse2DView &that) __CPU__ __HC__ = delete;
+  Sparse2DView &operator=(Sparse2DView &&that) __CPU__ __HC__ = delete;
+  Sparse2DView &operator=(const Sparse2DView &that) __CPU__ __HC__ = delete;
+  Sparse2DView &operator=(const Sparse2DView &&that) __CPU__ __HC__ = delete;
 };
 
 template <class T>
@@ -243,14 +243,14 @@ class Sparse2DList {
                                                      v_row_indices(that.v_row_indices),
                                                      av_row_indices(that.av_row_indices) {}
 
-  Sparse2DRaw<T> operator[](size_t i) const __HC__ {
-    return Sparse2DRaw<T>(av_data.data() + (av_info[(i * INFO_SIZE) + 3]), &av_info[i * INFO_SIZE],
+  Sparse2DView<T> operator[](size_t i) const __HC__ {
+    return Sparse2DView<T>(av_data.data() + (av_info[(i * INFO_SIZE) + 3]), &av_info[i * INFO_SIZE],
                           av_indices.data() + (av_info[(i * INFO_SIZE) + 3]),
                           av_row_indices.data() + (av_info[(i * INFO_SIZE) + 4]));
   }
 
-  Sparse2DRaw<T> operator[](size_t i) const __CPU__ {
-    return Sparse2DRaw<T>(v_data + (v_info[(i * INFO_SIZE) + 3]), &v_info[i * INFO_SIZE],
+  Sparse2DView<T> operator[](size_t i) const __CPU__ {
+    return Sparse2DView<T>(v_data + (v_info[(i * INFO_SIZE) + 3]), &v_info[i * INFO_SIZE],
                           v_indices + (v_info[(i * INFO_SIZE) + 3]),
                           v_row_indices + (v_info[(i * INFO_SIZE) + 4]));
   }

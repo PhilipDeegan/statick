@@ -34,8 +34,8 @@ void save(const S2D &s2d, const std::string &_file) {
 
 template <class Archive, class T>
 bool load_sparse2d_with_presized_data(Archive &ar, std::vector<T> &data, std::vector<size_t> &info,
-                                 std::vector<INDICE_TYPE> &indices,
-                                 std::vector<INDICE_TYPE> &row_indices) {
+                                      std::vector<INDICE_TYPE> &indices,
+                                      std::vector<INDICE_TYPE> &row_indices) {
   size_t rows, cols, size_sparse, size;
   ar(size_sparse, rows, cols, size);
   ar(cereal::binary_data(data.data(), sizeof(T) * size_sparse));
@@ -66,15 +66,15 @@ bool load_sparse2d_with_raw_data(Archive &ar, std::vector<T> &data, std::vector<
   return true;
 }
 
-template <class T> class RawSparse2D;
+template <class T> class Sparse2DView;
 
 template <class T>
 class Sparse2D {
  public:
   using value_type = T;
   using real_type  = Sparse2D<T>;
-  using raw_type   = RawSparse2D<T>;
-  using raw1d_type = Sparse<T>;
+  using view_type  = Sparse2DView<T>;
+  using view1d_type = Sparse<T>;
   static constexpr bool is_sparse =  1;
 
   Sparse2D() {}
@@ -189,19 +189,19 @@ class Sparse2D {
 };
 
 template <class T>
-class RawSparse2D {
+class Sparse2DView {
  public:
   using value_type = T;
   using real_type  = Sparse2D<T>;
-  using raw_type   = RawSparse2D<T>;
-  using raw1d_type = Sparse<T>;
+  using view_type  = Sparse2DView<T>;
+  using view1d_type = Sparse<T>;
   static constexpr bool is_sparse =  1;
 
-  RawSparse2D(T * const _data, const size_t *_info, const INDICE_TYPE *_indices,
+  Sparse2DView(T * const _data, const size_t *_info, const INDICE_TYPE *_indices,
               const INDICE_TYPE *_row_indices)
       : v_data(_data), m_cols(&_info[0]), m_rows(&_info[1]), m_size(&_info[2]),
         v_indices(_indices), v_row_indices(_row_indices) {}
-  RawSparse2D(RawSparse2D &&that)
+  Sparse2DView(Sparse2DView &&that)
       : v_data(that.v_data), m_cols(that.m_cols), m_rows(that.m_rows), m_size(that.m_size),
         v_indices(that.v_indices), v_row_indices(that.v_row_indices) {}
   T &operator[](int i) { return v_data[i]; }
@@ -229,14 +229,14 @@ class RawSparse2D {
   const INDICE_TYPE *v_indices, *v_row_indices;
 
  private:
-  RawSparse2D() = delete;
-  RawSparse2D(RawSparse2D &that) = delete;
-  RawSparse2D(const RawSparse2D &that) = delete;
-  RawSparse2D(const RawSparse2D &&that) = delete;
-  RawSparse2D &operator=(RawSparse2D &that) = delete;
-  RawSparse2D &operator=(RawSparse2D &&that) = delete;
-  RawSparse2D &operator=(const RawSparse2D &that) = delete;
-  RawSparse2D &operator=(const RawSparse2D &&that) = delete;
+  Sparse2DView() = delete;
+  Sparse2DView(Sparse2DView &that) = delete;
+  Sparse2DView(const Sparse2DView &that) = delete;
+  Sparse2DView(const Sparse2DView &&that) = delete;
+  Sparse2DView &operator=(Sparse2DView &that) = delete;
+  Sparse2DView &operator=(Sparse2DView &&that) = delete;
+  Sparse2DView &operator=(const Sparse2DView &that) = delete;
+  Sparse2DView &operator=(const Sparse2DView &&that) = delete;
 };
 
 template <class Archive, class T>
@@ -279,8 +279,8 @@ class Sparse2DList {
 
  public:
   Sparse2DList() {}
-  RawSparse2D<T> operator[](size_t i) const {
-    return RawSparse2D<T>(m_data.data() + (m_info[(i * INFO_SIZE) + 3]), &m_info[i * INFO_SIZE],
+  Sparse2DView<T> operator[](size_t i) const {
+    return Sparse2DView<T>(m_data.data() + (m_info[(i * INFO_SIZE) + 3]), &m_info[i * INFO_SIZE],
                           m_indices.data() + (m_info[(i * INFO_SIZE) + 3]),
                           m_row_indices.data() + (m_info[(i * INFO_SIZE) + 4]));
   }
@@ -313,23 +313,23 @@ class Sparse2DList {
 };
 
 template <class T>
-class RawSparse2DList {
+class Sparse2DViewList {
  private:
   static constexpr size_t INFO_SIZE = 5;
 
  public:
-  RawSparse2DList(const T *data, const size_t *info, const INDICE_TYPE *_indices,
+  Sparse2DViewList(const T *data, const size_t *info, const INDICE_TYPE *_indices,
                   const INDICE_TYPE *_rows_indices)
       : v_data(data), v_info(info), v_indices(_indices), v_row_indices(_rows_indices) {}
-  RawSparse2DList(std::vector<T> &data, std::vector<size_t> &info,
+  Sparse2DViewList(std::vector<T> &data, std::vector<size_t> &info,
                   std::vector<INDICE_TYPE> &_indices, std::vector<INDICE_TYPE> &_rows_indices)
       : v_data(data.data()),
         v_info(info.data()),
         v_indices(_indices.data()),
         v_row_indices(_rows_indices.data()) {}
 
-  RawSparse2D<T> operator[](size_t i) const {
-    return RawSparse2D<T>(v_data + (v_info[(i * INFO_SIZE) + 3]), &v_info[i * INFO_SIZE],
+  Sparse2DView<T> operator[](size_t i) const {
+    return Sparse2DView<T>(v_data + (v_info[(i * INFO_SIZE) + 3]), &v_info[i * INFO_SIZE],
                           v_indices + (v_info[(i * INFO_SIZE) + 3]),
                           v_row_indices + (v_info[(i * INFO_SIZE) + 4]));
   }
@@ -342,15 +342,15 @@ class RawSparse2DList {
   const size_t *v_info;
   const INDICE_TYPE *v_indices, *v_row_indices;
 
-  RawSparse2DList() = delete;
-  RawSparse2DList(RawSparse2DList &that) = delete;
-  RawSparse2DList(const RawSparse2DList &that) = delete;
-  RawSparse2DList(RawSparse2DList &&that) = delete;
-  RawSparse2DList(const RawSparse2DList &&that) = delete;
-  RawSparse2DList &operator=(RawSparse2DList &that) = delete;
-  RawSparse2DList &operator=(RawSparse2DList &&that) = delete;
-  RawSparse2DList &operator=(const RawSparse2DList &that) = delete;
-  RawSparse2DList &operator=(const RawSparse2DList &&that) = delete;
+  Sparse2DViewList() = delete;
+  Sparse2DViewList(Sparse2DViewList &that) = delete;
+  Sparse2DViewList(const Sparse2DViewList &that) = delete;
+  Sparse2DViewList(Sparse2DViewList &&that) = delete;
+  Sparse2DViewList(const Sparse2DViewList &&that) = delete;
+  Sparse2DViewList &operator=(Sparse2DViewList &that) = delete;
+  Sparse2DViewList &operator=(Sparse2DViewList &&that) = delete;
+  Sparse2DViewList &operator=(const Sparse2DViewList &that) = delete;
+  Sparse2DViewList &operator=(const Sparse2DViewList &&that) = delete;
 };
 
 template <typename T, typename A2D/* != is_sparse*/>
@@ -387,7 +387,7 @@ Sparse2D<T> to_sparse2d(const A2D &a2d){
 template <typename T>
 statick::Sparse2D<T> statick::Array2D<T>::toSparse2D()    const { return statick::to_sparse2d<T>(*this); }
 template <typename T>
-statick::Sparse2D<T> statick::RawArray2D<T>::toSparse2D() const { return statick::to_sparse2d<T>(*this); }
+statick::Sparse2D<T> statick::Array2DView<T>::toSparse2D() const { return statick::to_sparse2d<T>(*this); }
 
 template <typename T, typename S2D/* == is_sparse*/>
 statick::Array2D<T> to_array2d(const S2D &s2d){
@@ -408,7 +408,7 @@ statick::Array2D<T> to_array2d(const S2D &s2d){
 template <typename T>
 statick::Array2D<T> statick::Sparse2D<T>::toArray2D()    const { return statick::to_array2d<T>(*this); }
 template <typename T>
-statick::Array2D<T> statick::RawSparse2D<T>::toArray2D() const { return statick::to_array2d<T>(*this); }
+statick::Array2D<T> statick::Sparse2DView<T>::toArray2D() const { return statick::to_array2d<T>(*this); }
 
 }
 

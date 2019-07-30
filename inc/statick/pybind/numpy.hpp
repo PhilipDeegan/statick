@@ -407,7 +407,7 @@ public:
     using value_type = T;
 
     std::vector<size_t> _info;
-    std::shared_ptr<statick::RawSparse2D<T>> m_data_ptr;
+    std::shared_ptr<statick::Sparse2DView<T>> m_data_ptr;
 
     csr_t() : csr(0, static_cast<const T *>(nullptr)) {}
     csr_t(handle h, borrowed_t) : csr(h, borrowed_t{}), _info(3) {
@@ -444,7 +444,7 @@ public:
       auto *row_indices = (INDICE_TYPE *) PyArray_DATA(obj_indptr);
       std::cout << data[0] << std::endl;
 
-      m_data_ptr = std::make_shared<statick::RawSparse2D<T>>(data, _info.data(), indices, row_indices);
+      m_data_ptr = std::make_shared<statick::Sparse2DView<T>>(data, _info.data(), indices, row_indices);
     }
     csr_t(handle h, stolen_t) : csr(h, stolen_t{}) { }
 
@@ -538,7 +538,7 @@ public:
         return 1; //api.PyArray_Check_(h.ptr()) && api.PyArray_EquivTypes_(detail::csr_proxy(h.ptr())->descr, dtype::of<T>().ptr());
     }
 
-    statick::RawSparse2D<T> * raw() const { return m_data_ptr.get(); }
+    statick::Sparse2DView<T> * raw() const { return m_data_ptr.get(); }
 
 protected:
     /// Create csr from any object -- always returns a new reference

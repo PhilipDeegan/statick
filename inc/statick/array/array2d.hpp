@@ -47,15 +47,15 @@ bool load_array2d_with_raw_data(Archive &ar, std::vector<T> &data, std::vector<s
 }
 
 template <class T>    class Sparse2D;
-template <typename T> class RawArray2D;
+template <typename T> class Array2DView;
 
 template <typename T>
 class Array2D {
  public:
   using value_type = T;
   using real_type  = Array2D<T>;
-  using raw_type   = RawArray2D<T>;
-  using raw1d_type = RawArray<T>;
+  using view_type  = Array2DView<T>;
+  using view1d_type = ArrayView<T>;
   static constexpr bool is_sparse =  0;
 
   Array2D() {}
@@ -90,7 +90,7 @@ class Array2D {
   }
 
   const T *data() const { return m_data.data(); }
-  RawArray<T> row(size_t i)  const { return RawArray<T>(&m_data[i * m_info[0]], m_info[0]); }
+  ArrayView<T> row(size_t i)  const { return ArrayView<T>(&m_data[i * m_info[0]], m_info[0]); }
   const T *row_raw(size_t i) const { return &m_data[i * m_info[0]]; }
   const T &operator[](int i) const { return m_data[i]; }
 
@@ -143,23 +143,23 @@ class Array2D {
 };
 
 template <typename T>
-class RawArray2D {
+class Array2DView {
  public:
   using value_type = T;
   using real_type  = Array2D<T>;
-  using raw_type   = RawArray2D<T>;
-  using raw1d_type = RawArray<T>;
+  using view_type  = Array2DView<T>;
+  using view1d_type = ArrayView<T>;
   static constexpr bool is_sparse =  0;
 
-  RawArray2D(const T *_data, const size_t *_info)
+  Array2DView(const T *_data, const size_t *_info)
       : v_data(_data), m_cols(&_info[0]), m_rows(&_info[1]), m_size(&_info[2]) {}
-  RawArray2D(RawArray2D &&that)
+  Array2DView(Array2DView &&that)
       : v_data(that.v_data), m_cols(that.m_cols), m_rows(that.m_rows), m_size(that.m_size) {}
 
   const T &operator[](int i) { return v_data[i]; }
   const T *data() const { return v_data; }
   const T *row_raw(size_t i) const { return &v_data[i * (*m_cols)]; }
-  RawArray<T> row(size_t i) const { return RawArray<T>(&v_data[i * (*m_cols)], *m_cols); }
+  ArrayView<T> row(size_t i) const { return ArrayView<T>(&v_data[i * (*m_cols)], *m_cols); }
 
   const size_t &cols() const { return *m_cols; }
   const size_t &rows() const { return *m_rows; }
@@ -171,14 +171,14 @@ class RawArray2D {
   const T *v_data;
   const size_t *m_cols, *m_rows, *m_size;
 
-  RawArray2D() = delete;
-  RawArray2D(RawArray2D &that) = delete;
-  RawArray2D(const RawArray2D &that) = delete;
-  RawArray2D(const RawArray2D &&that) = delete;
-  RawArray2D &operator=(RawArray2D &that) = delete;
-  RawArray2D &operator=(RawArray2D &&that) = delete;
-  RawArray2D &operator=(const RawArray2D &that) = delete;
-  RawArray2D &operator=(const RawArray2D &&that) = delete;
+  Array2DView() = delete;
+  Array2DView(Array2DView &that) = delete;
+  Array2DView(const Array2DView &that) = delete;
+  Array2DView(const Array2DView &&that) = delete;
+  Array2DView &operator=(Array2DView &that) = delete;
+  Array2DView &operator=(Array2DView &&that) = delete;
+  Array2DView &operator=(const Array2DView &that) = delete;
+  Array2DView &operator=(const Array2DView &&that) = delete;
 };
 
 template <class Archive, class T>
@@ -212,8 +212,8 @@ class Array2DList {
 
  public:
   Array2DList() {}
-  RawArray2D<T> operator[](size_t i) const {
-    return RawArray2D<T>(m_data.data() + (m_info[(i * INFO_SIZE) + 3]), &m_info[i * INFO_SIZE]);
+  Array2DView<T> operator[](size_t i) const {
+    return Array2DView<T>(m_data.data() + (m_info[(i * INFO_SIZE) + 3]), &m_info[i * INFO_SIZE]);
   }
 
   const size_t *info() const { return m_info.data(); }
@@ -272,7 +272,7 @@ class SharedArray2DList {
 };
 
 template <typename T>
-using SharedRawArray2DList = SharedArray2DList<T, RawArray2D<T>>;
+using SharedArray2DViewList = SharedArray2DList<T, Array2DView<T>>;
 
 
 }  // namespace statick

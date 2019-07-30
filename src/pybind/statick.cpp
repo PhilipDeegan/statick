@@ -17,9 +17,9 @@ py_array_double make_array(const py::ssize_t size) {
   return py_array_double(size);
 }
 
-statick::RawArray<double> py_array_double_as_raw_array(py_array_double &pad){
+statick::ArrayView<double> py_array_double_as_raw_array(py_array_double &pad){
   py::buffer_info pad_info = pad.request();
-  return statick::RawArray<double>((double*)pad_info.ptr, pad_info.shape[0]);
+  return statick::ArrayView<double>((double*)pad_info.ptr, pad_info.shape[0]);
 }
 
 py_array_double add_arrays(py_array_double i, py_array_double j)
@@ -75,7 +75,7 @@ bool compare(py_array_double &dense, py_csr_double &sparse){
   dinfo[0] = dbinfo.shape[1];
   dinfo[1] = dbinfo.shape[0];
   dinfo[2] = dbinfo.shape[0]*dbinfo.shape[1];
-  statick::RawArray2D<T> arr((T*)dbinfo.ptr, dinfo.data());
+  statick::Array2DView<T> arr((T*)dbinfo.ptr, dinfo.data());
   auto d_sparse = arr.toSparse2D();
   auto &s_sparse = *sparse.raw();
 

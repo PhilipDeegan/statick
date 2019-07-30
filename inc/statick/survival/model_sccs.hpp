@@ -13,7 +13,7 @@ class TModelSCCS {
   using T   = typename DAO::value_type;
   using T_F = typename DAO::T_F;
   using T_L = typename DAO::T_L;
-  using FrR = typename DAO::T_F::raw1d_type;
+  using FrR = typename DAO::T_F::view1d_type;
   using value_type = T;
 
   static size_t get_max_interval(DAO &dao, size_t i) {

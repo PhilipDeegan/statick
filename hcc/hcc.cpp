@@ -97,7 +97,7 @@ void sparse(int argc, char *argv[]) {
 
       size_t N_SAMPLES = features_info[1], N_FEATURES = features_info[0];
 
-      statick::RawSparse2D<double> l_features(data[0].data(), info[0].data(), indices[0].data(),
+      statick::Sparse2DView<double> l_features(data[0].data(), info[0].data(), indices[0].data(),
                                            row_indices[0].data());
 
       std::vector<double> steps_corrections(

@@ -40,14 +40,14 @@ bool load_array_with_raw_data(Archive &ar, std::vector<T> &data) {
   return true;
 }
 
-template <typename T> class RawArray;
+template <typename T> class ArrayView;
 
 template <typename T>
 class Array {
  public:
   using value_type = T;
   using real_type  = Array<T>;
-  using raw_type   = RawArray<T>;
+  using view_type  = ArrayView<T>;
   static constexpr bool is_sparse = 0;
 
   Array(size_t size = 0) : m_data(size) {}
@@ -130,18 +130,18 @@ class Array {
 };
 
 template <typename T>
-class RawArray {
+class ArrayView {
  public:
   using value_type = T;
   using real_type  = Array<T>;
-  using raw_type   = RawArray<T>;
+  using view_type  = ArrayView<T>;
   static constexpr bool is_sparse =  0;
 
-  RawArray(){}
-  RawArray(const std::vector<T> &_data) : _size(_data.size()), v_data(_data.data()) {}
-  RawArray(const T *_data, const size_t _size) : _size(_size), v_data(_data) {}
-  RawArray(RawArray &&that) : _size(that._size), v_data(that.v_data) {}
-  RawArray &operator=(const RawArray &&that) {
+  ArrayView(){}
+  ArrayView(const std::vector<T> &_data) : _size(_data.size()), v_data(_data.data()) {}
+  ArrayView(const T *_data, const size_t _size) : _size(_size), v_data(_data) {}
+  ArrayView(ArrayView &&that) : _size(that._size), v_data(that.v_data) {}
+  ArrayView &operator=(const ArrayView &&that) {
     if(&that != this){
       const_cast<size_t&>(this->_size) =  that._size;
       this->v_data =  that.v_data;
@@ -181,12 +181,12 @@ class RawArray {
  private:
   const size_t _size = 0;
   const T *v_data = nullptr;
-  RawArray(RawArray &that) = delete;
-  RawArray(const RawArray &that) = delete;
-  RawArray(const RawArray &&that) = delete;
-  RawArray &operator=(RawArray &that) = delete;
-  RawArray &operator=(RawArray &&that) = delete;
-  RawArray &operator=(const RawArray &that) = delete;
+  ArrayView(ArrayView &that) = delete;
+  ArrayView(const ArrayView &that) = delete;
+  ArrayView(const ArrayView &&that) = delete;
+  ArrayView &operator=(ArrayView &that) = delete;
+  ArrayView &operator=(ArrayView &&that) = delete;
+  ArrayView &operator=(const ArrayView &that) = delete;
 };
 
 template <class Archive, class T>
@@ -217,8 +217,8 @@ class ArrayList {
 
  public:
   ArrayList() {}
-  RawArray<T> operator[](size_t i) const {
-    return RawArray<T>(m_data.data() + (m_info[(i * INFO_SIZE) + 1]), m_info[i * INFO_SIZE]);
+  ArrayView<T> operator[](size_t i) const {
+    return ArrayView<T>(m_data.data() + (m_info[(i * INFO_SIZE) + 1]), m_info[i * INFO_SIZE]);
   }
 
   const size_t *info() const { return m_info.data(); }
@@ -276,7 +276,7 @@ class SharedArrayList {
   SharedArrayList &operator=(const SharedArrayList &&that) = delete;
 };
 template <typename T>
-using SharedRawArrayList = SharedArrayList<T, RawArray<T>>;
+using SharedArrayViewList = SharedArrayList<T, ArrayView<T>>;
 
 
 }  // namespace statick
