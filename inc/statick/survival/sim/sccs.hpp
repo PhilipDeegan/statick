@@ -1,6 +1,9 @@
 #ifndef STATICK_SURVIVAL_SIM_SCCS_H_
 #define STATICK_SURVIVAL_SIM_SCCS_H_
 
+//#include "gsl/gsl_randist.h"
+
+#include "wrappy/wrappy.h"
 #include "statick/survival/dao/model_sccs.hpp"
 
 namespace statick {

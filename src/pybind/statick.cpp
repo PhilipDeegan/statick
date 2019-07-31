@@ -10,7 +10,6 @@
 #include "statick/pybind/numpy.hpp"
 
 namespace py = pybind11;
-
 using py_array_double = py::array_t<double, py::array::c_style | py::array::forcecast>;
 
 py_array_double make_array(const py::ssize_t size) {

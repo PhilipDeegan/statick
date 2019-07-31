@@ -4,6 +4,7 @@ name: statick
 scm: https://github.com/dekken/statick
 
 parent: base
+test: test/(\w).cpp
 
 profile:
 - name: base
@@ -14,7 +15,6 @@ profile:
   if_link:
     nix: -pthread
   dep: io.cereal mkn.kul lang.pybind11
-  test: test/(\w).cpp
   mod:
   - name: lang.python3
     compile:
@@ -22,15 +22,29 @@ profile:
     link:
       delete: -Wl,-stack_size,1000000
 
-- name: statick.py
+- name: py.py
   parent: base
   install: statick/bin
-  out: statick
-  src: src/pybind/statick.cpp
   mode: none
   mod:
   - name: lang.pybind11
-  test: example.py
+
+- name: statick.py
+  parent: py.py
+  install: statick/bin
+  out: statick
+  src: src/pybind/statick.cpp
+
+- name: statick.linear_model.py
+  parent: py.py
+  install: statick/linear_model/bin
+  out: statick_linear_model
+  src: src/pybind/linear_model
+
+- name: py
+  parent: base
+  self: statick.py
+        statick.linear_model.py
 
 - name: clean
   parent: base
