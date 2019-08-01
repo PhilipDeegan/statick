@@ -22,10 +22,6 @@ T grad_i_factor(const FEATURES &features, const T *labels, const K *coeffs, cons
 template <typename _F, typename _L>
 class DAO {
  private:
-   void init() {
-    vars[0] = m_features->cols();
-    vars[1] = m_features->rows();
-  }
  public:
   using FEATURE = typename std::conditional<is_shared_ptr<_F>::value, typename _F::element_type, _F>::type;
   using FEATURES = _F;
@@ -34,14 +30,22 @@ class DAO {
   using T = typename FEATURE::value_type;
   using value_type = T;
 
+  DAO(){}
   DAO(FEATURES &&_features, LABELS &&_labels) : m_features(_features), m_labels(_labels) { init(); }
   DAO(FEATURES &_features, LABELS &_labels) : m_features(_features), m_labels(_labels)   { init(); }
 
+  void init() { vars[0] = m_features->cols(); vars[1] = m_features->rows(); }
+
   auto &features() const { if constexpr(is_shared_ptr<_F>::value) return *m_features; else return m_features; }
-  auto &labels()   const { if constexpr(is_shared_ptr<_F>::value) return *m_labels; else return m_labels; }
+  auto &labels()   const { if constexpr(is_shared_ptr<_L>::value) return *m_labels; else return m_labels; }
 
   inline const size_t &n_features() const { return vars[0]; }
   inline const size_t &n_samples() const { return vars[1]; }
+
+  void print(){
+    std::cout << vars[0] << std::endl;
+    std::cout << vars[1] << std::endl;
+  }
 
   FEATURES m_features;
   LABELS m_labels;

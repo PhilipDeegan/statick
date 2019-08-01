@@ -41,10 +41,17 @@ profile:
   out: statick_linear_model
   src: src/pybind/linear_model
 
+- name: statick.solver.py
+  parent: py.py
+  install: statick/solver/bin
+  out: statick_linear_model
+  src: src/pybind/solver
+
 - name: py
   parent: base
   self: statick.py
         statick.linear_model.py
+        statick.solver.py
 
 - name: clean
   parent: base
