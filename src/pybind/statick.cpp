@@ -1,27 +1,18 @@
-#include <random>
-#include "kul/log.hpp"
-#include <Python.h>
-#include <pybind11/stl.h>
-#include "pybind11/numpy.h"
-#include "numpy/arrayobject.h"
-#include "numpy/npy_math.h"
-#include "cereal/archives/portable_binary.hpp"
 #include "statick/array.hpp"
-#include "statick/pybind/numpy.hpp"
+#include "statick/pybind/def.hpp"
 
 namespace py = pybind11;
-using py_array_double = py::array_t<double, py::array::c_style | py::array::forcecast>;
 
-py_array_double make_array(const py::ssize_t size) {
-  return py_array_double(size);
+py_arrayv_d make_array(const py::ssize_t size) {
+  return py_arrayv_d(size);
 }
 
-statick::ArrayView<double> py_array_double_as_raw_array(py_array_double &pad){
+statick::ArrayView<double> py_arrayv_d_as_raw_array(py_arrayv_d &pad){
   py::buffer_info pad_info = pad.request();
   return statick::ArrayView<double>((double*)pad_info.ptr, pad_info.shape[0]);
 }
 
-py_array_double add_arrays(py_array_double i, py_array_double j)
+py_arrayv_d add_arrays(py_arrayv_d i, py_arrayv_d j)
 {
   py::buffer_info info_i = i.request(), info_j = j.request();
   if ((info_i.ndim != 1) || (info_j.ndim != 1))
@@ -44,8 +35,8 @@ void take_sparse2d(py_csr_double &v) {
 void save_double_sparse2d(py_csr_double &v, std::string &file) {
   statick::sparse_2d::save(*v.raw(), file);
 }
-void save_double_array(py_array_double &v, std::string &file) {
-  statick::dense::save<double>(py_array_double_as_raw_array(v), file);
+void save_double_array(py_arrayv_d &v, std::string &file) {
+  statick::dense::save<double>(py_arrayv_d_as_raw_array(v), file);
 }
 
 std::vector<int> make_vector(){
@@ -67,7 +58,7 @@ void print_sparse(py_csr_double &v){
     std::cout << s_sparse.data()[i] << std::endl;
 }
 
-bool compare(py_array_double &dense, py_csr_double &sparse){
+bool compare(py_arrayv_d &dense, py_csr_double &sparse){
   using T = double;
   py::buffer_info dbinfo = dense.request();
   std::vector<size_t> dinfo(3);

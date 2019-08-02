@@ -1,6 +1,7 @@
 #ifndef STATICK_SOLVER_ASAGA_HPP_
 #define STATICK_SOLVER_ASAGA_HPP_
 
+#include <atomic>
 #include <thread>
 #include "statick/solver/saga.hpp"
 #include "statick/solver/history.hpp"

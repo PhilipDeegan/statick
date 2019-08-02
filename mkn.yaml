@@ -35,6 +35,12 @@ profile:
   out: statick
   src: src/pybind/statick.cpp
 
+- name: statick.array.py
+  parent: py.py
+  install: statick/array/bin
+  out: statick_array
+  src: src/pybind/array
+
 - name: statick.linear_model.py
   parent: py.py
   install: statick/linear_model/bin
@@ -44,12 +50,13 @@ profile:
 - name: statick.solver.py
   parent: py.py
   install: statick/solver/bin
-  out: statick_linear_model
+  out: statick_solver
   src: src/pybind/solver
 
 - name: py
   parent: base
   self: statick.py
+        statick.array.py
         statick.linear_model.py
         statick.solver.py
 

@@ -43,8 +43,12 @@ class DAO {
   inline const size_t &n_samples() const { return vars[1]; }
 
   void print(){
-    std::cout << vars[0] << std::endl;
-    std::cout << vars[1] << std::endl;
+    std::cout << "n_features: " << vars[0] << std::endl;
+    std::cout << "n_samples: " << vars[1] << std::endl;
+    std::cout << "m_features->size(): " << m_features->size() << std::endl;
+    std::cout << "m_features->cols(): " << m_features->cols() << std::endl;
+    std::cout << "m_features->rows(): " << m_features->rows() << std::endl;
+    std::cout << "m_labels->size(): " << m_labels->size() << std::endl;
   }
 
   FEATURES m_features;

@@ -1,3 +1,2 @@
-from .bin.statick_linear_model import *
-from .log_reg import *
-
+from .bin.statick_solver import *
+from .saga import *

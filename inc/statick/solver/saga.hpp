@@ -1,12 +1,18 @@
 #ifndef STATICK_SOLVER_SAGA_HPP_
 #define STATICK_SOLVER_SAGA_HPP_
+
+#include "kul/log.hpp"
+
 namespace statick {
 namespace saga {
 namespace dense {
-template <typename MODAO, bool INTERCEPT = false>
+template <typename _MODAO, bool INTERCEPT = false>
 class DAO {
  public:
-  using T = typename MODAO::value_type;
+  using T = typename _MODAO::value_type;
+  using MODAO = _MODAO;
+  using value_type = T;
+
   DAO(MODAO &modao)
       : iterate(modao.n_features() + static_cast<size_t>(INTERCEPT)),
         gradients_average(modao.n_features()), gradients_memory(modao.n_samples()) {}
@@ -64,17 +70,19 @@ std::vector<T> compute_step_corrections(const Sparse2D &features) {
   return steps_corrections;
 }
 
-template <typename MODAO, bool INTERCEPT = false>
+template <typename _MODAO, bool INTERCEPT = false>
 class DAO {
  public:
-  using T = typename MODAO::value_type;
+  using T = typename _MODAO::value_type;
+  using MODAO = _MODAO;
+  using value_type = T;
+
   DAO(MODAO &modao)
       : iterate(modao.n_features() + static_cast<size_t>(INTERCEPT)),
         steps_corrections(statick::saga::sparse::compute_step_corrections(modao.features())),
         gradients_average(modao.n_features()), gradients_memory(modao.n_samples()) {}
-  DAO() {}
-  T step = 0.00257480411965l;
 
+  T step = 0.00257480411965l;
   std::vector<T> iterate, steps_corrections, gradients_average, gradients_memory;
 };
 

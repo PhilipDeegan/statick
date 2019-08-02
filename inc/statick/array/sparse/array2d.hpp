@@ -199,11 +199,9 @@ class Sparse2DView {
 
   Sparse2DView(T * const _data, const size_t *_info, const INDICE_TYPE *_indices,
               const INDICE_TYPE *_row_indices)
-      : v_data(_data), m_cols(&_info[0]), m_rows(&_info[1]), m_size(&_info[2]),
-        v_indices(_indices), v_row_indices(_row_indices) {}
+      : v_data(_data), v_indices(_indices), v_row_indices(_row_indices) { set_info(_info);  }
   Sparse2DView(Sparse2DView &&that)
-      : v_data(that.v_data), m_cols(that.m_cols), m_rows(that.m_rows), m_size(that.m_size),
-        v_indices(that.v_indices), v_row_indices(that.v_row_indices) {}
+      : v_data(that.v_data), v_indices(that.v_indices), v_row_indices(that.v_row_indices) { set_info(that.m_info); }
   T &operator[](int i) { return v_data[i]; }
   const T *data() const { return v_data; }
   T *mutable_data() { return v_data; }
@@ -218,15 +216,17 @@ class Sparse2DView {
                      v_indices + v_row_indices[i]);
   }
 
+  void set_info(const size_t *_info){ m_info[0]=_info[0]; m_info[1] = _info[1]; m_info[2] = _info[2]; }
+
   statick::Array2D<T> toArray2D() const;
 
-  const size_t &cols() const { return *m_cols; }
-  const size_t &rows() const { return *m_rows; }
-  const size_t &size() const { return *m_size; }
+  const size_t &cols() const { return m_info[0]; }
+  const size_t &rows() const { return m_info[1]; }
+  const size_t &size() const { return m_info[2]; }
 
-  T *v_data;
-  const size_t *m_cols, *m_rows, *m_size;
-  const INDICE_TYPE *v_indices, *v_row_indices;
+  T *v_data = nullptr;
+  size_t m_info[3] = {0, 0, 0};
+  const INDICE_TYPE *v_indices = nullptr, *v_row_indices = nullptr;
 
  private:
   Sparse2DView() = delete;
