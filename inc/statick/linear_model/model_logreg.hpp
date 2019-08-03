@@ -68,10 +68,10 @@ using DAO = logreg::DAO<std::shared_ptr<FEATURES>,
 }  // namespace sparse
 }  // namespace logreg
 
-template <typename _F, typename _L>
+template <typename _F, typename _L, typename _DAO = logreg::DAO<_F, _L>>
 class ModelLogReg {
  public:
-  using DAO = logreg::DAO<_F, _L>;
+  using DAO = _DAO;
   using value_type = typename DAO::value_type;
   using T = value_type;
 

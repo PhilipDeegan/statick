@@ -12,7 +12,8 @@ class ModelLogReg(TMLR):
 
     def fit(self, X, y):
         TMLR.fit(self, X, y)
-        object.__setattr__(self, "_dao", statick.linear_model.log_reg_fit_sd(X, y))
+        object.__setattr__(self, "_dao", statick.linear_model.LOGREG_DAO_sd(X, y))
+        # print("type(self._dao)", type(self._dao))
         return self._dao
 
     def _print(self):

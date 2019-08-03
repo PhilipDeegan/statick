@@ -40,4 +40,4 @@ AR_P_T(float, s)
 #undef AR_P_T
 }
 
-#endif  //  TICK_ARRAY_HPP_
+#endif  //  STATICK_ARRAY_HPP_

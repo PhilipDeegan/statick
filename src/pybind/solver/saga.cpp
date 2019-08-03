@@ -1,8 +1,6 @@
-#include "statick/array.hpp"
-#include "statick/pybind/def.hpp"
-#include "statick/solver/saga.hpp"
+#include "statick/pybind/linear_model.hpp"
 #include "statick/prox/prox_l2sq.hpp"
-#include "statick/linear_model/model_logreg.hpp"
+#include "statick/solver/saga.hpp"
 namespace py = pybind11;
 
 /*
@@ -17,7 +15,7 @@ Function mapping convention:
 
 namespace statick {
 
-using LOGREG_DAO_sd_ptr = statick::logreg::DAO<sparse2dv_d_ptr, arrayv_d_ptr>;
+using LOGREG_DAO_sd_ptr = statick_py::logreg::DAO<sparse2dv_d_ptr, arrayv_d_ptr>;
 using SAGA_LOG_REG_DAO_sd_ptr = statick::saga::sparse::DAO<LOGREG_DAO_sd_ptr, false>;
 
 template <typename DAO>
@@ -26,10 +24,11 @@ void saga_solve_log_reg_s(DAO &dao, typename DAO::MODAO &modao){
   constexpr size_t N_ITER = 111;
 
   using T        = typename DAO::value_type;
+  using MODAO    = typename DAO::MODAO;
   using FEATURES = statick::Sparse2DView<T>;
   using LABELS   = statick::ArrayView<T>;
   using PROX     = statick::ProxL2Sq<T>;
-  using MODEL    = statick::ModelLogReg<std::shared_ptr<FEATURES>, std::shared_ptr<LABELS>>;
+  using MODEL    = statick::ModelLogReg<std::shared_ptr<FEATURES>, std::shared_ptr<LABELS>, MODAO>;
   using SOLVER   = statick::solver::SAGA<MODEL>;
 
   const size_t n_samples = modao.n_samples();
