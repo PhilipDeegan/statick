@@ -111,7 +111,7 @@ void sparse(int argc, char *argv[]) {
       std::uniform_int_distribution<size_t> uniform_dist;
       std::uniform_int_distribution<size_t>::param_type p(0, N_SAMPLES - 1);
       for (size_t i = 0; i < next_i.size(); i++) next_i[i] = uniform_dist(generator, p);
-      hc::array_view<size_t, 1> ar_next_i(next_i.size(), next_i.data());
+      hc::array_view<size_t, 1> ar_next_i(next_i.size().data());
       synchronize_to_device(ar_next_i);
       RAM_HERE;
 
@@ -251,7 +251,7 @@ void dense(int argc, char *argv[]) {
     //       ar_gradients_average(gradients_average.size(), gradients_average.data()),
     //       ar_gradients_memory(gradients_memory.size(), gradients_memory.data()),
     //       ar_iterate(iterate.size(), iterate.data());
-    //   hc::array_view<INDEX_TYPE, 1> ar_next_i(next_i.size(), next_i.data());
+    //   hc::array_view<INDEX_TYPE, 1> ar_next_i(next_i.size().data());
 
     //   if (cpu)
     //     statick::saga::dense::solve(ar_features.data(), ar_labels.data(),

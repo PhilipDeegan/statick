@@ -7,24 +7,17 @@ from tick.dataset import fetch_tick_dataset
 
 train_set = fetch_tick_dataset('binary/adult/adult.trn.bz2')
 test_set = fetch_tick_dataset('binary/adult/adult.tst.bz2')
-
 X, y = train_set[0], train_set[1]
 
 from statick.linear_model import ModelLogReg
-model = ModelLogReg()
-model.fit(X, y)
-
-n_samples = X.shape[0]
-n_features = X.shape[1]
-
 from statick.prox import ProxL2Sq
-STRENGTH = (1. / n_samples) + 1e-10;
-prox = ProxL2Sq(strength=STRENGTH)
-
 from statick.solver import SAGA
-solver = SAGA(step=1e-3, max_iter=100, verbose=False, tol=0)
-solver.set_model(model).set_prox(prox)
-solver.solve()
+
+solver = SAGA(step=1e-3, max_iter=100, verbose=False, tol=0) \
+          .set_model(ModelLogReg().fit(X, y))                \
+          .set_prox (ProxL2Sq(strength=((1. / X.shape[0]) + 1e-10)))
+for i in range(111):
+    solver.solve()
 
 # predictions = learner.predict_proba(test_set[0])
 # fpr, tpr, _ = roc_curve(test_set[1], predictions[:, 1])

@@ -14,12 +14,10 @@ int main() {
   using SOLVER   = statick::solver::SVRG<MODEL, HISTORY>;
   std::string labels_s("adult.labels.cereal"), features_s("adult.features.cereal");
   MODEL::DAO modao(FEATURES::FROM_CEREAL(features_s), LABELS::FROM_CEREAL(labels_s));
-  const size_t n_samples = modao.n_samples(); // is used in "random_seq.ipp"
-#include "random_seq.ipp"
-  const auto STRENGTH = (1. / n_samples) + 1e-10;
-  SOLVER::DAO dao(modao, N_ITER, n_samples, THREADS); PROX prox(STRENGTH); auto start = NOW;
+  const auto STRENGTH = (1. / modao.n_samples()) + 1e-10;
+  SOLVER::DAO dao(modao, N_ITER, modao.n_samples(), THREADS); PROX prox(STRENGTH); auto start = NOW;
   dao.history.tol.val = 1e-5;
-  SOLVER::SOLVE(dao, modao, prox, next_i);
+  SOLVER::SOLVE(dao, modao, prox);
   std::cout << (NOW - start) / 1e3 << std::endl;
   return 0;
 }

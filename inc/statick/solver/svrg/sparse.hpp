@@ -30,7 +30,8 @@ class DAO {
  public:
   using HISTORY = HISTOIR;
   DAO(MODAO &modao, size_t _n_epochs, size_t _epoch_size, size_t _threads)
-      : n_epochs(_n_epochs),
+      : rand(0, modao.n_samples() - 1),
+        n_epochs(_n_epochs),
         epoch_size(_epoch_size), n_threads(_threads),
         iterate(modao.n_features() + static_cast<size_t>(INTERCEPT)),
         steps_corrections(statick::svrg::sparse::compute_step_corrections(modao.features())) {
@@ -40,13 +41,12 @@ class DAO {
   HISTORY history;
   std::vector<T> iterate, steps_corrections;
   std::vector<T> full_gradient, fixed_w, grad_i, grad_i_fixed_w, next_iterate;
+  RandomMinMax<INDICE_TYPE> rand;
 };
 
 template <typename MODEL, uint16_t RM, uint16_t ST, bool INTERCEPT,
-          typename PROX, typename NEXT_I,
-          typename DAO, typename T = typename MODEL::value_type>
-void solve_thread(DAO &dao, typename MODEL::DAO &modao, PROX prox,
-                  NEXT_I fn_next_i,size_t n_thread) {
+          typename PROX, typename DAO, typename T = typename MODEL::value_type>
+void solve_thread(DAO &dao, typename MODEL::DAO &modao, PROX prox, size_t n_thread) {
 
   auto is_in_range = [](size_t){ return 1; }; // TODO - TODO
   auto & features = modao.features();
@@ -64,7 +64,7 @@ void solve_thread(DAO &dao, typename MODEL::DAO &modao, PROX prox,
   thread_epoch_size += n_thread < (epoch_size % n_threads);
 
   for (size_t t = 0; t < thread_epoch_size; ++t) {
-    const size_t i = fn_next_i();
+    INDICE_TYPE i = dao.rand.next();
     const size_t x_i_size = features.row_size(i);
     const T *x_i = features.row_raw(i);
     const INDICE_TYPE *x_i_indices = features.row_indices(i);
@@ -96,8 +96,8 @@ void solve_thread(DAO &dao, typename MODEL::DAO &modao, PROX prox,
 template <typename MODEL,
           uint16_t RM = VarianceReductionMethod::Last,
           uint16_t ST = StepType::Fixed, bool INTERCEPT = false,
-          typename PROX, typename NEXT_I, typename DAO>
-void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox, NEXT_I fn_next_i) {
+          typename PROX, typename DAO>
+void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox) {
   using T = typename MODEL::value_type;
   using TOL = typename DAO::HISTORY::TOLERANCE;
   auto &history = dao.history;
@@ -113,7 +113,7 @@ void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox, NEXT_I fn_next_i) {
   std::vector<std::function<void()>> funcs;
   for (size_t i = 1; i < n_threads; i++)
     funcs.emplace_back([&](){
-      solve_thread<MODEL, RM, ST, INTERCEPT>(dao, modao, prox, fn_next_i, i); });
+      solve_thread<MODEL, RM, ST, INTERCEPT>(dao, modao, prox, i); });
 
   auto start = std::chrono::steady_clock::now();
   auto log_history = [&](size_t epoch){
@@ -127,9 +127,9 @@ void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox, NEXT_I fn_next_i) {
   };
 
   for (size_t epoch = 1; epoch < (n_epochs + 1); ++epoch) {
-    statick::svrg::prepare_solve<MODEL>(dao, modao, dao.t, fn_next_i);
+    statick::svrg::prepare_solve<MODEL>(dao, modao, dao.t);
     pool.async(funcs);
-    solve_thread<MODEL, RM, ST, INTERCEPT>(dao, modao, prox, fn_next_i, 0);
+    solve_thread<MODEL, RM, ST, INTERCEPT>(dao, modao, prox, 0);
     pool.sync();
     log_history(epoch);
     if constexpr(RM == VarianceReductionMethod::Last)

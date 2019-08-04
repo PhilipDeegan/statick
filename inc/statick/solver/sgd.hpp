@@ -1,24 +1,27 @@
 #ifndef STATICK_SOLVER_SGD_HPP_
 #define STATICK_SOLVER_SGD_HPP_
+#include "statick/random.hpp"
 namespace statick {
 namespace sgd {
 template <typename MODAO, bool INTERCEPT = false>
 class DAO {
  public:
   using T = typename MODAO::value_type;
-  DAO(MODAO &modao)
-      : iterate(modao.n_features() + static_cast<size_t>(INTERCEPT)) {}
-  DAO() {}
+  DAO(MODAO &modao) :
+    rand(0, modao.n_samples() - 1),
+    iterate(modao.n_features() + static_cast<size_t>(INTERCEPT)) {}
+
   T step = 1e-5;
   size_t t = 0;
   std::vector<T> iterate;
+  RandomMinMax<INDICE_TYPE> rand;
 };
 
 namespace dense {
-template <typename MODEL, bool INTERCEPT = false, typename PROX, typename NEXT_I,
+template <typename MODEL, bool INTERCEPT = false, typename PROX,
           typename T = typename MODEL::value_type,
           typename DAO = sgd::DAO<T>>
-void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox, NEXT_I _next_i) {
+void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox) {
   auto &t = dao.t;
   const size_t n_samples = modao.n_samples(), n_features = modao.n_features(), start_t = t;
   auto &features = modao.features();
@@ -28,7 +31,7 @@ void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox, NEXT_I _next_i) {
   std::vector<T> v_grad(n_features, 0);
   T *grad = v_grad.data();
   for (t = start_t; t < start_t + n_samples; ++t) {
-    INDICE_TYPE i = _next_i();
+    INDICE_TYPE i = dao.rand.next();
     T step_t = step / (dao.t + 1);
     const T *x_i = features.row_raw(i);
     T grad_i_factor = labels[i] * (sigmoid(labels[i] * features.row(i).dot(iterate)) - 1);
@@ -39,10 +42,10 @@ void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox, NEXT_I _next_i) {
 }
 }  // namespace dense
 namespace sparse {
-template <typename MODEL, bool INTERCEPT = false, typename PROX, typename NEXT_I,
+template <typename MODEL, bool INTERCEPT = false, typename PROX,
           typename T = typename MODEL::value_type,
           typename DAO = sgd::DAO<T>>
-void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox, NEXT_I _next_i) {
+void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox) {
   auto &t = dao.t;
   const size_t n_samples = modao.n_samples(), n_features = modao.n_features(), start_t = t;
   const T step = dao.step;
@@ -50,7 +53,7 @@ void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox, NEXT_I _next_i) {
   auto *labels = modao.labels().data();
   auto *iterate = dao.iterate.data();
   for (t = start_t; t < start_t + n_samples; ++t) {
-    INDICE_TYPE i = _next_i();
+    INDICE_TYPE i = dao.rand.next();
     T step_t = step / (t + 1);
     const T *x_i = features.row_raw(i);
     T grad_i_factor = labels[i] * (sigmoid(labels[i] * features.row(i).dot(iterate)) - 1);
@@ -70,12 +73,12 @@ class SGD {
  public:
   using DAO = typename statick::sgd::DAO<typename MODEL::DAO, INTERCEPT>;
 
-  template <typename PROX, typename NEXT_I>
-  static inline void SOLVE(DAO &dao, typename MODEL::DAO &modao, PROX &prox, NEXT_I next_i) {
+  template <typename PROX>
+  static inline void SOLVE(DAO &dao, typename MODEL::DAO &modao, PROX &prox) {
     if constexpr (MODEL::DAO::FEATURE::is_sparse)
-      statick::sgd::sparse::solve<MODEL>(dao, modao, prox, next_i);
+      statick::sgd::sparse::solve<MODEL>(dao, modao, prox);
     else
-      statick::sgd::dense::solve<MODEL>(dao, modao, prox, next_i);
+      statick::sgd::dense::solve<MODEL>(dao, modao, prox);
   }
 };
 }

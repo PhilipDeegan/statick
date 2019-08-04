@@ -12,16 +12,14 @@ int main() {
   using SOLVER   = statick::solver::ASAGA<MODEL, HISTORY>;
   const std::string features_s("url.features.cereal"), labels_s("url.labels.cereal");
   MODEL::DAO modao(FEATURES::FROM_CEREAL(features_s), LABELS::FROM_CEREAL(labels_s));
-  const size_t n_samples = modao.n_samples(), n_features = modao.n_features();
-#include "random_seq.ipp"
   const T STRENGTH = (1. / modao.n_samples()) + 1e-10;
-  SOLVER::DAO dao(modao, N_ITER, n_samples, THREADS); PROX prox(STRENGTH);
+  SOLVER::DAO dao(modao, N_ITER, modao.n_samples(), THREADS); PROX prox(STRENGTH);
   std::function<T(T*, size_t)> objectife = [&](T* iterate, size_t size){
     return MODEL::LOSS(modao, iterate) + statick::prox_l2sq::value(iterate, size, STRENGTH);
   };
   dao.history.tol.val = 1e-5;
   dao.history.f_objective = objectife;
-  SOLVER::SOLVE(dao, modao, prox, next_i);
+  SOLVER::SOLVE(dao, modao, prox);
   std::vector<T> &objs(dao.history.objectives);
   auto min_objective = *std::min_element(std::begin(objs), std::end(objs));
   auto history = dao.history.time_history;

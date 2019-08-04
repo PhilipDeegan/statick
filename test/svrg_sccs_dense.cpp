@@ -24,12 +24,10 @@ int main() {
     for (size_t j = 0; j < N_PERIODS; ++j) (*labels[i])[j] = (*labels[i])[j] % 2 == 0 ? 1 : 0;
   }
   MODAO madao(features, labels);
-  const size_t n_samples = madao.n_samples(); // is used in "random_seq.ipp"
-#include "random_seq.ipp"
   const double STRENGTH = (1. / N_SAMPLES) + 1e-10;
   DAO dao(madao, N_ITER, N_SAMPLES, N_THREADS); PROX prox(STRENGTH); auto start = NOW;
   dao.step = MODEL::lip_max(madao);
-  statick::svrg::dense::solve<MODEL>(dao, madao, prox, next_i);
+  statick::svrg::dense::solve<MODEL>(dao, madao, prox);
   std::cout << (NOW - start) / 1e3 << std::endl;
   kul::File tick_interop("sccs.cereal");
   if(tick_interop) statick::sccs::load_from<T>(tick_interop.real());

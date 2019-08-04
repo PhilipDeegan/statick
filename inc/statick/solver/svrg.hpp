@@ -2,6 +2,7 @@
 #define STATICK_SOLVER_SVRG_HPP_
 
 #include <thread>
+#include "statick/random.hpp"
 #include "statick/solver/history.hpp"
 
 namespace statick {
@@ -13,11 +14,10 @@ namespace StepType {
 constexpr uint16_t Fixed = 1, BarzilaiBorwein = 2;
 }
 template <typename MODEL, uint16_t RM = VarianceReductionMethod::Last,
-          uint16_t ST = StepType::Fixed, bool INTERCEPT = false, typename NEXT_I,
+          uint16_t ST = StepType::Fixed, bool INTERCEPT = false,
           typename T = typename MODEL::value_type,
           typename DAO>
-void prepare_solve(DAO &dao, typename MODEL::DAO &modao, size_t &t, NEXT_I fn_next_i) {
-  (void) fn_next_i;  // possibly unused if constexpr
+void prepare_solve(DAO &dao, typename MODEL::DAO &modao, size_t &t) {
   const size_t n_samples = modao.n_samples(), n_features = modao.n_features();
   std::vector<T> previous_iterate, previous_full_gradient;
   size_t iterate_size = n_features + static_cast<size_t>(INTERCEPT);
@@ -47,7 +47,7 @@ void prepare_solve(DAO &dao, typename MODEL::DAO &modao, size_t &t, NEXT_I fn_ne
   if constexpr(RM == VarianceReductionMethod::Random || RM == VarianceReductionMethod::Average)
     std::fill(dao.next_iterate.begin(), dao.next_iterate.end(), 0);
   dao.rand_index = 0;
-  if constexpr(RM == VarianceReductionMethod::Random) dao.rand_index = fn_next_i();
+  if constexpr(RM == VarianceReductionMethod::Random) dao.rand_index = dao.rand.next();
 }
 }  // namespace svrg
 }  // namespace statick
@@ -63,12 +63,12 @@ class SVRG {
  public:
   using DAO = typename std::conditional<MODEL::DAO::FEATURE::is_sparse, statick::svrg::sparse::DAO<typename MODEL::DAO, _H, _I>, statick::svrg::dense::DAO<typename MODEL::DAO, _H, _I>>::type;
 
-  template <typename PROX, typename NEXT_I>
-  static inline void SOLVE(DAO &dao, typename MODEL::DAO &modao, PROX &prox, NEXT_I next_i) {
+  template <typename PROX>
+  static inline void SOLVE(DAO &dao, typename MODEL::DAO &modao, PROX &prox) {
     if constexpr (MODEL::DAO::FEATURE::is_sparse)
-      statick::svrg::sparse::solve<MODEL>(dao, modao, prox, next_i);
+      statick::svrg::sparse::solve<MODEL>(dao, modao, prox);
     else
-      statick::svrg::dense::solve<MODEL>(dao, modao, prox, next_i);
+      statick::svrg::dense::solve<MODEL>(dao, modao, prox);
   }
 };
 }

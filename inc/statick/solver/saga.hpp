@@ -8,7 +8,7 @@ namespace saga {
 
 class DAO {
  public:
-  DAO(size_t n_samples) : rand(0, n_samples - 1){ }
+  DAO(size_t n_samples) : rand(0, n_samples - 1) { }
 
   RandomMinMax<INDICE_TYPE> rand;
 };

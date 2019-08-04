@@ -29,7 +29,7 @@ int main() {
   size_t t = 0;
   auto start = NOW;
   for (size_t j = 0; j < N_ITER; ++j) {
-    solve<statick::TModelSCCS<double>>(dao, call, iterate.data(), next_i, t, 4, N_SAMPLES);
+    solve<statick::TModelSCCS<double>>(dao, call, iterate.data(), t, 4, N_SAMPLES);
     if (j % 10 == 0) objs.emplace_back(statick::TModelSCCS<double>::loss(dao, iterate.data()));
   }
   for (auto &o : objs) std::cout << __LINE__ << " " << o << std::endl;
