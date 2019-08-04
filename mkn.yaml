@@ -47,6 +47,12 @@ profile:
   out: statick_linear_model
   src: src/pybind/linear_model
 
+- name: statick.prox.py
+  parent: py.py
+  install: statick/prox/bin
+  out: statick_prox
+  src: src/pybind/prox
+
 - name: statick.solver.py
   parent: py.py
   install: statick/solver/bin
@@ -58,6 +64,7 @@ profile:
   self: statick.py
         statick.array.py
         statick.linear_model.py
+        statick.prox.py
         statick.solver.py
 
 - name: clean

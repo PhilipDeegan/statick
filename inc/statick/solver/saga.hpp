@@ -1,36 +1,44 @@
 #ifndef STATICK_SOLVER_SAGA_HPP_
 #define STATICK_SOLVER_SAGA_HPP_
 
-#include "kul/log.hpp"
+#include "statick/random.hpp"
 
 namespace statick {
 namespace saga {
+
+class DAO {
+ public:
+  DAO(size_t n_samples) : rand(0, n_samples - 1){ }
+
+  RandomMinMax<INDICE_TYPE> rand;
+};
+
 namespace dense {
 template <typename _MODAO, bool INTERCEPT = false>
-class DAO {
+class DAO : public statick::saga::DAO {
  public:
   using T = typename _MODAO::value_type;
   using MODAO = _MODAO;
   using value_type = T;
 
-  DAO(MODAO &modao)
-      : iterate(modao.n_features() + static_cast<size_t>(INTERCEPT)),
+  DAO(MODAO &modao) : statick::saga::DAO(modao.n_samples()),
+        iterate(modao.n_features() + static_cast<size_t>(INTERCEPT)),
         gradients_average(modao.n_features()), gradients_memory(modao.n_samples()) {}
-  DAO() {}
+
   T step = 0.00257480411965l;
   std::vector<T> iterate, gradients_average, gradients_memory;
 };
 
-template <typename MODEL, bool INTERCEPT = false, typename PROX, typename NEXT_I,
+template <typename MODEL, bool INTERCEPT = false, typename PROX,
           typename T = typename MODEL::value_type,
           typename DAO = statick::saga::dense::DAO<T>>
-void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox, NEXT_I _next_i) {
+void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox) {
   const size_t n_samples = modao.n_samples(), n_features = modao.n_features();
   auto *features = modao.features().data();
   T n_samples_inverse = ((double)1 / (double)n_samples), step = dao.step;
   auto *iterate = dao.iterate.data();
   for (size_t t = 0; t < n_samples; ++t) {
-    INDICE_TYPE i = _next_i();
+    INDICE_TYPE i = dao.rand.next();
     T grad_i_factor = MODEL::grad_i_factor(modao, iterate, i);
     T grad_i_factor_old = dao.gradients_memory[i];
     dao.gradients_memory[i] = grad_i_factor;
@@ -51,7 +59,7 @@ void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox, NEXT_I _next_i) {
 }  // namespace dense
 
 namespace sparse {
-template <typename Sparse2D, class T = double>
+template <typename Sparse2D, class T = typename Sparse2D::value_type>
 std::vector<T> compute_columns_sparsity(const Sparse2D &features) {
   std::vector<T> column_sparsity(features.cols());
   std::fill(column_sparsity.begin(), column_sparsity.end(), 0);
@@ -62,7 +70,7 @@ std::vector<T> compute_columns_sparsity(const Sparse2D &features) {
   for (size_t i = 0; i < features.cols(); ++i) column_sparsity[i] *= samples_inverse;
   return column_sparsity;
 }
-template <typename Sparse2D, class T = double>
+template <typename Sparse2D, class T = typename Sparse2D::value_type>
 std::vector<T> compute_step_corrections(const Sparse2D &features) {
   std::vector<T> steps_corrections(features.cols()),
       columns_sparsity(compute_columns_sparsity(features));
@@ -71,14 +79,14 @@ std::vector<T> compute_step_corrections(const Sparse2D &features) {
 }
 
 template <typename _MODAO, bool INTERCEPT = false>
-class DAO {
+class DAO : public statick::saga::DAO {
  public:
   using T = typename _MODAO::value_type;
   using MODAO = _MODAO;
   using value_type = T;
 
-  DAO(MODAO &modao)
-      : iterate(modao.n_features() + static_cast<size_t>(INTERCEPT)),
+  DAO(MODAO &modao) : statick::saga::DAO(modao.n_samples()),
+        iterate(modao.n_features() + static_cast<size_t>(INTERCEPT)),
         steps_corrections(statick::saga::sparse::compute_step_corrections(modao.features())),
         gradients_average(modao.n_features()), gradients_memory(modao.n_samples()) {}
 
@@ -86,10 +94,10 @@ class DAO {
   std::vector<T> iterate, steps_corrections, gradients_average, gradients_memory;
 };
 
-template <typename MODEL, bool INTERCEPT = false, typename PROX, typename NEXT_I,
+template <typename MODEL, bool INTERCEPT = false, typename PROX,
           typename T = typename MODEL::value_type,
           typename DAO = statick::saga::sparse::DAO<T>>
-void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox, NEXT_I _next_i) {
+void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox) {
   const size_t n_samples = modao.n_samples(), n_features = modao.n_features();
   (void) n_features;  // possibly unused if constexpr
   T n_samples_inverse = ((double)1 / (double)n_samples), step = dao.step;
@@ -97,7 +105,7 @@ void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox, NEXT_I _next_i) {
   auto * steps_corrections = dao.steps_corrections.data();
   auto &features = modao.features();
   for (size_t t = 0; t < n_samples; ++t) {
-    INDICE_TYPE i = _next_i();
+    INDICE_TYPE i = dao.rand.next();
     size_t x_i_size = features.row_size(i);
     const T *x_i = features.row_raw(i);
     const INDICE_TYPE *x_i_indices = features.row_indices(i);
@@ -128,14 +136,14 @@ class SAGA {
  public:
   using DAO = typename std::conditional<MODEL::DAO::FEATURE::is_sparse, statick::saga::sparse::DAO<typename MODEL::DAO, INTERCEPT>, statick::saga::dense::DAO<typename MODEL::DAO, INTERCEPT>>::type;
 
-  template <typename PROX, typename NEXT_I>
-  static inline void SOLVE(DAO &dao, typename MODEL::DAO &modao, PROX &prox, NEXT_I next_i) {
+  template <typename PROX>
+  static inline void SOLVE(DAO &dao, typename MODEL::DAO &modao, PROX &prox) {
     if constexpr (MODEL::DAO::FEATURE::is_sparse)
-      statick::saga::sparse::solve<MODEL>(dao, modao, prox, next_i);
+      statick::saga::sparse::solve<MODEL>(dao, modao, prox);
     else
-      statick::saga::dense::solve<MODEL>(dao, modao, prox, next_i);
+      statick::saga::dense::solve<MODEL>(dao, modao, prox);
   }
 };
-}
+}  // namespace solver
 }  // namespace statick
 #endif  // STATICK_SOLVER_SAGA_HPP_

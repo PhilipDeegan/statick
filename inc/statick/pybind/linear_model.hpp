@@ -32,14 +32,32 @@ template <typename _F, typename _L>
 class DAO : public statick::logreg::DAO<_F, _L> {
  public:
   using SUPER = statick::logreg::DAO<_F, _L>;
+  using FEATURES = typename SUPER::FEATURES;
   using FEATURE = typename SUPER::FEATURE;
+  using LABELS = typename SUPER::LABELS;
+  using LABEL = typename SUPER::LABEL;
   using T = typename SUPER::T;
   template<typename F = FEATURE, typename = typename std::enable_if<!F::is_sparse>::type >
   DAO(py_array_t<T> & a, py_array_t<T> & b){ fit_d(*this, a, b); }
   template<typename F = FEATURE, typename = typename std::enable_if< F::is_sparse>::type >
   DAO(py_csr_t<T> & a, py_array_t<T> & b)  { fit_s(*this, a, b); }
 };
-}}
+}
+
+template <typename _F, typename _L>
+class ModelLogReg : public statick::ModelLogReg<_F, _L, logreg::DAO<_F, _L>> {
+ public:
+  using SUPER = statick::ModelLogReg<_F, _L, logreg::DAO<_F, _L>>;
+  using DAO = logreg::DAO<_F, _L>;
+  // using T = typename SUPER::T;
+  // template<typename F = FEATURE, typename = typename std::enable_if<!F::is_sparse>::type >
+  // DAO(py_array_t<T> & a, py_array_t<T> & b){ fit_d(*this, a, b); }
+  // template<typename F = FEATURE, typename = typename std::enable_if< F::is_sparse>::type >
+  // DAO(py_csr_t<T> & a, py_array_t<T> & b)  { fit_s(*this, a, b); }
+};
+
+
+}
 
 
 #endif  // STATICK_PYBIND_LINEAR_MODEL_HPP_

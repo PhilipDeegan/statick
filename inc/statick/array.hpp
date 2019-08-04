@@ -5,10 +5,12 @@
 #include <vector>
 #include <random>
 
+#ifndef INDICE_TYPE
 #ifdef TICK_SPARSE_INDICES_INT64
 #define INDICE_TYPE size_t
 #else
 #define INDICE_TYPE std::uint32_t
+#endif
 #endif
 
 namespace statick {

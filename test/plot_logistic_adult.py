@@ -13,13 +13,17 @@ X, y = train_set[0], train_set[1]
 from statick.linear_model import ModelLogReg
 model = ModelLogReg()
 model.fit(X, y)
-model._print()
 
-print("X.shape", X.shape)
+n_samples = X.shape[0]
+n_features = X.shape[1]
+
+from statick.prox import ProxL2Sq
+STRENGTH = (1. / n_samples) + 1e-10;
+prox = ProxL2Sq(strength=STRENGTH)
 
 from statick.solver import SAGA
 solver = SAGA(step=1e-3, max_iter=100, verbose=False, tol=0)
-solver.set_model(model)
+solver.set_model(model).set_prox(prox)
 solver.solve()
 
 # predictions = learner.predict_proba(test_set[0])

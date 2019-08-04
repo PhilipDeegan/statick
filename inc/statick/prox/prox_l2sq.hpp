@@ -46,9 +46,8 @@ class ProxL2Sq {
       for (size_t i = 0; i < size; i++)
         out[i] = prox_l2sq::p0::call_single(coeffs[i], step, prox.strength);
   }
-  static inline void call(const T *coeffs, T step, T *out, size_t size) {
+  static inline void call(const T *coeffs, T step, T *out, size_t size) {}
 
-}
   T strength {0};
 };
 }  // namespace statick

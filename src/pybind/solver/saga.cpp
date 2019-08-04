@@ -1,6 +1,8 @@
 #include "statick/pybind/linear_model.hpp"
 #include "statick/prox/prox_l2sq.hpp"
+#include "statick/prox/prox_zero.hpp"
 #include "statick/solver/saga.hpp"
+#include "statick/random.hpp"
 namespace py = pybind11;
 
 /*
@@ -8,55 +10,52 @@ Function mapping convention:
  log_reg_fit_sd = s(sparse), d(double)
  log_reg_fit_dd = d(dense) , d(double)
 */
-#define NOW                                                \
-  std::chrono::duration_cast<std::chrono::milliseconds>(   \
-      std::chrono::system_clock::now().time_since_epoch()) \
-      .count()
 
 namespace statick {
 
-using LOGREG_DAO_sd_ptr = statick_py::logreg::DAO<sparse2dv_d_ptr, arrayv_d_ptr>;
-using SAGA_LOG_REG_DAO_sd_ptr = statick::saga::sparse::DAO<LOGREG_DAO_sd_ptr, false>;
+using PROX_ZERO_d = statick::ProxZero<double>;
+using PROX_L2SQ_d = statick::ProxL2Sq<double>;
 
-template <typename DAO>
-void saga_solve_log_reg_s(DAO &dao, typename DAO::MODAO &modao){
-  constexpr bool INTERCEPT = false;
-  constexpr size_t N_ITER = 111;
+using LOGREG_DAO_sd = statick_py::logreg::DAO<sparse2dv_d_ptr, arrayv_d_ptr>;
+using SAGA_LOG_REG_DAO_sd = statick::saga::sparse::DAO<LOGREG_DAO_sd, false>;
+using saga_solve_log_reg_sd = statick::solver::SAGA<statick_py::ModelLogReg<sparse2dv_d_ptr, arrayv_d_ptr>>;
 
-  using T        = typename DAO::value_type;
-  using MODAO    = typename DAO::MODAO;
-  using FEATURES = statick::Sparse2DView<T>;
-  using LABELS   = statick::ArrayView<T>;
-  using PROX     = statick::ProxL2Sq<T>;
-  using MODEL    = statick::ModelLogReg<std::shared_ptr<FEATURES>, std::shared_ptr<LABELS>, MODAO>;
-  using SOLVER   = statick::solver::SAGA<MODEL>;
+using LOGREG_DAO_dd = statick_py::logreg::DAO<array2dv_d_ptr , arrayv_d_ptr>;
+using SAGA_LOG_REG_DAO_dd = statick::saga::dense::DAO<LOGREG_DAO_dd, false>;
+using saga_solve_log_reg_dd = statick::solver::SAGA<statick_py::ModelLogReg<array2dv_d_ptr , arrayv_d_ptr>>;
 
-  const size_t n_samples = modao.n_samples();
-  KLOG(INF) << n_samples;
+using PROX_ZERO_s = statick::ProxZero<float>;
+using PROX_L2SQ_s = statick::ProxL2Sq<float>;
 
-  std::mt19937_64 generator;
-  std::random_device r;
-  std::seed_seq seed_seq{r(), r(), r(), r(), r(), r(), r(), r()};
-  generator = std::mt19937_64(seed_seq);
-  std::uniform_int_distribution<size_t> uniform_dist;
-  std::uniform_int_distribution<size_t>::param_type p(0, n_samples - 1);
-  auto next_i = [&]() { return uniform_dist(generator, p); };
+using LOGREG_DAO_ss = statick_py::logreg::DAO<sparse2dv_s_ptr, arrayv_s_ptr>;
+using SAGA_LOG_REG_DAO_ss = statick::saga::sparse::DAO<LOGREG_DAO_ss, false>;
+using saga_solve_log_reg_ss = statick::solver::SAGA<statick_py::ModelLogReg<sparse2dv_s_ptr, arrayv_s_ptr>>;
 
-  const T STRENGTH = (1. / n_samples) + 1e-10;
-  PROX prox(STRENGTH); std::vector<T> objs; auto start = NOW;
-  for (size_t j = 0; j < N_ITER; ++j) {
-    SOLVER::SOLVE(dao, modao, prox, next_i);
-    if (j % 10 == 0) objs.emplace_back(MODEL::LOSS(modao, dao.iterate.data()));
-  }
-}
-template void saga_solve_log_reg_s<SAGA_LOG_REG_DAO_sd_ptr>(SAGA_LOG_REG_DAO_sd_ptr &, typename SAGA_LOG_REG_DAO_sd_ptr::MODAO &);
+using LOGREG_DAO_ds = statick_py::logreg::DAO<array2dv_s_ptr , arrayv_s_ptr>;
+using SAGA_LOG_REG_DAO_ds = statick::saga::dense::DAO<LOGREG_DAO_ds, false>;
+using saga_solve_log_reg_ds = statick::solver::SAGA<statick_py::ModelLogReg<array2dv_s_ptr , arrayv_s_ptr>>;
 
 PYBIND11_MODULE(statick_solver, m) {
   m.attr("__name__") = "statick.solver";
-  m.def("saga_solve_log_reg_sd_ptr", &saga_solve_log_reg_s<SAGA_LOG_REG_DAO_sd_ptr>, "solve sparse double");
-  py::class_<SAGA_LOG_REG_DAO_sd_ptr>(m, "SAGA_LOG_REG_DAO_sd_ptr")
-      .def(py::init<LOGREG_DAO_sd_ptr &>())
-      .def_readwrite("step", &SAGA_LOG_REG_DAO_sd_ptr::step);
+  py::class_<SAGA_LOG_REG_DAO_sd>(m, "SAGA_LOG_REG_DAO_sd").def(py::init<LOGREG_DAO_sd &>())
+                                                           .def_readwrite("step", &SAGA_LOG_REG_DAO_sd::step);
+  m.def("saga_solve_log_reg_zero_sd", &saga_solve_log_reg_sd::SOLVE<PROX_ZERO_d>, "solve sparse double prox zero");
+  m.def("saga_solve_log_reg_l2sq_sd", &saga_solve_log_reg_sd::SOLVE<PROX_L2SQ_d>, "solve sparse double prox l2sq");
+
+  py::class_<SAGA_LOG_REG_DAO_dd>(m, "SAGA_LOG_REG_DAO_dd").def(py::init<LOGREG_DAO_dd &>())
+                                                           .def_readwrite("step", &SAGA_LOG_REG_DAO_dd::step);
+  m.def("saga_solve_log_reg_zero_dd", &saga_solve_log_reg_dd::SOLVE<PROX_ZERO_d>, "solve dense double prox zero");
+  m.def("saga_solve_log_reg_l2sq_dd", &saga_solve_log_reg_dd::SOLVE<PROX_L2SQ_d>, "solve dense double prox l2sq");
+
+  py::class_<SAGA_LOG_REG_DAO_ss>(m, "SAGA_LOG_REG_DAO_ss").def(py::init<LOGREG_DAO_ss &>())
+                                                           .def_readwrite("step", &SAGA_LOG_REG_DAO_ss::step);
+  m.def("saga_solve_log_reg_zero_ss", &saga_solve_log_reg_ss::SOLVE<PROX_ZERO_s>, "solve sparse single prox zero");
+  m.def("saga_solve_log_reg_l2sq_ss", &saga_solve_log_reg_ss::SOLVE<PROX_L2SQ_s>, "solve sparse single prox l2sq");
+
+  py::class_<SAGA_LOG_REG_DAO_ds>(m, "SAGA_LOG_REG_DAO_ds").def(py::init<LOGREG_DAO_ds &>())
+                                                           .def_readwrite("step", &SAGA_LOG_REG_DAO_ds::step);
+  m.def("saga_solve_log_reg_zero_ds", &saga_solve_log_reg_ds::SOLVE<PROX_ZERO_s>, "solve dense single prox zero");
+  m.def("saga_solve_log_reg_l2sq_ds", &saga_solve_log_reg_ds::SOLVE<PROX_L2SQ_s>, "solve dense single prox l2sq");
 }
 
 }  //  namespace statick
