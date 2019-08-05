@@ -6,6 +6,7 @@ namespace statick {
 template <typename T, bool POSITIVE = 0>
 class ProxZero {
  public:
+  static constexpr bool is_separable = true;
   static constexpr std::string_view NAME = "zero";
   using value_type = T;
 

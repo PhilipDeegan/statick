@@ -6,15 +6,17 @@ int main() {
   using T        = double;
   using FEATURES = statick::Array2D<T>;
   using LABELS   = statick::Array<T>;
-  using PROX     = statick::ProxL2Sq<T>;
+  using SOLVER   = statick::solver::SAGA;
   using MODEL    = statick::ModelLogReg<std::shared_ptr<FEATURES>, std::shared_ptr<LABELS>>;
-  using SOLVER   = statick::solver::SAGA<MODEL>;
+  using PROX     = statick::ProxL2Sq<T>;
+  auto  SOLVE    = &SOLVER::template SOLVE<MODEL, PROX>;
   MODEL::DAO modao(FEATURES::RANDOM(N_SAMPLES, N_FEATURES, SEED),
                    LABELS::RANDOM(N_FEATURES, SEED));
-  const T STRENGTH = (1. / modao.n_samples()) + 1e-10;
-  SOLVER::DAO dao(modao); PROX prox(STRENGTH); std::vector<T> objs; auto start = NOW;
+  SOLVER::DAO<MODEL> dao(modao);
+  PROX prox(/*strength=*/(1. / modao.n_samples()) + 1e-10);
+  std::vector<T> objs; auto start = NOW;
   for (size_t j = 0; j < N_ITER; ++j) {
-    SOLVER::SOLVE(dao, modao, prox);
+    SOLVE(dao, modao, prox);
     if (j % 10 == 0) objs.emplace_back(MODEL::LOSS(modao, dao.iterate.data()));
   }
   auto finish = NOW;

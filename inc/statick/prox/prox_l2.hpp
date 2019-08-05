@@ -28,7 +28,11 @@ T value(const K *coeffs, size_t size, T strength) {
 template <typename T, bool POSITIVE = 0>
 class ProxL2 {
  public:
+  static constexpr bool is_separable = false;
+  static constexpr std::string_view NAME = "l2";
+
   ProxL2(T _strength) : strength(_strength){}
+
   static inline void call(ProxL2 &prox, const T* coeffs, T step, T *out, size_t size) {
     if constexpr (POSITIVE) prox_l2::call(coeffs, step, out, size, prox.strength);
     else prox_l2::p0::call(coeffs, step, out, size, prox.strength);
@@ -38,5 +42,6 @@ class ProxL2 {
   }
   T strength {0};
 };
+
 }  // namespace statick
 #endif  // STATICK_PROX_PROX_L2_HPP_

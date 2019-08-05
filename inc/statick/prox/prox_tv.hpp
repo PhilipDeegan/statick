@@ -96,5 +96,25 @@ T value(const RAWrray &coeffs, size_t start, size_t end, T strength) {
   return strength * tv_norm;
 }
 }  // namespace prox_tv
+
+
+}  // namespace prox_l2sq
+template <typename T, bool POSITIVE = 0>
+class ProxTV {
+ public:
+  static constexpr bool is_separable = false;
+  static constexpr std::string_view NAME = "tv";
+  using value_type = T;
+
+  static inline T value(ProxTV &prox, const T *coeffs, const size_t size) {
+    return 0;
+  }
+  static inline T call_single(ProxTV &prox, const T x, T step) {
+    return x;
+  }
+
+  static inline void call(ProxTV &prox, const T* coeffs, T step, T *out, size_t size) {}
+}
+
 }  // namespace statick
 #endif  // STATICK_PROX_PROX_TV_HPP_

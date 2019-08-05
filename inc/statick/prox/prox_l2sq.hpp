@@ -27,6 +27,7 @@ T value(const T *coeffs, size_t size, T strength) {
 template <typename T, bool POSITIVE = 0>
 class ProxL2Sq {
  public:
+  static constexpr bool is_separable = true;
   static constexpr std::string_view NAME = "l2sq";
   using value_type = T;
 

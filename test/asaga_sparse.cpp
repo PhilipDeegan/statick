@@ -14,7 +14,7 @@ int main() {
   MODEL::DAO modao(FEATURES::FROM_CEREAL(features_s), LABELS::FROM_CEREAL(labels_s));
   const T STRENGTH = (1. / modao.n_samples()) + 1e-10;
   SOLVER::DAO dao(modao, N_ITER, modao.n_samples(), THREADS); PROX prox(STRENGTH);
-  std::function<T(T*, size_t)> objectife = [&](T* iterate, size_t size){
+  auto objectife = [&](T* iterate, size_t size){
     return MODEL::LOSS(modao, iterate) + statick::prox_l2sq::value(iterate, size, STRENGTH);
   };
   dao.history.tol.val = 1e-5;
