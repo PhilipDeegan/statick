@@ -49,6 +49,7 @@ class ModelLogReg : public statick::ModelLogReg<_F, _L, logreg::DAO<_F, _L>> {
  public:
   using SUPER = statick::ModelLogReg<_F, _L, logreg::DAO<_F, _L>>;
   using DAO = logreg::DAO<_F, _L>;
+  using SUPER::NAME;
   // using T = typename SUPER::T;
   // template<typename F = FEATURE, typename = typename std::enable_if<!F::is_sparse>::type >
   // DAO(py_array_t<T> & a, py_array_t<T> & b){ fit_d(*this, a, b); }

@@ -7,5 +7,5 @@ class ProxL2Sq(TPL2SQ):
     def __init__(self, **kwargs):
         TPL2SQ.__init__(self, **kwargs)
         object.__setattr__(self, "_dao", statick.prox.PROX_L2SQ_d(self.strength))
-        object.__setattr__(self, "_MANGLING", "L2SQ")
+        object.__setattr__(self, "_MANGLING", "l2sq")
 

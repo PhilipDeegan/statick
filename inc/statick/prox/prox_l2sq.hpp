@@ -27,6 +27,9 @@ T value(const T *coeffs, size_t size, T strength) {
 template <typename T, bool POSITIVE = 0>
 class ProxL2Sq {
  public:
+  static constexpr std::string_view NAME = "l2sq";
+  using value_type = T;
+
   ProxL2Sq(T _strength) : strength(_strength){}
   static inline T value(ProxL2Sq &prox, const T *coeffs, const size_t size) {
     return statick::prox_l2sq::value(coeffs, size, prox.strength);

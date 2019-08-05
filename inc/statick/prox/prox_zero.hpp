@@ -6,6 +6,9 @@ namespace statick {
 template <typename T, bool POSITIVE = 0>
 class ProxZero {
  public:
+  static constexpr std::string_view NAME = "zero";
+  using value_type = T;
+
   static inline T value(ProxZero &prox, const T *coeffs, const size_t size) {
     return 0;
   }

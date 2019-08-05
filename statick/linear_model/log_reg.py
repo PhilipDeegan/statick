@@ -7,7 +7,7 @@ class ModelLogReg(TMLR):
     def __init__(self):
         TMLR.__init__(self)
         self._model = None
-        object.__setattr__(self, "_MANGLING", "LOG_REG")
+        object.__setattr__(self, "_MANGLING", "log_reg")
         object.__setattr__(self, "_dao", None)
 
     def fit(self, X, y):

@@ -131,13 +131,15 @@ void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox) {
 }  // namespace sparse
 }  // namespace saga
 namespace solver {
-template <typename MODEL, bool INTERCEPT = false>
+
 class SAGA {
  public:
+  static constexpr std::string_view NAME = "saga";
+  template <typename MODEL, bool INTERCEPT = false>
   using DAO = typename std::conditional<MODEL::DAO::FEATURE::is_sparse, statick::saga::sparse::DAO<typename MODEL::DAO, INTERCEPT>, statick::saga::dense::DAO<typename MODEL::DAO, INTERCEPT>>::type;
 
-  template <typename PROX>
-  static inline void SOLVE(DAO &dao, typename MODEL::DAO &modao, PROX &prox) {
+  template <typename MODEL, typename PROX, bool INTERCEPT = false>
+  static inline void SOLVE(DAO<MODEL, INTERCEPT> &dao, typename MODEL::DAO &modao, PROX &prox) {
     if constexpr (MODEL::DAO::FEATURE::is_sparse)
       statick::saga::sparse::solve<MODEL>(dao, modao, prox);
     else

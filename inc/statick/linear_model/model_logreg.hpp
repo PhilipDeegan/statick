@@ -71,6 +71,7 @@ using DAO = logreg::DAO<std::shared_ptr<FEATURES>,
 template <typename _F, typename _L, typename _DAO = logreg::DAO<_F, _L>>
 class ModelLogReg {
  public:
+  static constexpr std::string_view NAME = "log_reg";
   using DAO = _DAO;
   using value_type = typename DAO::value_type;
   using T = value_type;
