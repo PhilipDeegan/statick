@@ -30,11 +30,11 @@ class DAO {
  public:
   using HISTORY = HISTOIR;
   DAO(MODAO &modao, size_t _n_epochs, size_t _epoch_size, size_t _threads)
-      : rand(0, modao.n_samples() - 1),
-        n_epochs(_n_epochs),
+      : n_epochs(_n_epochs),
         epoch_size(_epoch_size), n_threads(_threads),
         iterate(modao.n_features() + static_cast<size_t>(INTERCEPT)),
-        steps_corrections(statick::svrg::sparse::compute_step_corrections(modao.features())) {
+        steps_corrections(statick::svrg::sparse::compute_step_corrections(modao.features())),
+        rand(0, modao.n_samples() - 1) {
   }
   T step = 0.00257480411965l;
   size_t n_epochs, epoch_size, rand_index = 0, n_threads, t = 0;
@@ -47,22 +47,15 @@ class DAO {
 template <typename MODEL, uint16_t RM, uint16_t ST, bool INTERCEPT,
           typename PROX, typename DAO, typename T = typename MODEL::value_type>
 void solve_thread(DAO &dao, typename MODEL::DAO &modao, PROX prox, size_t n_thread) {
-
-  auto is_in_range = [](size_t){ return 1; }; // TODO - TODO
-  auto & features = modao.features();
-  auto & next_iterate = dao.next_iterate;
-  auto * full_gradient = dao.full_gradient.data();
   const auto &step = dao.step;
-  const auto n_samples = features.rows(), n_features = features.cols();
-  (void) n_features;  // possibly unused if constexpr
-  const auto epoch_size = dao.epoch_size != 0 ? dao.epoch_size : n_samples;
+  auto & features = modao.features();
+  auto * full_gradient = dao.full_gradient.data();
+  const auto epoch_size = dao.epoch_size != 0 ? dao.epoch_size : features.rows();
   auto * iterate = dao.iterate.data();
   auto * steps_corrections = dao.steps_corrections.data();
-
   auto n_threads = dao.n_threads;
   size_t thread_epoch_size = epoch_size / n_threads;
   thread_epoch_size += n_thread < (epoch_size % n_threads);
-
   for (size_t t = 0; t < thread_epoch_size; ++t) {
     INDICE_TYPE i = dao.rand.next();
     const size_t x_i_size = features.row_size(i);
@@ -82,13 +75,13 @@ void solve_thread(DAO &dao, typename MODEL::DAO &modao, PROX prox, size_t n_thre
     // consistent with the dense case (in the case where the user has the weird
     // desire to to regularize the intercept)
     if constexpr (INTERCEPT) {
-      T descent_direction = step * (grad_i_diff + full_gradient[n_features]);
-        iterate[n_features] = PROX::call_single(prox,
-            iterate[n_features] - descent_direction, step);
+      iterate.back() = PROX::call_single(prox,
+        iterate.back() - (/*descent_direction =*/ step * (grad_i_diff + full_gradient.back())),
+        step);
     }
     // Note that the average option for variance reduction with sparse data is a
     // very bad idea, but this is caught in the python class
-    if constexpr (RM == VarianceReductionMethod::Random) if(t == dao.rand_index) next_iterate = iterate;
+    if constexpr (RM == VarianceReductionMethod::Random) if(t == dao.rand_index) dao.next_iterate = iterate;
     if constexpr (RM == VarianceReductionMethod::Average) dao.next_iterate.mult_incr(iterate, 1.0 / epoch_size);
   }
 }
@@ -101,13 +94,12 @@ void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox) {
   using T = typename MODEL::value_type;
   using TOL = typename DAO::HISTORY::TOLERANCE;
   auto &history = dao.history;
-  const size_t n_samples = modao.n_samples(), n_features = modao.n_features();
   history.init(dao.n_epochs / history.record_every + 1, dao.iterate.size());
   const auto &n_epochs = dao.n_epochs, &n_threads = dao.n_threads;
-  const auto epoch_size = dao.epoch_size != 0 ? dao.epoch_size : n_samples;
+  const auto epoch_size = dao.epoch_size != 0 ? dao.epoch_size : modao.n_samples();
   const auto &record_every = history.record_every;
-  auto &last_record_time = history.last_record_time;
   auto &last_record_epoch = history.last_record_epoch;
+  auto &last_record_time = history.last_record_time;
   auto * iterate = dao.iterate.data();
   statick::ThreadPool pool(n_threads);
   std::vector<std::function<void()>> funcs;
@@ -115,6 +107,7 @@ void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox) {
     funcs.emplace_back([&](){
       solve_thread<MODEL, RM, ST, INTERCEPT>(dao, modao, prox, i); });
 
+  const auto n_features = modao.n_features();
   auto start = std::chrono::steady_clock::now();
   auto log_history = [&](size_t epoch){
     dao.t += epoch_size;
@@ -134,7 +127,7 @@ void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox) {
     log_history(epoch);
     if constexpr(RM == VarianceReductionMethod::Last)
       for (size_t i = 0; i < dao.iterate.size(); i++)
-        dao.next_iterate[i] = dao.iterate[i];
+        dao.next_iterate[i] = iterate[i];
   }
 
   dao.t += epoch_size;

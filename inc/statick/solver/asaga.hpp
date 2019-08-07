@@ -8,27 +8,32 @@
 namespace statick {
 namespace asaga {
 
-template <typename MODAO, typename HISTOIR = statick::solver::NoHistory,
-          bool INTERCEPT = false, typename T = typename MODAO::value_type>
+template <typename _MODEL, typename HISTOIR = statick::solver::NoHistory, bool _INTERCEPT = false>
 class DAO {
  public:
+  using MODEL = _MODEL;
+  using MODAO = typename _MODEL::DAO;
+  using T = typename MODAO::value_type;
+  using value_type = T;
   using HISTORY = HISTOIR;
+  static constexpr bool INTERCEPT = _INTERCEPT;
+
   DAO(MODAO &modao, size_t _n_epochs, size_t _epoch_size, size_t _threads)
-      : rand(0, modao.n_samples() - 1),
-        n_epochs(_n_epochs), epoch_size(_epoch_size), n_threads(_threads),
+      : n_epochs(_n_epochs), epoch_size(_epoch_size), n_threads(_threads),
         iterate(modao.n_features() + static_cast<size_t>(INTERCEPT)),
         steps_corrections(statick::saga::sparse::compute_step_corrections(modao.features())),
-        gradients_average(modao.n_features()), gradients_memory(modao.n_samples()) {
+        gradients_average(modao.n_features()), gradients_memory(modao.n_samples()),
+        rand(0, modao.n_samples() - 1) {
     for (size_t i = 0; i < modao.n_samples(); i++) gradients_memory[i].store(0);
     for (size_t i = 0; i < modao.n_features(); i++) gradients_average[i].store(0);
   }
   T step = 0.00257480411965l;
   size_t n_epochs = 200, epoch_size = 0, n_threads;
-  HISTORY history;
   std::vector<T> iterate, steps_corrections;
   std::vector<std::atomic<T>> gradients_average, gradients_memory;
 
   RandomMinMax<INDICE_TYPE> rand;
+  HISTORY history;
 };
 namespace sparse {
 
@@ -43,11 +48,7 @@ void threaded_solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox, size_t n_t
   const auto &n_epochs = dao.n_epochs;
   const auto n_samples = features.rows(), n_features = features.cols();
   const auto epoch_size = dao.epoch_size != 0 ? dao.epoch_size : n_samples;
-  auto &history = dao.history;
-  const auto &record_every = history.record_every;
-  auto &last_record_time = history.last_record_time;
-  auto &last_record_epoch = history.last_record_epoch;
-  auto * iterate = dao.iterate.data(), * steps_corrections = dao.steps_corrections.data();
+    auto * iterate = dao.iterate.data(), * steps_corrections = dao.steps_corrections.data();
   T n_samples_inverse = ((double)1 / (double)n_samples), x_ij = 0, step_correction = 0;
   T grad_factor_diff = 0, grad_avg_j = 0, grad_i_factor = 0, grad_i_factor_old = 0;
   auto n_threads = dao.n_threads;
@@ -87,12 +88,12 @@ void threaded_solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox, size_t n_t
     }
     if constexpr(std::is_same<typename DAO::HISTORY, statick::solver::History<T, TOL>>::value) {
       if (n_thread == 0) {
-        if ((last_record_epoch + epoch) == 1 ||
-            ((last_record_epoch + epoch) % record_every == 0)) {
+        if ((dao.history.last_record_epoch + epoch) == 1 ||
+            ((dao.history.last_record_epoch + epoch) % dao.history.record_every == 0)) {
           auto end = std::chrono::steady_clock::now();
           double time = ((end - start).count()) * std::chrono::steady_clock::period::num /
                         static_cast<double>(std::chrono::steady_clock::period::den);
-          history.save_history(time, epoch, iterate, n_features);
+          dao.history.save_history(time, epoch, iterate, n_features);
         }
       }
     }
@@ -102,8 +103,8 @@ void threaded_solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox, size_t n_t
       auto end = std::chrono::steady_clock::now();
       double time = ((end - start).count()) * std::chrono::steady_clock::period::num /
                     static_cast<double>(std::chrono::steady_clock::period::den);
-      last_record_time = time;
-      last_record_epoch += n_epochs;
+      dao.history.last_record_time = time;
+      dao.history.last_record_epoch += n_epochs;
     }
   }
 }
@@ -111,8 +112,11 @@ void threaded_solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox, size_t n_t
 template <typename MODEL, bool INTERCEPT = false, typename PROX, typename DAO>
 void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox) {
   using T = typename MODEL::value_type;
-  auto &history = dao.history;
-  history.init(dao.n_epochs / history.record_every + 1, dao.iterate.size());
+  using TOL = typename DAO::HISTORY::TOLERANCE;
+  if constexpr(std::is_same<typename DAO::HISTORY, statick::solver::History<T, TOL>>::value) {
+    auto &history = dao.history;
+    history.init(dao.n_epochs / history.record_every + 1, dao.iterate.size());
+  }
   std::vector<std::thread> threads;
   for (size_t i = 1; i < dao.n_threads; i++) {
     threads.emplace_back(
@@ -127,15 +131,17 @@ void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox) {
 }  // namespace sparse
 }  // namespace asaga
 namespace solver {
-template <typename MODEL, typename HISTOIR = statick::solver::NoHistory, bool INTERCEPT = false>
 class ASAGA {
  public:
-  using DAO = typename statick::asaga::DAO<typename MODEL::DAO, HISTOIR, INTERCEPT>;
+  static constexpr std::string_view NAME = "asaga";
+  template <typename M, typename H = statick::solver::NoHistory, bool I = false>
+  using DAO = typename statick::asaga::DAO<M, H, I>;
 
-  template <typename PROX>
-  static inline void SOLVE(DAO &dao, typename MODEL::DAO &modao, PROX &prox) {
-    if constexpr (MODEL::DAO::FEATURE::is_sparse)
-      statick::asaga::sparse::solve<MODEL>(dao, modao, prox);
+  template <typename _DAO, typename PROX>
+  static inline void SOLVE(_DAO &dao, typename _DAO::MODAO &modao, PROX &prox) {
+    using M = typename _DAO::MODEL;
+    if constexpr (M::DAO::FEATURE::is_sparse)
+      statick::asaga::sparse::solve<M>(dao, modao, prox);
     else
       throw std::runtime_error("Only sparse features are support for ASAGA");
   }

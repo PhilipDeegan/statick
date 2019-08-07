@@ -18,7 +18,7 @@ int main() {
     if (j % 10 == 0) objs.emplace_back(MODEL::LOSS(modao, dao.iterate.data()));
   }
   auto finish = NOW;
-  std::cout << (NOW - start) / 1e3 << std::endl;
   for (auto &o : objs) std::cout << __LINE__ << " " << o << std::endl;
+  std::cout << (finish - start) / 1e3 << std::endl;
   return 0;
 }

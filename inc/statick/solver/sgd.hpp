@@ -8,8 +8,8 @@ class DAO {
  public:
   using T = typename MODAO::value_type;
   DAO(MODAO &modao) :
-    rand(0, modao.n_samples() - 1),
-    iterate(modao.n_features() + static_cast<size_t>(INTERCEPT)) {}
+    iterate(modao.n_features() + static_cast<size_t>(INTERCEPT)),
+    rand(0, modao.n_samples() - 1) {}
 
   T step = 1e-5;
   size_t t = 0;

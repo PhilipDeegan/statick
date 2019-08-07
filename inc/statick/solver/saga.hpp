@@ -6,27 +6,40 @@
 namespace statick {
 namespace saga {
 
+template <typename _MODEL, bool INTERCEPT>
 class DAO {
  public:
-  DAO(size_t n_samples) : rand(0, n_samples - 1) { }
+  using MODEL = _MODEL;
+  using MODAO = typename _MODEL::DAO;
+  using T = typename MODAO::value_type;
+  using value_type = T;
 
+  DAO(MODAO &modao)
+    : iterate(modao.n_features() + static_cast<size_t>(INTERCEPT)),
+      gradients_average(modao.n_features()), gradients_memory(modao.n_samples()),
+      rand(0, modao.n_samples() - 1) { }
+
+  std::vector<T> iterate, gradients_average, gradients_memory;
   RandomMinMax<INDICE_TYPE> rand;
 };
 
 namespace dense {
-template <typename _MODAO, bool INTERCEPT = false>
-class DAO : public statick::saga::DAO {
+template <typename _MODEL, bool _INTERCEPT = false>
+class DAO : public statick::saga::DAO<_MODEL, _INTERCEPT> {
  public:
-  using T = typename _MODAO::value_type;
-  using MODAO = _MODAO;
+  using SUPER = statick::saga::DAO<_MODEL, _INTERCEPT>;
+  using T = typename SUPER::value_type;
+  using MODEL = _MODEL;
+  using MODAO = typename MODEL::DAO;
   using value_type = T;
+  static constexpr bool INTERCEPT = _INTERCEPT;
+  using SUPER::iterate;
+  using SUPER::gradients_average;
+  using SUPER::gradients_memory;
 
-  DAO(MODAO &modao) : statick::saga::DAO(modao.n_samples()),
-        iterate(modao.n_features() + static_cast<size_t>(INTERCEPT)),
-        gradients_average(modao.n_features()), gradients_memory(modao.n_samples()) {}
+  DAO(MODAO &modao) : statick::saga::DAO<_MODEL, INTERCEPT>(modao) {}
 
   T step = 0.00257480411965l;
-  std::vector<T> iterate, gradients_average, gradients_memory;
 };
 
 template <typename MODEL, bool INTERCEPT = false, typename PROX,
@@ -78,20 +91,25 @@ std::vector<T> compute_step_corrections(const Sparse2D &features) {
   return steps_corrections;
 }
 
-template <typename _MODAO, bool INTERCEPT = false>
-class DAO : public statick::saga::DAO {
+template <typename _MODEL, bool _INTERCEPT = false>
+class DAO : public statick::saga::DAO<_MODEL, _INTERCEPT> {
  public:
-  using T = typename _MODAO::value_type;
-  using MODAO = _MODAO;
+  using SUPER = statick::saga::DAO<_MODEL, _INTERCEPT>;
+  using T = typename SUPER::value_type;
+  using MODEL = _MODEL;
+  using MODAO = typename MODEL::DAO;
   using value_type = T;
+  static constexpr bool INTERCEPT = _INTERCEPT;
+  using SUPER::iterate;
+  using SUPER::gradients_average;
+  using SUPER::gradients_memory;
 
-  DAO(MODAO &modao) : statick::saga::DAO(modao.n_samples()),
-        iterate(modao.n_features() + static_cast<size_t>(INTERCEPT)),
-        steps_corrections(statick::saga::sparse::compute_step_corrections(modao.features())),
-        gradients_average(modao.n_features()), gradients_memory(modao.n_samples()) {}
+  DAO(MODAO &modao)
+     : statick::saga::DAO<_MODEL, INTERCEPT>(modao),
+       steps_corrections(statick::saga::sparse::compute_step_corrections(modao.features())) {}
 
   T step = 0.00257480411965l;
-  std::vector<T> iterate, steps_corrections, gradients_average, gradients_memory;
+  std::vector<T> steps_corrections;
 };
 
 template <typename MODEL, bool INTERCEPT = false, typename PROX,
@@ -135,15 +153,22 @@ namespace solver {
 class SAGA {
  public:
   static constexpr std::string_view NAME = "saga";
-  template <typename MODEL, bool INTERCEPT = false>
-  using DAO = typename std::conditional<MODEL::DAO::FEATURE::is_sparse, statick::saga::sparse::DAO<typename MODEL::DAO, INTERCEPT>, statick::saga::dense::DAO<typename MODEL::DAO, INTERCEPT>>::type;
+  template <typename M, bool I>
+  using sparse_dao = statick::saga::sparse::DAO<M, I>;
 
-  template <typename MODEL, typename PROX, bool INTERCEPT = false>
-  static inline void SOLVE(DAO<MODEL, INTERCEPT> &dao, typename MODEL::DAO &modao, PROX &prox) {
-    if constexpr (MODEL::DAO::FEATURE::is_sparse)
-      statick::saga::sparse::solve<MODEL>(dao, modao, prox);
+  template <typename M, bool I>
+  using  dense_dao = statick::saga:: dense::DAO<M, I>;
+
+  template <typename M, bool I = false>
+  using DAO = typename std::conditional<M::DAO::FEATURE::is_sparse, sparse_dao<M, I>, dense_dao<M, I>>::type;
+
+  template <typename _DAO, typename PROX>
+  static inline void SOLVE(_DAO &dao, typename _DAO::MODAO &modao, PROX &prox) {
+    using M = typename _DAO::MODEL;
+    if constexpr (std::is_same<_DAO, sparse_dao<M, _DAO::INTERCEPT>>::value)
+      statick::saga::sparse::solve<M>(dao, modao, prox);
     else
-      statick::saga::dense::solve<MODEL>(dao, modao, prox);
+      statick::saga:: dense::solve<M>(dao, modao, prox);
   }
 };
 }  // namespace solver

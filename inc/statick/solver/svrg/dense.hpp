@@ -11,10 +11,10 @@ class DAO {
  public:
   using HISTORY = HISTOIR;
   DAO(MODAO &modao, size_t _n_epochs, size_t _epoch_size, size_t _threads)
-      : rand(0, modao.n_samples() - 1),
-        n_epochs(_n_epochs),
+      : n_epochs(_n_epochs),
         epoch_size(_epoch_size), n_threads(_threads),
-        iterate(modao.n_features() + static_cast<size_t>(INTERCEPT)) {
+        iterate(modao.n_features() + static_cast<size_t>(INTERCEPT)),
+        rand(0, modao.n_samples() - 1) {
   }
   T step = 0.00257480411965l;
   size_t n_epochs, epoch_size, rand_index = 0, n_threads, t = 0;
