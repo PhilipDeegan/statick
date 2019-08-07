@@ -19,7 +19,7 @@ template <typename S, typename D, typename M, typename P>
 auto def_solve(pybind11::module &m, std::stringstream &st){
   std::stringstream ss;
   ss << "solve_" << S::NAME << "_" << M::NAME << "_" << P::NAME << "_" << st.str();
-  m.def(ss.str().c_str(), &S::template SOLVE<D, P>, "solve sparse double prox l2sq");
+  m.def(ss.str().c_str(), &S::template SOLVE<D, P>);
 }
 
 template <typename S, typename M, typename D = typename S::template DAO<M>>
