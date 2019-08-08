@@ -75,8 +75,9 @@ void solve_thread(DAO &dao, typename MODEL::DAO &modao, PROX prox, size_t n_thre
     // consistent with the dense case (in the case where the user has the weird
     // desire to to regularize the intercept)
     if constexpr (INTERCEPT) {
-      iterate.back() = PROX::call_single(prox,
-        iterate.back() - (/*descent_direction =*/ step * (grad_i_diff + full_gradient.back())),
+      const auto n_features = features.cols();
+      iterate[n_features] = PROX::call_single(prox,
+        iterate[n_features] - (/*descent_direction =*/ step * (grad_i_diff + full_gradient[n_features])),
         step);
     }
     // Note that the average option for variance reduction with sparse data is a
@@ -95,20 +96,15 @@ void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox) {
   using TOL = typename DAO::HISTORY::TOLERANCE;
   auto &history = dao.history;
   history.init(dao.n_epochs / history.record_every + 1, dao.iterate.size());
+  const auto n_features = modao.n_features();
   const auto &n_epochs = dao.n_epochs, &n_threads = dao.n_threads;
   const auto epoch_size = dao.epoch_size != 0 ? dao.epoch_size : modao.n_samples();
   const auto &record_every = history.record_every;
   auto &last_record_epoch = history.last_record_epoch;
   auto &last_record_time = history.last_record_time;
   auto * iterate = dao.iterate.data();
-  statick::ThreadPool pool(n_threads);
-  std::vector<std::function<void()>> funcs;
-  for (size_t i = 1; i < n_threads; i++)
-    funcs.emplace_back([&](){
-      solve_thread<MODEL, RM, ST, INTERCEPT>(dao, modao, prox, i); });
-
-  const auto n_features = modao.n_features();
   auto start = std::chrono::steady_clock::now();
+
   auto log_history = [&](size_t epoch){
     dao.t += epoch_size;
     if ((last_record_epoch + epoch) == 1 || ((last_record_epoch + epoch) % record_every == 0)) {
@@ -118,7 +114,12 @@ void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox) {
       history.save_history(time, epoch, iterate, n_features);
     }
   };
+  std::vector<std::function<void()>> funcs;
+  for (size_t i = 1; i < n_threads - 1; i++)
+    funcs.emplace_back([&](){
+      solve_thread<MODEL, RM, ST, INTERCEPT>(dao, modao, prox, i); });
 
+  statick::ThreadPool pool(n_threads - 1);
   for (size_t epoch = 1; epoch < (n_epochs + 1); ++epoch) {
     statick::svrg::prepare_solve<MODEL>(dao, modao, dao.t);
     pool.async(funcs);
