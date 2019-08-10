@@ -94,7 +94,8 @@ class ModelLogReg {
   }
 
   template <bool INTERCEPT = false, bool FILL = true, class K>
-  static void grad_i(DAO &dao, const K *coeffs, T *out, const size_t i) {
+  static void grad_i(DAO &dao, const K *coeffs, T *out, const size_t size, const size_t i) {
+    (void) size;
     compute_grad_i<INTERCEPT, true, K>(dao, coeffs, out, i);
   }
 
@@ -103,7 +104,7 @@ class ModelLogReg {
     set(out, T{0}, size);
     std::vector<T> buffer(size, 0);
     for (size_t i = 0; i < dao.n_samples(); ++i) {
-      grad_i<INTERCEPT, false>(dao, coeffs, buffer.data(), i);
+      grad_i<INTERCEPT, false>(dao, coeffs, buffer.data(), size, i);
       mult_incr(out, buffer.data(), 1, size);
     }
     for (size_t j = 0; j < size; ++j) out[j] /= dao.n_samples();

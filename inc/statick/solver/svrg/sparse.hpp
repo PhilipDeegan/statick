@@ -1,11 +1,12 @@
 #ifndef STATICK_SOLVER_SVRG_SPARSE_HPP_
 #define STATICK_SOLVER_SVRG_SPARSE_HPP_
 
+#include "statick/thread/pool.hpp"
 namespace statick {
 namespace svrg {
 namespace sparse {
 
-template <typename Sparse2D, class T = double>
+template <typename T, typename Sparse2D>
 std::vector<T> compute_columns_sparsity(const Sparse2D &features) {
   std::vector<T> column_sparsity(features.cols());
   std::fill(column_sparsity.begin(), column_sparsity.end(), 0);
@@ -16,19 +17,24 @@ std::vector<T> compute_columns_sparsity(const Sparse2D &features) {
   for (size_t i = 0; i < features.cols(); ++i) column_sparsity[i] *= samples_inverse;
   return column_sparsity;
 }
-template <typename Sparse2D, class T = double>
+template <typename Sparse2D, typename T = typename Sparse2D::value_type>
 std::vector<T> compute_step_corrections(const Sparse2D &features) {
   std::vector<T> steps_correction(features.cols()),
-      columns_sparsity(compute_columns_sparsity(features));
+      columns_sparsity(compute_columns_sparsity<T>(features));
   for (size_t j = 0; j < features.cols(); ++j) steps_correction[j] = 1. / columns_sparsity[j];
   return steps_correction;
 }
 
-template <typename MODAO, typename HISTOIR, bool INTERCEPT = false,
-          typename T = typename MODAO::value_type>
+template <typename _MODEL, typename HISTOIR = statick::solver::NoHistory, bool _INTERCEPT = false>
 class DAO {
  public:
+  using MODEL = _MODEL;
+  using MODAO = typename _MODEL::DAO;
+  using T = typename MODAO::value_type;
+  using value_type = T;
   using HISTORY = HISTOIR;
+  static constexpr bool INTERCEPT = _INTERCEPT;
+
   DAO(MODAO &modao, size_t _n_epochs, size_t _epoch_size, size_t _threads)
       : n_epochs(_n_epochs),
         epoch_size(_epoch_size), n_threads(_threads),
@@ -38,10 +44,10 @@ class DAO {
   }
   T step = 0.00257480411965l;
   size_t n_epochs, epoch_size, rand_index = 0, n_threads, t = 0;
-  HISTORY history;
   std::vector<T> iterate, steps_corrections;
   std::vector<T> full_gradient, fixed_w, grad_i, grad_i_fixed_w, next_iterate;
   RandomMinMax<INDICE_TYPE> rand;
+  HISTORY history;
 };
 
 template <typename MODEL, uint16_t RM, uint16_t ST, bool INTERCEPT,

@@ -58,17 +58,20 @@ void prepare_solve(DAO &dao, typename MODEL::DAO &modao, size_t &t) {
 
 namespace statick {
 namespace solver {
-template <typename MODEL, typename _H = statick::solver::NoHistory, bool _I = false>
+
 class SVRG {
  public:
-  using DAO = typename std::conditional<MODEL::DAO::FEATURE::is_sparse, statick::svrg::sparse::DAO<typename MODEL::DAO, _H, _I>, statick::svrg::dense::DAO<typename MODEL::DAO, _H, _I>>::type;
+  static constexpr std::string_view NAME = "svrg";
+  template <typename M, typename H = statick::solver::NoHistory, bool I = false>
+  using DAO = typename std::conditional<M::DAO::FEATURE::is_sparse, statick::svrg::sparse::DAO<M, H, I>, statick::svrg::dense::DAO<M, H, I>>::type;
 
-  template <typename PROX>
-  static inline void SOLVE(DAO &dao, typename MODEL::DAO &modao, PROX &prox) {
-    if constexpr (MODEL::DAO::FEATURE::is_sparse)
-      statick::svrg::sparse::solve<MODEL>(dao, modao, prox);
+  template <typename _DAO, typename PROX>
+  static inline void SOLVE(_DAO &dao, typename _DAO::MODAO &modao, PROX &prox) {
+    using M = typename _DAO::MODEL;
+    if constexpr (M::DAO::FEATURE::is_sparse)
+      statick::svrg::sparse::solve<M>(dao, modao, prox);
     else
-      statick::svrg::dense::solve<MODEL>(dao, modao, prox);
+      statick::svrg::dense::solve<M>(dao, modao, prox);
   }
 };
 }

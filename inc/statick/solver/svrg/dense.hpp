@@ -1,15 +1,21 @@
 #ifndef STATICK_SOLVER_SVRG_DENSE_HPP_
 #define STATICK_SOLVER_SVRG_DENSE_HPP_
 
+#include "statick/thread/pool.hpp"
 namespace statick {
 namespace svrg {
 namespace dense {
 
-template <typename MODAO, typename HISTOIR, bool INTERCEPT = false,
-          typename T = typename MODAO::value_type>
+template <typename _MODEL, typename HISTOIR = statick::solver::NoHistory, bool _INTERCEPT = false>
 class DAO {
  public:
+  using MODEL = _MODEL;
+  using MODAO = typename _MODEL::DAO;
+  using T = typename MODAO::value_type;
+  using value_type = T;
   using HISTORY = HISTOIR;
+  static constexpr bool INTERCEPT = _INTERCEPT;
+
   DAO(MODAO &modao, size_t _n_epochs, size_t _epoch_size, size_t _threads)
       : n_epochs(_n_epochs),
         epoch_size(_epoch_size), n_threads(_threads),
@@ -18,22 +24,23 @@ class DAO {
   }
   T step = 0.00257480411965l;
   size_t n_epochs, epoch_size, rand_index = 0, n_threads, t = 0;
-  HISTORY history;
   std::vector<T> iterate, full_gradient, fixed_w, grad_i, grad_i_fixed_w, next_iterate;
   RandomMinMax<INDICE_TYPE> rand;
+  HISTORY history;
 };
 
 template <typename MODEL, uint16_t RM = VarianceReductionMethod::Last,
           uint16_t ST = StepType::Fixed, bool INTERCEPT = false, typename PROX,
           typename DAO>
 void solve_thread(DAO &dao, typename MODEL::DAO &modao, PROX &prox, size_t n_thread) {
+  using T = typename MODEL::value_type;
   const size_t n_samples = modao.n_samples(), n_features = modao.n_features();
   const auto &n_threads = dao.n_threads;
   const auto epoch_size = dao.epoch_size != 0 ? dao.epoch_size : n_samples;
   size_t iterate_size = n_features + static_cast<size_t>(INTERCEPT);
   size_t thread_epoch_size = epoch_size / n_threads;
   thread_epoch_size += n_thread < (epoch_size % n_threads);
-  const auto &step = dao.step, epoch_size_inverse = 1.0 / epoch_size;
+  const T &step = dao.step, epoch_size_inverse = 1.0 / epoch_size;
   (void)  epoch_size_inverse;  // possibly unused if constexpr
   auto * iterate = dao.iterate.data(), *full_gradient = dao.full_gradient.data();
   auto * fixed_w = dao.fixed_w.data(), *grad_i_fixed_w = dao.grad_i_fixed_w.data();

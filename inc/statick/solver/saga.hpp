@@ -72,7 +72,7 @@ void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox) {
 }  // namespace dense
 
 namespace sparse {
-template <typename Sparse2D, class T = typename Sparse2D::value_type>
+template <typename T, typename Sparse2D>
 std::vector<T> compute_columns_sparsity(const Sparse2D &features) {
   std::vector<T> column_sparsity(features.cols());
   std::fill(column_sparsity.begin(), column_sparsity.end(), 0);
@@ -83,10 +83,10 @@ std::vector<T> compute_columns_sparsity(const Sparse2D &features) {
   for (size_t i = 0; i < features.cols(); ++i) column_sparsity[i] *= samples_inverse;
   return column_sparsity;
 }
-template <typename Sparse2D, class T = typename Sparse2D::value_type>
+template <typename Sparse2D, typename T = typename Sparse2D::value_type>
 std::vector<T> compute_step_corrections(const Sparse2D &features) {
   std::vector<T> steps_corrections(features.cols()),
-      columns_sparsity(compute_columns_sparsity(features));
+      columns_sparsity(compute_columns_sparsity<T>(features));
   for (size_t j = 0; j < features.cols(); ++j) steps_corrections[j] = 1. / columns_sparsity[j];
   return steps_corrections;
 }

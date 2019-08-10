@@ -11,7 +11,7 @@ X, y = train_set[0], train_set[1]
 
 from statick.linear_model import ModelLogReg
 from statick.prox import ProxL2Sq
-from statick.solver import SAGA
+from statick.solver import SAGA, SVRG
 
 solver = SAGA(step=1e-3, max_iter=100, verbose=False, tol=1e-5, n_threads=8) \
           .set_model(ModelLogReg().fit(X, y))                \
