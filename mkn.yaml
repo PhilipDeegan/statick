@@ -62,10 +62,10 @@ profile:
 - name: py
   parent: base
   self: statick.py
-  # statick.array.py
-  # statick.linear_model.py
-  # statick.prox.py
-  # statick.solver.py
+        statick.array.py
+        statick.linear_model.py
+        statick.prox.py
+        statick.solver.py
 
 - name: clean
   parent: base
