@@ -398,6 +398,7 @@ protected:
     }
 };
 
+
 template <typename T, int ExtraFlags = csr::forcecast> class csr_t : public csr {
 private:
     struct private_ctor {};
@@ -411,10 +412,10 @@ public:
 
     std::vector<size_t> _info;
     std::shared_ptr<statick::Sparse2DView<T>> m_data_ptr;
+    std::shared_ptr<statick_py::_PC<T>> m_pc;
 
     csr_t() : csr(0, static_cast<const T *>(nullptr)) {}
     csr_t(handle h, borrowed_t) : csr(h, borrowed_t{}), _info(3) {
-
       auto *obj = h.ptr();
       auto *obj_shape = PyObject_GetAttrString(obj,"shape");
       auto *obj_indptr = (PyArrayObject *) PyObject_GetAttrString(obj,"indptr");
@@ -461,6 +462,12 @@ public:
     }
 
     explicit csr_t(const buffer_info& info) : csr(info) { }
+
+    explicit csr_t(std::shared_ptr<statick_py::_PC<T>> &&pc)
+      : csr(reinterpret_steal<object>(statick_py::sparse2d_to_csr<T>(*pc.get()))), m_pc(pc){
+      m_data_ptr = std::make_shared<statick::Sparse2DView<T>>(m_pc->p_data, m_pc->info.data(), m_pc->p_indices, m_pc->p_row_indices);
+
+    }
 
     csr_t(ShapeContainer shape, StridesContainer strides, const T *ptr = nullptr, handle base = handle())
         : csr(std::move(shape), std::move(strides), ptr, base) { }

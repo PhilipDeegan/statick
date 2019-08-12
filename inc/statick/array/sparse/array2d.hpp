@@ -117,6 +117,7 @@ class Sparse2D {
   }
   template <class Archive> void save(Archive &ar) const { sparse_2d::save<T>(ar, *this); }
 
+  std::shared_ptr<view_type> as_view();
 
   statick::Array2D<T> toArray2D() const;
 
@@ -197,8 +198,8 @@ class Sparse2DView {
   using view1d_type = Sparse<T>;
   static constexpr bool is_sparse =  1;
 
-  Sparse2DView(T * const _data, const size_t *_info, const INDICE_TYPE *_indices,
-              const INDICE_TYPE *_row_indices)
+  Sparse2DView(T * _data, size_t *_info, INDICE_TYPE *_indices,
+              INDICE_TYPE *_row_indices)
       : v_data(_data), v_indices(_indices), v_row_indices(_row_indices) { set_info(_info);  }
   Sparse2DView(Sparse2DView &&that)
       : v_data(that.v_data), v_indices(that.v_indices), v_row_indices(that.v_row_indices) { set_info(that.m_info); }
@@ -226,7 +227,7 @@ class Sparse2DView {
 
   T *v_data = nullptr;
   size_t m_info[3] = {0, 0, 0};
-  const INDICE_TYPE *v_indices = nullptr, *v_row_indices = nullptr;
+  INDICE_TYPE *v_indices = nullptr, *v_row_indices = nullptr;
 
  private:
   Sparse2DView() = delete;
@@ -238,6 +239,13 @@ class Sparse2DView {
   Sparse2DView &operator=(const Sparse2DView &that) = delete;
   Sparse2DView &operator=(const Sparse2DView &&that) = delete;
 };
+
+template <class T>
+std::shared_ptr<Sparse2DView<T>> Sparse2D<T>::as_view() {
+  std::vector<size_t> info = {cols(), rows(), size()};
+  KLOG(INF) << &m_data[0];
+  return std::make_shared<Sparse2DView<T>>(&m_data[0], info.data(), &m_indices[0], &m_row_indices[0]);
+}
 
 template <class Archive, class T>
 bool load_sparse2dlist_with_raw_data(Archive &ar, std::vector<T> &data, std::vector<size_t> &info,

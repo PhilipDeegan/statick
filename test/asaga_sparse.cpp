@@ -15,19 +15,20 @@ int main() {
                    LABELS::FROM_CEREAL("url.labels.cereal"));
   const T STRENGTH = (1. / modao.n_samples()) + 1e-10;
   SODAO dao(modao, N_ITER, modao.n_samples(), THREADS); PROX prox(STRENGTH);
-  auto objectife = [&](T* iterate, size_t size){
-    return MODEL::LOSS(modao, iterate) + PROX::value(prox, iterate, size);
-  };
+  // auto objectife = [&](T* iterate, size_t size){
+  //   return MODEL::LOSS(modao, iterate) + PROX::value(prox, iterate, size);
+  // };
   dao.history.tol.val = 1e-5;
-  dao.history.f_objective = objectife;
+  // dao.history.f_objective = objectife;
   SOLVE(dao, modao, prox);
   std::vector<T> &objs(dao.history.objectives);
   auto min_objective = *std::min_element(std::begin(objs), std::end(objs));
+  KLOG(INF) << min_objective;
   auto history = dao.history.time_history;
-  auto record_every = dao.history.record_every;
+  auto log_every_n_epochs = dao.history.log_every_n_epochs;
   for (size_t i = 1; i < objs.size(); i++) {
     auto log_dist = objs[i] == min_objective ? 0 : log10(objs[i] - min_objective);
-    std::cout << THREADS << " " << i * record_every << " " << history[i] << " "
+    std::cout << THREADS << " " << i * log_every_n_epochs << " " << history[i] << " "
               << "1e" << log_dist << std::endl;
   }
   return 0;

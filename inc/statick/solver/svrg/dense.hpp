@@ -67,10 +67,10 @@ void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox) {
   using TOL = typename DAO::HISTORY::TOLERANCE;
   auto &history = dao.history;
   const size_t n_samples = modao.n_samples(), n_features = modao.n_features();
-  history.init(dao.n_epochs / history.record_every + 1, dao.iterate.size());
+  history.init(dao.n_epochs / history.log_every_n_epochs + 1, dao.iterate.size());
   const auto &n_epochs = dao.n_epochs, &n_threads = dao.n_threads;
   const auto epoch_size = dao.epoch_size != 0 ? dao.epoch_size : n_samples;
-  const auto &record_every = history.record_every;
+  const auto &log_every_n_epochs = history.log_every_n_epochs;
   auto &last_record_time = history.last_record_time;
   auto &last_record_epoch = history.last_record_epoch;
   auto * iterate = dao.iterate.data();
@@ -83,7 +83,7 @@ void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox) {
   auto start = std::chrono::steady_clock::now();
   auto log_history = [&](size_t epoch){
     dao.t += epoch_size;
-    if ((last_record_epoch + epoch) == 1 || ((last_record_epoch + epoch) % record_every == 0)) {
+    if ((last_record_epoch + epoch) == 1 || ((last_record_epoch + epoch) % log_every_n_epochs == 0)) {
       auto end = std::chrono::steady_clock::now();
       double time = ((end - start).count()) * std::chrono::steady_clock::period::num /
           static_cast<double>(std::chrono::steady_clock::period::den);

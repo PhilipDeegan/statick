@@ -18,6 +18,9 @@ class Solver(DummySolver):
         return model._MANGLING + s + C + T
 
     def __init__(self, **kwargs):
+        object.__setattr__(self, "log_every_n_epochs", 10)
+        if "log_every_n_epochs" in kwargs:
+            object.__setattr__(self, "log_every_n_epochs", kwargs["log_every_n_epochs"])
         object.__setattr__(self, "_solver", DummySolver())
         object.__setattr__(self, "_dao", None)
 
@@ -30,6 +33,8 @@ class Solver(DummySolver):
             self._dao.history.tol.val = self.tol
         else:
             object.__setattr__(self, "_dao", getattr(statick_solver, func)(model._dao))
+        if hasattr(self._dao, 'history'):
+            self._dao.history.log_every_n_epochs = self.log_every_n_epochs
         return self
 
     def set_prox(self, prox: TPROX):
@@ -43,5 +48,9 @@ class Solver(DummySolver):
         if self.n_threads > 1:
             max_iter = 1
         for i in range(max_iter):
+            print("solving at epoch", i)
             getattr(statick_solver, f)(self._dao, self.model._dao, self._prox._dao)
+        if hasattr(self._dao, 'history'):
+            object.__setattr__(self, "objectives", self._dao.history.objectives)
+            object.__setattr__(self, "time_history", self._dao.history.time_history)
 

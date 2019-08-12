@@ -40,7 +40,10 @@ auto def_solver(pybind11::module &m, pybind11::class_<D>&(*init)(pybind11::class
 template <typename T, typename TS, typename HS>
 void def_history(pybind11::module &m, std::string &&ts, std::string &&hs){
   py::class_<TS>(m, ts.c_str()).def_readwrite("val", &TS::val);
-  py::class_<HS>(m, hs.c_str()).def_readwrite("tol", &HS::tol);
+  py::class_<HS>(m, hs.c_str()).def_readonly("tol", &HS::tol)
+      .def_readonly("objectives", &HS::objectives)
+      .def_readonly("time_history", &HS::time_history)
+      .def_readwrite("log_every_n_epochs", &HS::log_every_n_epochs);
 }
 
 #define DEF_TO_XSTRING(s) DEF_TO_STRING(s)

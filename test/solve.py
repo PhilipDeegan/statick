@@ -11,7 +11,7 @@ y = tick_double_array_from_file   ("url.labels.cereal")
 model = ModelLogReg(fit_intercept=False).fit(X, y)
 prox = ProxL2Sq((1. / n_samples) + 1e-10, range=(0, n_features))
 asaga = SAGA(step=0.00257480411965, max_iter=200, tol=1e-10, verbose=False,
-            n_threads=8, record_every=10)
+            n_threads=8, log_every_n_epochs=10)
 asaga.set_model(model).set_prox(prox)
 asaga.solve()
 asaga.print_history()

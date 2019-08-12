@@ -22,8 +22,11 @@ void fit_d(DAO &dao, py_array_t<T> & a, py_array_t<T> & b){
 
 template <typename T, typename DAO>
 void fit_s(DAO &dao, py_csr_t<T> & a, py_array_t<T> & b){
-  pybind11::buffer_info b_info = b.request();
-  dao.m_features = a.m_data_ptr;
+  dao.X = a;
+  dao.y = b;
+  pybind11::buffer_info b_info = dao.y.request();
+  dao.m_features = dao.X.m_data_ptr;
+  KLOG(INF) << statick::sum(dao.X.m_data_ptr->data(), dao.X.m_data_ptr->size());
   dao.m_labels = std::make_shared<statick::ArrayView<T>>((T*)b_info.ptr, b_info.shape[0]);
   dao.init();
 }
@@ -37,10 +40,16 @@ class DAO : public statick::logreg::DAO<_F, _L> {
   using LABELS = typename SUPER::LABELS;
   using LABEL = typename SUPER::LABEL;
   using T = typename SUPER::T;
+
+  using X_TYPE = typename std::conditional<FEATURE::is_sparse, py_csr_t<T>, py_array_t<T>>::type;
+
   template<typename F = FEATURE, typename = typename std::enable_if<!F::is_sparse>::type >
   DAO(py_array_t<T> & a, py_array_t<T> & b){ fit_d(*this, a, b); }
   template<typename F = FEATURE, typename = typename std::enable_if< F::is_sparse>::type >
   DAO(py_csr_t<T> & a, py_array_t<T> & b)  { fit_s(*this, a, b); }
+
+  X_TYPE X;
+  py_array_t<T> y;
 };
 }
 

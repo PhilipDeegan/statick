@@ -47,7 +47,7 @@ class History {
     return false;
   }
 
-  size_t record_every = 10, last_record_epoch = 0, i = 0;
+  size_t log_every_n_epochs = 10, last_record_epoch = 0, i = 0;
   double last_record_time = 0;
   std::vector<double> time_history;
   std::vector<size_t> epoch_history;

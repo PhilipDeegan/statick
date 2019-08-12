@@ -34,6 +34,8 @@ class DAO {
 
   RandomMinMax<INDICE_TYPE> rand;
   HISTORY history;
+
+
 };
 namespace sparse {
 
@@ -89,7 +91,7 @@ void threaded_solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox, size_t n_t
     if constexpr(std::is_same<typename DAO::HISTORY, statick::solver::History<T, TOL>>::value) {
       if (n_thread == 0) {
         if ((dao.history.last_record_epoch + epoch) == 1 ||
-            ((dao.history.last_record_epoch + epoch) % dao.history.record_every == 0)) {
+            ((dao.history.last_record_epoch + epoch) % dao.history.log_every_n_epochs == 0)) {
           auto end = std::chrono::steady_clock::now();
           double time = ((end - start).count()) * std::chrono::steady_clock::period::num /
                         static_cast<double>(std::chrono::steady_clock::period::den);
@@ -113,10 +115,19 @@ template <typename MODEL, bool INTERCEPT = false, typename PROX, typename DAO>
 void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox) {
   using T = typename MODEL::value_type;
   using TOL = typename DAO::HISTORY::TOLERANCE;
+
+  auto objectife = [&](T* iterate, size_t size){
+    return MODEL::LOSS(modao, iterate) + PROX::value(prox, iterate, size);
+  };
+  (void) objectife;
   if constexpr(std::is_same<typename DAO::HISTORY, statick::solver::History<T, TOL>>::value) {
     auto &history = dao.history;
-    history.init(dao.n_epochs / history.record_every + 1, dao.iterate.size());
+    history.init(dao.n_epochs / history.log_every_n_epochs + 1, dao.iterate.size());
+    dao.history.f_objective = objectife;
   }
+
+  KLOG(INF) << statick::sum(modao.features().row_raw(0), modao.features().row_size(0));
+
   std::vector<std::thread> threads;
   for (size_t i = 1; i < dao.n_threads; i++) {
     threads.emplace_back(
@@ -126,6 +137,10 @@ void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox) {
   }
   threaded_solve<MODEL, INTERCEPT>(dao, modao, prox, 0);
   for (auto & thread : threads) thread.join();
+
+  std::vector<T> &objs(dao.history.objectives);
+  auto min_objective = *std::min_element(std::begin(objs), std::end(objs));
+  KLOG(INF) << min_objective;
 }
 
 }  // namespace sparse

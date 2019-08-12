@@ -11,6 +11,7 @@
 
 #include "numpy/npy_math.h"
 #include "numpy/arrayobject.h"
+#include "statick/pybind/csr.hpp"
 #include "statick/pybind/numpy.hpp"
 
 template <typename T>

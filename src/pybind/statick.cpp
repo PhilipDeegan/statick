@@ -3,6 +3,20 @@
 
 namespace py = pybind11;
 
+namespace statick_py {
+
+template <typename T>
+class array_t : public py_array_t<T> {
+ public:
+  array_t(std::shared_ptr<statick::Array<T>> _data)
+  : py_array_t<T>(_data->size(), _data->data()),
+    data(_data){}
+
+  std::shared_ptr<statick::Array<T>> data;
+};
+
+}
+
 py_arrayv_d make_array(const py::ssize_t size) {
   return py_arrayv_d(size);
 }
@@ -37,6 +51,21 @@ void save_double_sparse2d(py_csr_double &v, std::string &file) {
 }
 void save_double_array(py_arrayv_d &v, std::string &file) {
   statick::dense::save<double>(py_arrayv_d_as_raw_array(v), file);
+}
+
+py::object load_double_sparse2d(std::string &file) {
+  auto pc = std::make_shared<statick_py::_PC<double>>();
+  {
+    std::ifstream bin_data(file, std::ios::in | std::ios::binary);
+    cereal::PortableBinaryInputArchive iarchive(bin_data);
+    if (!statick_py::load_sparse2d_with_new_data(iarchive, *pc.get()))
+      throw std::runtime_error("ERORER)EROEORE");
+  }
+  return py::reinterpret_steal<py::object>(statick_py::sparse2d_to_csr<double>(*pc.get()));
+  // return py::object(statick_py::sparse2d_to_csr<double>(*pc.get()), pybind11::stolen_t{});//py_csr_double(std::move(pc));
+}
+statick_py::array_t<double> load_double_array(std::string &file) {
+  return statick_py::array_t<double>(statick::Array<double>::FROM_CEREAL(file));
 }
 
 std::vector<int> make_vector(){
@@ -77,6 +106,11 @@ bool compare(py_arrayv_d &dense, py_csr_double &sparse){
 
 namespace statick{
 PYBIND11_MODULE(statick, m) {
+  auto import = []() {
+    import_array();
+    // Py_Initialize();
+  };
+  import();
   m.def("make_array", &make_array, py::return_value_policy::move);
   m.def("add_arrays", &add_arrays, "Adding two numpy arrays");
   m.def("take_sparse2d", &take_sparse2d, "take_sparse2d");
@@ -85,6 +119,8 @@ PYBIND11_MODULE(statick, m) {
   m.def("take_tuple_vector", &take_tuple_vector, "take_tuple_vector");
   m.def("save_double_sparse2d", &save_double_sparse2d, "save_double_sparse2d");
   m.def("save_double_array", &save_double_array, "save_double_array");
+  m.def("load_double_sparse2d", &load_double_sparse2d, "load_double_sparse2d");
+  m.def("load_double_array", &load_double_array, "load_double_array");
   m.def("compare", &compare, "compare");
   m.def("print_sparse", &print_sparse, "print_sparse");
 }
