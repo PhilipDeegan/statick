@@ -40,7 +40,9 @@ class Solver(DummySolver):
         return self
 
     def set_prox(self, prox: TPROX):
-        object.__setattr__(self, "_prox", prox)
+        if self.model is None:
+            raise ValueError("Set model, then Prox")
+        object.__setattr__(self, "_prox", prox._set_dao(self.model.features.dtype))
         return self
 
     def solve(self):
@@ -54,4 +56,3 @@ class Solver(DummySolver):
         if hasattr(self._dao, 'history'):
             object.__setattr__(self, "objectives", self._dao.history.objectives)
             object.__setattr__(self, "time_history", self._dao.history.time_history)
-
