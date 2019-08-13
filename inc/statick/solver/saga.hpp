@@ -145,10 +145,8 @@ void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox) {
     }
   }
 }
-
-}  // namespace sparse
-}  // namespace saga
-namespace solver {
+}  /* namespace sparse */
+}  /* namespace saga */
 
 class SAGA {
  public:
@@ -171,6 +169,5 @@ class SAGA {
       statick::saga:: dense::solve<M>(dao, modao, prox);
   }
 };
-}  // namespace solver
 }  // namespace statick
 #endif  // STATICK_SOLVER_SAGA_HPP_

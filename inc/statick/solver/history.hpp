@@ -37,10 +37,8 @@ class History {
     std::copy(iterate, iterate+size, iterate_history[i].data());
     objectives[i] = f_objective(iterate, size);
     if constexpr (std::is_same<TOLERANCE, Tolerance<T>>::value) {
-      auto &prev_obj = tol.prev_obj;
-      auto &obj = objectives[i];
-      auto rel_obj = prev_obj != 0 ? std::abs(obj - prev_obj) / std::abs(prev_obj)
-                   : std::abs(obj);
+      auto &prev_obj = tol.prev_obj, &obj = objectives[i];
+      auto rel_obj = prev_obj != 0 ? std::abs(obj - prev_obj) / std::abs(prev_obj) : std::abs(obj);
       tol.prev_obj = obj;
       return rel_obj < tol.val;
     }

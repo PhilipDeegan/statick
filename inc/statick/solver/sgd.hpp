@@ -3,10 +3,14 @@
 #include "statick/random.hpp"
 namespace statick {
 namespace sgd {
-template <typename MODAO, bool INTERCEPT = false>
+template <typename _MODEL, bool _INTERCEPT = false>
 class DAO {
  public:
+  using MODEL = _MODEL;
+  using MODAO = typename _MODEL::DAO;
   using T = typename MODAO::value_type;
+  using value_type = T;
+  static constexpr bool INTERCEPT = _INTERCEPT;
   DAO(MODAO &modao) :
     iterate(modao.n_features() + static_cast<size_t>(INTERCEPT)),
     rand(0, modao.n_samples() - 1) {}
@@ -67,20 +71,21 @@ void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox) {
 }
 }  // namespace sparse
 }  // namespace sgd
-namespace solver {
-template <typename MODEL, bool INTERCEPT = false>
 class SGD {
  public:
-  using DAO = typename statick::sgd::DAO<typename MODEL::DAO, INTERCEPT>;
+  static constexpr std::string_view NAME = "sgd";
 
-  template <typename PROX>
-  static inline void SOLVE(DAO &dao, typename MODEL::DAO &modao, PROX &prox) {
-    if constexpr (MODEL::DAO::FEATURE::is_sparse)
-      statick::sgd::sparse::solve<MODEL>(dao, modao, prox);
+  template <typename M, bool I = false>
+  using DAO = typename statick::sgd::DAO<typename M::DAO, I>;
+
+  template <typename _DAO, typename PROX>
+  static inline void SOLVE(_DAO &dao, typename _DAO::MODAO &modao, PROX &prox) {
+    using M = typename _DAO::MODEL;
+    if constexpr (M::DAO::FEATURE::is_sparse)
+      statick::sgd::sparse::solve<M>(dao, modao, prox);
     else
-      statick::sgd::dense::solve<MODEL>(dao, modao, prox);
+      statick::sgd::dense::solve<M>(dao, modao, prox);
   }
 };
-}
 }  // namespace statick
 #endif  // STATICK_SOLVER_SGD_HPP_

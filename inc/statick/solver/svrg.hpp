@@ -55,10 +55,7 @@ void prepare_solve(DAO &dao, typename MODEL::DAO &modao, size_t &t) {
 #include "statick/solver/svrg/dense.hpp"
 #include "statick/solver/svrg/sparse.hpp"
 
-
 namespace statick {
-namespace solver {
-
 class SVRG {
  public:
   static constexpr std::string_view NAME = "svrg";
@@ -74,7 +71,6 @@ class SVRG {
       statick::svrg::dense::solve<M>(dao, modao, prox);
   }
 };
-}
-}
+}  // namespace statick
 
 #endif  // STATICK_SOLVER_SVRG_HPP_

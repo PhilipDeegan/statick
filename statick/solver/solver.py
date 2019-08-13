@@ -48,7 +48,6 @@ class Solver(DummySolver):
         if self.n_threads > 1:
             max_iter = 1
         for i in range(max_iter):
-            print("solving at epoch", i)
             getattr(statick_solver, f)(self._dao, self.model._dao, self._prox._dao)
         if hasattr(self._dao, 'history'):
             object.__setattr__(self, "objectives", self._dao.history.objectives)

@@ -6,8 +6,8 @@
 #include "statick/pybind/def.hpp"
 #include "statick/linear_model/model_logreg.hpp"
 
-namespace statick_py { namespace logreg {
-
+namespace statick_py {
+namespace logreg {
 template <typename T, typename DAO>
 void fit_d(DAO &dao, py_array_t<T> & a, py_array_t<T> & b){
   pybind11::buffer_info a_info = a.request(), b_info = b.request();
@@ -51,7 +51,7 @@ class DAO : public statick::logreg::DAO<_F, _L> {
   X_TYPE X;
   py_array_t<T> y;
 };
-}
+}  /* namespace logreg*/
 
 template <typename _F, typename _L>
 class ModelLogReg : public statick::ModelLogReg<_F, _L, logreg::DAO<_F, _L>> {
@@ -59,15 +59,6 @@ class ModelLogReg : public statick::ModelLogReg<_F, _L, logreg::DAO<_F, _L>> {
   using SUPER = statick::ModelLogReg<_F, _L, logreg::DAO<_F, _L>>;
   using DAO = logreg::DAO<_F, _L>;
   using SUPER::NAME;
-  // using T = typename SUPER::T;
-  // template<typename F = FEATURE, typename = typename std::enable_if<!F::is_sparse>::type >
-  // DAO(py_array_t<T> & a, py_array_t<T> & b){ fit_d(*this, a, b); }
-  // template<typename F = FEATURE, typename = typename std::enable_if< F::is_sparse>::type >
-  // DAO(py_csr_t<T> & a, py_array_t<T> & b)  { fit_s(*this, a, b); }
 };
-
-
-}
-
-
-#endif  // STATICK_PYBIND_LINEAR_MODEL_HPP_
+}  /* namespace statick_py*/
+#endif  /* STATICK_PYBIND_LINEAR_MODEL_HPP_ */

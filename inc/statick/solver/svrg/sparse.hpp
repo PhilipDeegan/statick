@@ -6,24 +6,8 @@ namespace statick {
 namespace svrg {
 namespace sparse {
 
-template <typename T, typename Sparse2D>
-std::vector<T> compute_columns_sparsity(const Sparse2D &features) {
-  std::vector<T> column_sparsity(features.cols());
-  std::fill(column_sparsity.begin(), column_sparsity.end(), 0);
-  double samples_inverse = 1. / features.rows();
-  for (size_t i = 0; i < features.rows(); ++i)
-    for (size_t j = 0; j < features.row_size(i); ++j)
-      column_sparsity[features.row_indices(i)[j]] += 1;
-  for (size_t i = 0; i < features.cols(); ++i) column_sparsity[i] *= samples_inverse;
-  return column_sparsity;
-}
 template <typename Sparse2D, typename T = typename Sparse2D::value_type>
-std::vector<T> compute_step_corrections(const Sparse2D &features) {
-  std::vector<T> steps_correction(features.cols()),
-      columns_sparsity(compute_columns_sparsity<T>(features));
-  for (size_t j = 0; j < features.cols(); ++j) steps_correction[j] = 1. / columns_sparsity[j];
-  return steps_correction;
-}
+std::vector<T> compute_step_corrections(const Sparse2D &features);
 
 template <typename _MODEL, typename HISTOIR = statick::solver::NoHistory, bool _INTERCEPT = false>
 class DAO {
@@ -49,6 +33,25 @@ class DAO {
   RandomMinMax<INDICE_TYPE> rand;
   HISTORY history;
 };
+
+template <typename T, typename Sparse2D>
+std::vector<T> compute_columns_sparsity(const Sparse2D &features) {
+  std::vector<T> column_sparsity(features.cols());
+  std::fill(column_sparsity.begin(), column_sparsity.end(), 0);
+  double samples_inverse = 1. / features.rows();
+  for (size_t i = 0; i < features.rows(); ++i)
+    for (size_t j = 0; j < features.row_size(i); ++j)
+      column_sparsity[features.row_indices(i)[j]] += 1;
+  for (size_t i = 0; i < features.cols(); ++i) column_sparsity[i] *= samples_inverse;
+  return column_sparsity;
+}
+template <typename Sparse2D, typename T>
+std::vector<T> compute_step_corrections(const Sparse2D &features) {
+  std::vector<T> steps_correction(features.cols()),
+      columns_sparsity(compute_columns_sparsity<T>(features));
+  for (size_t j = 0; j < features.cols(); ++j) steps_correction[j] = 1. / columns_sparsity[j];
+  return steps_correction;
+}
 
 template <typename MODEL, uint16_t RM, uint16_t ST, bool INTERCEPT,
           typename PROX, typename DAO, typename T = typename MODEL::value_type>
@@ -110,7 +113,6 @@ void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox) {
   auto &last_record_time = history.last_record_time;
   auto * iterate = dao.iterate.data();
   auto start = std::chrono::steady_clock::now();
-
   auto log_history = [&](size_t epoch){
     dao.t += epoch_size;
     if ((last_record_epoch + epoch) == 1 || ((last_record_epoch + epoch) % log_every_n_epochs == 0)) {
@@ -124,7 +126,6 @@ void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox) {
   for (size_t i = 1; i < n_threads - 1; i++)
     funcs.emplace_back([&](){
       solve_thread<MODEL, RM, ST, INTERCEPT>(dao, modao, prox, i); });
-
   statick::ThreadPool pool(n_threads - 1);
   for (size_t epoch = 1; epoch < (n_epochs + 1); ++epoch) {
     statick::svrg::prepare_solve<MODEL>(dao, modao, dao.t);
@@ -136,7 +137,6 @@ void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox) {
       for (size_t i = 0; i < dao.iterate.size(); i++)
         dao.next_iterate[i] = iterate[i];
   }
-
   dao.t += epoch_size;
   if constexpr(std::is_same<typename DAO::HISTORY, statick::solver::History<T, TOL>>::value) {
     auto end = std::chrono::steady_clock::now();

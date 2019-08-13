@@ -8,7 +8,7 @@ int main() {
   using LABELS   = statick::Array<T>;
   using MODEL    = statick::ModelLogReg<std::shared_ptr<FEATURES>, std::shared_ptr<LABELS>>;
   using PROX     = statick::ProxL2Sq<T>;
-  using SOLVER   = statick::solver::SAGA;
+  using SOLVER   = statick::SAGA;
   using SODAO    = SOLVER::DAO<MODEL>;
   auto  SOLVE    = &SOLVER::template SOLVE<SODAO, PROX>;
   MODEL::DAO modao(FEATURES::FROM_CEREAL("url.features.cereal"),

@@ -4,7 +4,6 @@
 namespace py = pybind11;
 
 namespace statick_py {
-
 template <typename T>
 class array_t : public py_array_t<T> {
  public:
@@ -14,7 +13,6 @@ class array_t : public py_array_t<T> {
 
   std::shared_ptr<statick::Array<T>> data;
 };
-
 }
 
 py_arrayv_d make_array(const py::ssize_t size) {
@@ -54,15 +52,12 @@ void save_double_array(py_arrayv_d &v, std::string &file) {
 }
 
 py::object load_double_sparse2d(std::string &file) {
-  auto pc = std::make_shared<statick_py::_PC<double>>();
-  {
-    std::ifstream bin_data(file, std::ios::in | std::ios::binary);
-    cereal::PortableBinaryInputArchive iarchive(bin_data);
-    if (!statick_py::load_sparse2d_with_new_data(iarchive, *pc.get()))
-      throw std::runtime_error("ERORER)EROEORE");
-  }
-  return py::reinterpret_steal<py::object>(statick_py::sparse2d_to_csr<double>(*pc.get()));
-  // return py::object(statick_py::sparse2d_to_csr<double>(*pc.get()), pybind11::stolen_t{});//py_csr_double(std::move(pc));
+  statick_py::_PC<double> pc;
+  std::ifstream bin_data(file, std::ios::in | std::ios::binary);
+  cereal::PortableBinaryInputArchive iarchive(bin_data);
+  if (!statick_py::load_sparse2d_with_new_data(iarchive, pc))
+    throw std::runtime_error("ERORER)EROEORE");
+  return py::reinterpret_steal<py::object>(statick_py::sparse2d_to_csr<double>(pc));
 }
 statick_py::array_t<double> load_double_array(std::string &file) {
   return statick_py::array_t<double>(statick::Array<double>::FROM_CEREAL(file));

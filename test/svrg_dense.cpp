@@ -9,7 +9,7 @@ int main() {
   using LABELS   = statick::Array<T>;
   using PROX     = statick::ProxL2Sq<T>;
   using MODEL    = statick::ModelLogReg<std::shared_ptr<FEATURES>, std::shared_ptr<LABELS>>;
-  using SOLVER   = statick::solver::SVRG;
+  using SOLVER   = statick::SVRG;
   using SODAO    = SOLVER::DAO<MODEL, statick::solver::History<T, statick::solver::Tolerance<T>>>;
   auto  SOLVE    = &SOLVER::template SOLVE<SODAO, PROX>;
   MODEL::DAO modao(FEATURES::RANDOM(N_SAMPLES, N_FEATURES, SEED),

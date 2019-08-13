@@ -61,14 +61,14 @@ PYBIND11_MODULE(statick_solver, m) {
   using log_reg_dd = statick_py::ModelLogReg<array2dv_d_ptr , arrayv_d_ptr>;
   using log_reg_ds = statick_py::ModelLogReg<array2dv_s_ptr , arrayv_s_ptr>;
 
-  using _saga = statick::solver::SAGA;
+  using _saga = statick::SAGA;
   statick::def_solver<_saga, log_reg_sd>(m); statick::def_solver<_saga, log_reg_dd>(m);
   statick::def_solver<_saga, log_reg_ss>(m); statick::def_solver<_saga, log_reg_ds>(m);
 
   DEF_HISTORY(double, tolerance_d, history_tol_d);
   DEF_HISTORY(float , tolerance_s, history_tol_s);
 
-  using _asaga = statick::solver::ASAGA;
+  using _asaga = statick::ASAGA;
   using _asaga_dao_d = typename _asaga::template DAO<log_reg_sd, history_tol_d>;
   using _asaga_dao_s = typename _asaga::template DAO<log_reg_ss, history_tol_s>;
   statick::def_solver<_asaga, log_reg_sd, _asaga_dao_d>(
@@ -80,7 +80,7 @@ PYBIND11_MODULE(statick_solver, m) {
     return m.def(py::init<typename log_reg_ss::DAO &, size_t, size_t, size_t>());
   }).def_readonly("history", &_asaga_dao_s::history);
 
-  using _svrg = statick::solver::SVRG;
+  using _svrg = statick::SVRG;
   using _svrg_dao_sd = typename _svrg::template DAO<log_reg_sd, history_tol_d>;
   using _svrg_dao_ss = typename _svrg::template DAO<log_reg_ss, history_tol_s>;
   statick::def_solver<_svrg, log_reg_sd, _svrg_dao_sd>(

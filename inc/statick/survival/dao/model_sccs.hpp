@@ -48,12 +48,6 @@ class DAO {
     return *this;
   }
 
-  size_t vars[5]{0};
-  statick::Array<size_t> col_offset, n_lags, censoring;
-  FEATURES features;
-  LABELS labels;
-  model::lipschitz::DAO<T> lip_dao;
-
   inline const auto &n_intervals() const { return vars[0]; }
   inline const auto &n_samples() const { return vars[1]; }
   inline const auto &n_observations() const { return vars[2]; }
@@ -91,6 +85,12 @@ class DAO {
     for(auto &f : features) ar(*f);
     ar(cereal::make_nvp("censoring", this->censoring));
   }
+
+  FEATURES features;
+  LABELS labels;
+  size_t vars[5]{0};
+  statick::Array<size_t> col_offset, n_lags, censoring;
+  model::lipschitz::DAO<T> lip_dao;
 };
 
 template <class MODAO>

@@ -79,7 +79,6 @@ void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox) {
   for (size_t i = 1; i < n_threads - 1; i++)
     funcs.emplace_back([&](){
       solve_thread<MODEL, RM, ST, INTERCEPT>(dao, modao, prox, i); });
-
   auto start = std::chrono::steady_clock::now();
   auto log_history = [&](size_t epoch){
     dao.t += epoch_size;
@@ -90,7 +89,6 @@ void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox) {
       history.save_history(time, epoch, iterate, n_features);
     }
   };
-
   for (size_t epoch = 1; epoch < (n_epochs + 1); ++epoch) {
     statick::svrg::prepare_solve<MODEL>(dao, modao, dao.t);
     pool.async(funcs);
@@ -100,7 +98,6 @@ void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox) {
     if constexpr(RM == VarianceReductionMethod::Last)
       for (size_t i = 0; i < dao.iterate.size(); i++) dao.next_iterate[i] = dao.iterate[i];
   }
-
   dao.t += dao.epoch_size;
   if constexpr(std::is_same<typename DAO::HISTORY, statick::solver::History<T, TOL>>::value) {
     auto end = std::chrono::steady_clock::now();

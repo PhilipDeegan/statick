@@ -12,7 +12,6 @@ class _PC{
   T *p_data = nullptr;
   INDICE_TYPE *p_indices = nullptr, *p_row_indices = nullptr;
   std::vector<size_t> info;
-  PyArrayObject * array = nullptr, * indices = nullptr, * row_indices = nullptr;
 };
 
 template <class Archive, class T>
@@ -23,7 +22,6 @@ bool load_sparse2d_with_new_data(Archive &ar, _PC<T> &pc) {
   pc.p_data = reinterpret_cast<T *>(PyMem_RawMalloc(data_size));
   pc.p_indices = reinterpret_cast<INDICE_TYPE *>(PyMem_RawMalloc(info[2] * sizeof(INDICE_TYPE)));
   pc.p_row_indices = reinterpret_cast<INDICE_TYPE *>(PyMem_RawMalloc((info[1] + 1) * sizeof(INDICE_TYPE)));
-
   ar(cereal::binary_data(pc.p_data, sizeof(T) * info[2]));
   ar(cereal::binary_data(pc.p_indices, sizeof(INDICE_TYPE) * info[2]));
   ar(cereal::binary_data(pc.p_row_indices, sizeof(INDICE_TYPE) * (info[1] + 1)));
@@ -32,32 +30,27 @@ bool load_sparse2d_with_new_data(Archive &ar, _PC<T> &pc) {
 
 template <typename T>
 PyObject * sparse2d_to_csr(_PC<T> &pc){
-
   auto data_type = NPY_UINT64;
   if constexpr (std::is_same<T, double>::value)
       data_type = NPY_DOUBLE;
   else
+  if constexpr (std::is_same<T, float >::value)
       data_type = NPY_FLOAT;
+  else
+    KEXCEPT(kul::Exception, "Unhandeled data type for csr_matrix");
 
 #ifdef TICK_SPARSE_INDICES_INT64
   auto indice_type = NPY_UINT64;
 #else
   auto indice_type = NPY_UINT32;
 #endif
-
   auto info = pc.info;
   auto p_data = pc.p_data;
   auto p_indices = pc.p_indices;
   auto p_row_indices = pc.p_row_indices;
 
-  auto *&array = pc.array;
-  auto *&indices = pc.indices;
-  auto *&row_indices = pc.row_indices;
-
+  PyArrayObject * array = nullptr, * indices = nullptr, * row_indices = nullptr;
   PyObject *scipy_sparse_csr = nullptr, *csr_matrix = nullptr, *matrix = nullptr;
-  // auto *&scipy_sparse_csr = pc.scipy_sparse_csr;
-  // auto *&csr_matrix = pc.csr_matrix;
-  // auto *&matrix = pc.matrix;
 
   size_t cols = info[0], rows = info[1], size_sparse = info[2];
   npy_intp dims[1];  dims[0] = size_sparse;
