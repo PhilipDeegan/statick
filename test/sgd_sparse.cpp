@@ -11,8 +11,8 @@ int main() {
   using SOLVER   = statick::SGD;
   using SODAO    = SOLVER::DAO<MODEL>;
   auto  SOLVE    = &SOLVER::template SOLVE<SODAO, PROX>;
-  MODEL::DAO modao(FEATURES::FROM_CEREAL("url.features.cereal"),
-                   LABELS::FROM_CEREAL("url.labels.cereal"));
+  MODEL::DAO modao(FEATURES::FROM_CEREAL("adult.features.cereal"),
+                   LABELS::FROM_CEREAL("adult.labels.cereal"));
   SODAO dao(modao);
   PROX prox(/*strength=*/(1. / modao.n_samples()) + 1e-10);
   std::vector<T> objs; auto start = NOW;

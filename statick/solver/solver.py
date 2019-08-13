@@ -35,6 +35,8 @@ class Solver(DummySolver):
             object.__setattr__(self, "_dao", getattr(statick_solver, func)(model._dao))
         if hasattr(self._dao, 'history'):
             self._dao.history.log_every_n_epochs = self.log_every_n_epochs
+        if hasattr(self._dao, 'step'):
+            self._dao.step = self.step
         return self
 
     def set_prox(self, prox: TPROX):

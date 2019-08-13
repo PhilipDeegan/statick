@@ -15,6 +15,7 @@ int main() {
                    LABELS::FROM_CEREAL("url.labels.cereal"));
   const T STRENGTH = (1. / modao.n_samples()) + 1e-10;
   SODAO dao(modao, N_ITER, modao.n_samples(), THREADS); PROX prox(STRENGTH);
+  dao.step = 0.00257480411965l;
   dao.history.tol.val = 1e-5;
   SOLVE(dao, modao, prox);
   std::vector<T> &objs(dao.history.objectives);

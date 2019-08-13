@@ -4,6 +4,7 @@
 #include "statick/solver/asaga.hpp"
 #include "statick/solver/saga.hpp"
 #include "statick/solver/svrg.hpp"
+#include "statick/solver/sgd.hpp"
 #include "statick/random.hpp"
 namespace py = pybind11;
 
@@ -64,6 +65,10 @@ PYBIND11_MODULE(statick_solver, m) {
   using _saga = statick::SAGA;
   statick::def_solver<_saga, log_reg_sd>(m); statick::def_solver<_saga, log_reg_dd>(m);
   statick::def_solver<_saga, log_reg_ss>(m); statick::def_solver<_saga, log_reg_ds>(m);
+
+  using _sgd = statick::SGD;
+  statick::def_solver<_sgd, log_reg_sd>(m); statick::def_solver<_sgd, log_reg_dd>(m);
+  statick::def_solver<_sgd, log_reg_ss>(m); statick::def_solver<_sgd, log_reg_ds>(m);
 
   DEF_HISTORY(double, tolerance_d, history_tol_d);
   DEF_HISTORY(float , tolerance_s, history_tol_s);

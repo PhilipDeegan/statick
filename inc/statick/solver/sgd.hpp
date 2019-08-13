@@ -76,7 +76,7 @@ class SGD {
   static constexpr std::string_view NAME = "sgd";
 
   template <typename M, bool I = false>
-  using DAO = typename statick::sgd::DAO<typename M::DAO, I>;
+  using DAO = typename statick::sgd::DAO<M, I>;
 
   template <typename _DAO, typename PROX>
   static inline void SOLVE(_DAO &dao, typename _DAO::MODAO &modao, PROX &prox) {
