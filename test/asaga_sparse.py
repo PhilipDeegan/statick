@@ -14,7 +14,7 @@ y = statick.load_double_array("url.labels.cereal")
 
 solver = SAGA(step=STEP, max_iter=MAX_ITER, verbose=False, tol=TOL, n_threads=N_THREADS) \
           .set_model(ModelLogReg().fit(X, y))                                        \
-          .set_prox (ProxL2Sq(strength=((1. / X.shape[0]) + 1e-10)))
+		  .set_prox (ProxL2Sq(strength=((1. / X.shape[0]) + 1e-10)))
 solver.solve()
 objs = solver.objectives
 history = solver.time_history

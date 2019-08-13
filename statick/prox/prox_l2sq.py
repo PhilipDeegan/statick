@@ -7,7 +7,7 @@ from .prox import *
 class ProxL2Sq(PROX, TPL2SQ):
 
     def __init__(self, **kwargs):
-        Prox.__init__(self, **kwargs)
+        PROX.__init__(self, **kwargs)
         TPL2SQ.__init__(self, **kwargs)
         object.__setattr__(self, "_MANGLING", "l2sq")
 
