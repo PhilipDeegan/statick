@@ -31,20 +31,17 @@ class DAO {
   using value_type = T;
 
   DAO(){}
-  DAO(FEATURES &&_features, LABELS &&_labels) : m_features(_features), m_labels(_labels) { init(); }
-  DAO(FEATURES &_features, LABELS &_labels) : m_features(_features), m_labels(_labels)   { init(); }
-
-  void init() { vars[0] = m_features->cols(); vars[1] = m_features->rows(); }
+  DAO(FEATURES &&_features, LABELS &&_labels) : m_features(_features), m_labels(_labels) {}
+  DAO(FEATURES &_features, LABELS &_labels) : m_features(_features), m_labels(_labels)   {}
 
   auto &features() const { if constexpr(is_shared_ptr<_F>::value) return *m_features; else return m_features; }
   auto &labels()   const { if constexpr(is_shared_ptr<_L>::value) return *m_labels; else return m_labels; }
 
-  inline const size_t &n_features() const { return vars[0]; }
-  inline const size_t &n_samples() const { return vars[1]; }
+  inline const size_t &n_samples() const { return features().rows(); }
+  inline const size_t &n_features() const { return features().cols(); }
 
   FEATURES m_features;
   LABELS m_labels;
-  size_t vars[2];  // cols, rows;
 };
 
 namespace dense {

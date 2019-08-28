@@ -17,7 +17,6 @@ void fit_d(DAO &dao, py_array_t<T> & a, py_array_t<T> & b){
   ainfo[2] = a_info.shape[0]*a_info.shape[1];
   dao.m_features = std::make_shared<statick::Array2DView<T>>((T*)a_info.ptr, ainfo.data());
   dao.m_labels = std::make_shared<statick::ArrayView<T>>((T*)b_info.ptr, b_info.shape[0]);
-  dao.init();
 }
 
 template <typename T, typename DAO>
@@ -28,7 +27,6 @@ void fit_s(DAO &dao, py_csr_t<T> & a, py_array_t<T> & b){
   dao.m_features = dao.X.m_data_ptr;
   KLOG(INF) << statick::sum(dao.X.m_data_ptr->data(), dao.X.m_data_ptr->size());
   dao.m_labels = std::make_shared<statick::ArrayView<T>>((T*)b_info.ptr, b_info.shape[0]);
-  dao.init();
 }
 
 template <typename _F, typename _L>
