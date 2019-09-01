@@ -6,20 +6,17 @@
 namespace statick_py {
 
 template <typename T>
-class _PC{
- public:
-  _PC(): info(4){}
+struct _PC{
   T *p_data = nullptr;
   INDICE_TYPE *p_indices = nullptr, *p_row_indices = nullptr;
-  std::vector<size_t> info;
+  size_t info[4];
 };
 
 template <class Archive, class T>
 bool load_sparse2d_with_new_data(Archive &ar, _PC<T> &pc) {
-  ar(pc.info[2], pc.info[1], pc.info[0], pc.info[3]);
   auto &info = pc.info;
-  auto data_size = info[2] * sizeof(T);
-  pc.p_data = reinterpret_cast<T *>(PyMem_RawMalloc(data_size));
+  ar(info[2], info[1], info[0], info[3]);
+  pc.p_data = reinterpret_cast<T *>(PyMem_RawMalloc(info[2] * sizeof(T)));
   pc.p_indices = reinterpret_cast<INDICE_TYPE *>(PyMem_RawMalloc(info[2] * sizeof(INDICE_TYPE)));
   pc.p_row_indices = reinterpret_cast<INDICE_TYPE *>(PyMem_RawMalloc((info[1] + 1) * sizeof(INDICE_TYPE)));
   ar(cereal::binary_data(pc.p_data, sizeof(T) * info[2]));
@@ -31,13 +28,10 @@ bool load_sparse2d_with_new_data(Archive &ar, _PC<T> &pc) {
 template <typename T>
 PyObject * sparse2d_to_csr(_PC<T> &pc){
   auto data_type = NPY_UINT64;
-  if constexpr (std::is_same<T, double>::value)
-      data_type = NPY_DOUBLE;
+  if constexpr (std::is_same<T, double>::value) data_type = NPY_DOUBLE;
   else
-  if constexpr (std::is_same<T, float >::value)
-      data_type = NPY_FLOAT;
-  else
-    KEXCEPT(kul::Exception, "Unhandeled data type for csr_matrix");
+  if constexpr (std::is_same<T, float >::value) data_type = NPY_FLOAT;
+  else KEXCEPT(kul::Exception, "Unhandeled data type for csr_matrix");
 
 #ifdef TICK_SPARSE_INDICES_INT64
   auto indice_type = NPY_UINT64;
@@ -45,24 +39,17 @@ PyObject * sparse2d_to_csr(_PC<T> &pc){
   auto indice_type = NPY_UINT32;
 #endif
   auto info = pc.info;
-  auto p_data = pc.p_data;
-  auto p_indices = pc.p_indices;
-  auto p_row_indices = pc.p_row_indices;
-
-  PyArrayObject * array = nullptr, * indices = nullptr, * row_indices = nullptr;
-  PyObject *scipy_sparse_csr = nullptr, *csr_matrix = nullptr, *matrix = nullptr;
-
   size_t cols = info[0], rows = info[1], size_sparse = info[2];
   npy_intp dims[1];  dims[0] = size_sparse;
   npy_intp rowDim[1]; rowDim[0] = rows + 1;
 
-  array = (PyArrayObject *) PyArray_SimpleNewFromData(1, dims, data_type, p_data);
+  PyArrayObject * array = (PyArrayObject *) PyArray_SimpleNewFromData(1, dims, data_type, pc.p_data);
   if(!PyArray_Check(array)) throw std::runtime_error("Array check failed");
 
-  indices = (PyArrayObject *) PyArray_SimpleNewFromData(1, dims, indice_type, p_indices);
+  PyArrayObject * indices = (PyArrayObject *) PyArray_SimpleNewFromData(1, dims, indice_type, pc.p_indices);
   if(!PyArray_Check(indices)) throw std::runtime_error("indices check failed");
 
-  row_indices = (PyArrayObject *) PyArray_SimpleNewFromData(1, rowDim, indice_type, p_row_indices);
+  PyArrayObject * row_indices = (PyArrayObject *) PyArray_SimpleNewFromData(1, rowDim, indice_type, pc.p_row_indices);
   if(!PyArray_Check(row_indices)) throw std::runtime_error("row_indices check failed");
 
   if(!array) throw std::runtime_error("Array failed");
@@ -93,12 +80,13 @@ PyObject * sparse2d_to_csr(_PC<T> &pc){
      throw std::runtime_error("shape set failed on dic");
   if(!PyDict_Check(dic)) throw std::runtime_error("dic is no dic");
 
-  scipy_sparse_csr = PyImport_ImportModule("scipy.sparse.csr");
+  PyObject * scipy_sparse_csr = PyImport_ImportModule("scipy.sparse.csr");
   if(!scipy_sparse_csr) throw std::runtime_error("scipy_sparse_csr failed");
-  csr_matrix = PyObject_GetAttrString(scipy_sparse_csr, "csr_matrix");
+  PyObject * csr_matrix = PyObject_GetAttrString(scipy_sparse_csr, "csr_matrix");
   if(!csr_matrix) throw std::runtime_error("csr_matrix failed");
   if(!PyCallable_Check(csr_matrix)) throw std::runtime_error("csr_matrix check failed");
-  if(!(matrix = PyObject_Call(csr_matrix, Otuple, dic))) throw std::runtime_error("matrix failed to call object");
+  PyObject *matrix = PyObject_Call(csr_matrix, Otuple, dic);
+  if(!matrix) throw std::runtime_error("matrix failed to call object");
 
   // csr_matrix destruction does not remove these unless set like this ¯\_(ツ)_/¯
   if(PyObject_SetAttrString(matrix, "_indices", (PyObject *)indices)) throw std::runtime_error("set indices failed");
@@ -118,7 +106,7 @@ PyObject * sparse2d_to_csr(_PC<T> &pc){
   Py_DECREF(indices);
   Py_DECREF(row_indices);
 
-  return (PyObject *) matrix;
+  return matrix;
 }
 }
 

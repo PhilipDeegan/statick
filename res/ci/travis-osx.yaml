@@ -14,5 +14,3 @@ file:
     archiver: ar -cr
     compiler: clang++ -std=c++17 -fPIC -O3
     linker: clang++ -Wl,-rpath,/usr/local/lib
-
-#-fno-omit-frame-pointer -fsanitize=address

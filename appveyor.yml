@@ -21,24 +21,12 @@ cache:
   - C:\ProgramData\chocolatey\bin -> appveyor.yml
   - C:\ProgramData\chocolatey\lib -> appveyor.yml
 
+install:
+  - IF NOT EXIST C:\ProgramData\chocolatey\bin\swig.exe choco install res\ci\swig.4.0.0.nupkg --yes --limit-output #> $null
+  - cat C:\ProgramData\chocolatey\logs\chocolatey.log
+
 build_script:
+  - cp "C:\Program Files (x86)\Windows Kits\10\bin\x64\rc.exe" %CD%
   - call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
   - mkdir -p "C:\Program Files (x86)\Windows Kits\10\include\10.0.16299.0\cppwinrt"
-  - bash -c "PATH=\"$PWD:/c/Python36-x64/:/c/Program Files/Git/usr/bin:$PATH\"; ./res/ci/appvey.sh"
-
-# artifacts:
-#   - path: '*.tar'
-
-# deploy:
-# - provider: BinTray
-#   username: dekken
-#   api_key:
-#     secure: FGDIE5oZsFn49kRhIK98X2JAqXwvReVl1nSlKNlo3pYCtosD2r9YfkHHhAJcjcyE
-#   subject: dekken
-#   repo: maiken
-#   package: mkn
-#   publish: true
-#   override: true
-#   explode: true
-#   artifact: /.*\.tar/
-#   version: master
+  - bash -c "PATH=\"$PWD:/c/Python37-x64/:/c/Program Files/Git/usr/bin:$PATH\"; ./res/ci/appvey.sh"

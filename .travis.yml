@@ -2,7 +2,7 @@ language: generic
 matrix:
   include:
   - os: linux
-    dist: xenial
+    dist: bionic
     sudo: required
     language: cpp
     compiler: gcc
@@ -15,30 +15,30 @@ matrix:
           - libatlas-base-dev
           - libblas-dev
   - os: osx
-    osx_image: xcode10.2
+    sudo: required
+    osx_image: xcode11
     language: c++
     compiler: clang
 
 before_install:
   - |
-    git clone https://github.com/Dekken/maiken --depth 10 -b master maiken
+    python3 -V
+    curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python3 get-pip.py --user
     python3 -m pip install pip --upgrade
+    git clone https://github.com/Dekken/maiken --depth 10 -b master maiken
     if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
       make bsd -C maiken CXX="clang++" & MKN=$!
-      python3 -m pip install numpy scikit-learn scipy mkl mkl-include
       find /usr/local/lib -name "libmkl*"
       wait $MKN
     elif [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
-      make nix -C maiken & MKN=$!
       sudo ln -fs /usr/bin/gcc-8 /usr/local/bin/gcc; sudo ln -fs /usr/bin/g++-8 /usr/local/bin/g++;
-      export PATH="$PWD:/opt/python/3.6.7/bin:$PATH"
-      python3 -m pip install numpy scikit-learn scipy
+      make nix -C maiken & MKN=$!
+      export PATH="$PWD:/opt/python/3.7.3/bin:$PATH"
       wait $MKN
     fi
   - mv maiken/mkn .
 
 script:
-  - set -e
   - |
     export KUL_GIT_CO="--depth 3"
     export MKN_LIB_LINK_LIB=1

@@ -47,10 +47,7 @@ class Solver(DummySolver):
 
     def solve(self):
         import statick.solver.bin.statick_solver as statick_solver
-        print("self._prox", self._prox)
-        print("self._prox", self._prox._dao)
         f = "solve_" + self._s_name + "_" + Solver.CFUNC_RESOLVER(self.model, "_" + self._prox._MANGLING + "_")
-        print("f", f)
         max_iter = self.max_iter
         if self.n_threads > 1:
             max_iter = 1
