@@ -45,7 +45,9 @@ void sparse(int argc, char *argv[]) {
   KOUT(NON) << "Devices " << devices;
   if (devices == 0) exit(2);
 
-  std::string features_s("sparse.features.data"), labels_s("sparse.labels.data");
+  kul::File feat("../url.features.cereal"), labe("../url.labels.cereal");
+  if(!feat || ! labe) KEXIT(1, "DATA DOES NOT EXIST");
+  std::string features_s("../url.features.cereal"), labels_s("../url.labels.cereal");
   auto dev_lambda = [&](size_t dev_id) {
     try {
       std::vector<hc::accelerator_view> acc_views;
@@ -86,7 +88,7 @@ void sparse(int argc, char *argv[]) {
       std::uniform_int_distribution<size_t> uniform_dist;
       std::uniform_int_distribution<size_t>::param_type p(0, N_SAMPLES - 1);
       for (size_t i = 0; i < next_i.size(); i++) next_i[i] = uniform_dist(generator, p);
-      hc::array_view<size_t, 1> ar_next_i(next_i.size().data());
+      hc::array_view<size_t, 1> ar_next_i(next_i.size());
       synchronize_to_device(ar_next_i);
       RAM_HERE;
 

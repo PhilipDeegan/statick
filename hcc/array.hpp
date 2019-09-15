@@ -146,33 +146,23 @@ class Sparse2DView {
  public:
   Sparse2DView(const T *_data, const size_t *_info, const INDEX_TYPE *_indices,
               const INDEX_TYPE *_row_indices) __CPU__ __HC__ : v_data(_data),
-                                                               m_info[0](_info[0]),
-                                                               m_info[1](_info[1]),
-                                                               m_info[2](_info[2]),
                                                                v_indices(_indices),
-                                                               v_row_indices(_row_indices) {}
+                                                               v_row_indices(_row_indices) {
+    m_info[0] = _info[0]; m_info[1] = _info[1]; m_info[2] = _info[2];
+  }
   Sparse2DView(const Sparse2DView &that) __CPU__ __HC__ : v_data(that.v_data),
-                                                               m_info[0](_info[0]),
-                                                               m_info[1](_info[1]),
-                                                               m_info[2](_info[2]),
                                                         v_indices(that.v_indices),
-                                                        v_row_indices(that.v_row_indices) {}
+                                                        v_row_indices(that.v_row_indices) {
+    m_info[0] = that.m_info[0]; m_info[1] = that.m_info[1]; m_info[2] = that.m_info[2];
+  }
 
-  Sparse2DView(Sparse2DView &&that) __CPU__ __HC__ : v_data(that.v_data),
-                                                             m_info[0](_info[0]),
-                                                             m_info[1](_info[1]),
-                                                             m_info[2](_info[2]),
-                                                   v_indices(that.v_indices),
-                                                   v_row_indices(that.v_row_indices) {}
   Sparse2DView(const Sparse2DView &&that) __CPU__ __HC__ : v_data(that.v_data),
-                                                               m_info[0](_info[0]),
-                                                               m_info[1](_info[1]),
-                                                               m_info[2](_info[2]),
                                                          v_indices(that.v_indices),
-                                                         v_row_indices(that.v_row_indices) {}
+                                                         v_row_indices(that.v_row_indices) {
+    m_info[0] = that.m_info[0]; m_info[1] = that.m_info[1]; m_info[2] = that.m_info[2];
+  }
 
   T &operator[](const Kalmar::index<1> &idx) const __CPU__ __HC__ { return v_data[idx]; }
-  // const T &operator[](int i) const __CPU__ __HC__ { return v_data[i]; }
   T &operator[](int i) __CPU__ __HC__ { return v_data[i]; }
   Sparse<T> row(size_t i) const __CPU__ __HC__ {
     return Sparse<T>(v_data + v_row_indices[i], v_row_indices[i + 1] - v_row_indices[i],
@@ -196,7 +186,7 @@ class Sparse2DView {
 
  private:
   const T *v_data;
-  const size_t m_info[3];
+  size_t m_info[3];
   const INDEX_TYPE *v_indices, *v_row_indices;
 
   Sparse2DView() = delete;

@@ -1,9 +1,7 @@
 # License: BSD 3 clause
 
-import gc, unittest, weakref
-
+import os, gc, scipy, unittest
 import numpy as np
-import scipy
 from scipy.sparse import csr_matrix
 
 import statick
@@ -14,24 +12,11 @@ class Test(unittest.TestCase):
         """...Test brute force method in order to see if we have a memory leak
         during typemap out
         """
-        import os
-
-        def deserialize(file):
-            return
-            # cap = statick.load_double_sparse2d(file)
-            # ctypes.pythonapi.PyCapsule_GetPointer.restype = ctypes.py_object
-            # ctypes.pythonapi.PyCapsule_GetPointer.argtypes = [ctypes.py_object, ctypes.c_char_p]
-            # ctypes.pythonapi.PyCapsule_GetName.restype = ctypes.c_char_p
-            # ctypes.pythonapi.PyCapsule_GetName.argtypes = [ctypes.py_object]
-            # name = ctypes.pythonapi.PyCapsule_GetName(cap)
-            # return (cap, ctypes.pythonapi.PyCapsule_GetPointer(cap, name))
-
         try:
             import psutil
         except ImportError:
             print('Without psutils we cannot ensure we have no memory leaks')
             return
-
 
         def get_memory_used():
             """Returns memory used by current process
@@ -64,7 +49,6 @@ class Test(unittest.TestCase):
                                    bytes_size, delta=1.1 * bytes_size)
             a = 1
             for i in range(10):
-                # Check memory is not increasing
                 gc.collect()
                 filled_memory = get_memory_used()
                 self.assertAlmostEqual(filled_memory, initial_memory,
@@ -78,7 +62,6 @@ class Test(unittest.TestCase):
         finally:
             if os.path.exists(cereal_file):
                 os.remove(cereal_file)
-
 
 
 if __name__ == "__main__":
