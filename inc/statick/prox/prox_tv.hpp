@@ -31,13 +31,13 @@ void call(const T *coeffs, T step, T *out, size_t start, size_t end, T strength)
         do {
           sub_out[k0++] = vmin;
         } while (k0 <= k);
-        if constexpr(POSITIVE) {
-            for (size_t i = start; i < end; i++) {
-              if (out[i] < 0) {
-                out[i] = 0;
-              }
+        if constexpr (POSITIVE) {
+          for (size_t i = start; i < end; i++) {
+            if (out[i] < 0) {
+              out[i] = 0;
             }
           }
+        }
         return;
       }
     }
@@ -97,8 +97,7 @@ T value(const RAWrray &coeffs, size_t start, size_t end, T strength) {
 }
 }  // namespace prox_tv
 
-
-}  // namespace prox_l2sq
+}  // namespace statick
 template <typename T, bool POSITIVE = 0>
 class ProxTV {
  public:
@@ -106,14 +105,10 @@ class ProxTV {
   static constexpr std::string_view NAME = "tv";
   using value_type = T;
 
-  static inline T value(ProxTV &prox, const T *coeffs, const size_t size) {
-    return 0;
-  }
-  static inline T call_single(ProxTV &prox, const T x, T step) {
-    return x;
-  }
+  static inline T value(ProxTV &prox, const T *coeffs, const size_t size) { return 0; }
+  static inline T call_single(ProxTV &prox, const T x, T step) { return x; }
 
-  static inline void call(ProxTV &prox, const T* coeffs, T step, T *out, size_t size) {}
+  static inline void call(ProxTV &prox, const T *coeffs, T step, T *out, size_t size) {}
 }
 
 }  // namespace statick

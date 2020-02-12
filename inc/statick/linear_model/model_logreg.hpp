@@ -21,21 +21,32 @@ T grad_i_factor(const FEATURES &features, const T *labels, const K *coeffs, cons
 
 template <typename _F, typename _L>
 class DAO {
- private:
  public:
-  using FEATURE = typename std::conditional<is_shared_ptr<_F>::value, typename _F::element_type, _F>::type;
   using FEATURES = _F;
   using LABELS = _L;
-  using LABEL = typename std::conditional<is_shared_ptr<_L>::value, typename _L::element_type, _L>::type;
+  using FEATURE =
+      typename std::conditional<is_shared_ptr<_F>::value, typename _F::element_type, _F>::type;
+  using LABEL =
+      typename std::conditional<is_shared_ptr<_L>::value, typename _L::element_type, _L>::type;
   using T = typename FEATURE::value_type;
   using value_type = T;
 
-  DAO(){}
+  DAO() {}
   DAO(FEATURES &&_features, LABELS &&_labels) : m_features(_features), m_labels(_labels) {}
-  DAO(FEATURES &_features, LABELS &_labels) : m_features(_features), m_labels(_labels)   {}
+  DAO(FEATURES &_features, LABELS &_labels) : m_features(_features), m_labels(_labels) {}
 
-  auto &features() const { if constexpr(is_shared_ptr<_F>::value) return *m_features; else return m_features; }
-  auto &labels()   const { if constexpr(is_shared_ptr<_L>::value) return *m_labels; else return m_labels; }
+  auto &features() const {
+    if constexpr (is_shared_ptr<_F>::value)
+      return *m_features;
+    else
+      return m_features;
+  }
+  auto &labels() const {
+    if constexpr (is_shared_ptr<_L>::value)
+      return *m_labels;
+    else
+      return m_labels;
+  }
 
   inline const size_t &n_samples() const { return features().rows(); }
   inline const size_t &n_features() const { return features().cols(); }
@@ -46,13 +57,11 @@ class DAO {
 
 namespace dense {
 template <typename FEATURES, typename LABELS>
-using DAO = logreg::DAO<std::shared_ptr<FEATURES>,
-                        std::shared_ptr<LABELS>>;
+using DAO = logreg::DAO<std::shared_ptr<FEATURES>, std::shared_ptr<LABELS>>;
 }  // namespace dense
 namespace sparse {
 template <typename FEATURES, typename LABELS>
-using DAO = logreg::DAO<std::shared_ptr<FEATURES>,
-                        std::shared_ptr<LABELS>>;
+using DAO = logreg::DAO<std::shared_ptr<FEATURES>, std::shared_ptr<LABELS>>;
 }  // namespace sparse
 }  // namespace logreg
 
@@ -65,7 +74,7 @@ class ModelLogReg {
   using T = value_type;
 
   template <bool INTERCEPT = false, bool FILL = true, class K>
-  static T grad_i_factor(DAO &dao, K*coeffs, const size_t i) {
+  static T grad_i_factor(DAO &dao, K *coeffs, const size_t i) {
     return logreg::grad_i_factor(dao.features(), dao.labels().data(), coeffs, i);
   }
 
@@ -73,17 +82,21 @@ class ModelLogReg {
   static void compute_grad_i(DAO &dao, const K *coeffs, T *out, const size_t i) {
     auto *x_i = dao.features().row_raw(i);
     const T alpha_i = grad_i_factor(dao, coeffs, i);
-    if constexpr(FILL) mult_fill(out, x_i, alpha_i, dao.n_features());
-    else mult_incr(out, x_i, alpha_i, dao.n_features());
-    if constexpr(INTERCEPT) {
-      if constexpr(FILL) out[dao.n_features()] = alpha_i;
-      else out[dao.n_features()] += alpha_i;
+    if constexpr (FILL)
+      mult_fill(out, x_i, alpha_i, dao.n_features());
+    else
+      mult_incr(out, x_i, alpha_i, dao.n_features());
+    if constexpr (INTERCEPT) {
+      if constexpr (FILL)
+        out[dao.n_features()] = alpha_i;
+      else
+        out[dao.n_features()] += alpha_i;
     }
   }
 
   template <bool INTERCEPT = false, bool FILL = true, class K>
   static void grad_i(DAO &dao, const K *coeffs, T *out, const size_t size, const size_t i) {
-    (void) size;
+    (void)size;
     compute_grad_i<INTERCEPT, true, K>(dao, coeffs, out, i);
   }
 

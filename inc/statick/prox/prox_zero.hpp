@@ -10,14 +10,10 @@ class ProxZero {
   static constexpr std::string_view NAME = "zero";
   using value_type = T;
 
-  static inline T value(ProxZero &prox, const T *coeffs, const size_t size) {
-    return 0;
-  }
-  static inline T call_single(ProxZero &prox, const T x, T step) {
-    return x;
-  }
+  static inline T value(ProxZero &prox, const T *coeffs, const size_t size) { return 0; }
+  static inline T call_single(ProxZero &prox, const T x, T step) { return x; }
 
-  static inline void call(ProxZero &prox, const T* coeffs, T step, T *out, size_t size) {}
+  static inline void call(ProxZero &prox, const T *coeffs, T step, T *out, size_t size) {}
 };
 
 }  // namespace statick

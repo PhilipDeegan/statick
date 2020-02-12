@@ -14,11 +14,11 @@
 #endif
 
 namespace statick {
-template<class T>
+template <class T>
 struct is_shared_ptr : std::false_type {};
-template<class T>
+template <class T>
 struct is_shared_ptr<std::shared_ptr<T>> : std::true_type {};
-}
+}  // namespace statick
 
 #include "cereal/types/vector.hpp"
 #include "cereal/archives/portable_binary.hpp"
@@ -30,16 +30,16 @@ struct is_shared_ptr<std::shared_ptr<T>> : std::true_type {};
 #include "statick/array/sparse/array2d.hpp"
 
 namespace statick {
-#define AR_P_T(C, n)                                         \
-  using arrayv_##n          = statick::ArrayView<C>;         \
-  using arrayv_##n##_ptr    = std::shared_ptr<arrayv_##n>;   \
-  using array2dv_##n        = statick::Array2DView<C>;       \
-  using array2dv_##n##_ptr  = std::shared_ptr<array2dv_##n>; \
-  using sparse2dv_##n       = statick::Sparse2DView<C>;      \
+#define AR_P_T(C, n)                                        \
+  using arrayv_##n = statick::ArrayView<C>;                 \
+  using arrayv_##n##_ptr = std::shared_ptr<arrayv_##n>;     \
+  using array2dv_##n = statick::Array2DView<C>;             \
+  using array2dv_##n##_ptr = std::shared_ptr<array2dv_##n>; \
+  using sparse2dv_##n = statick::Sparse2DView<C>;           \
   using sparse2dv_##n##_ptr = std::shared_ptr<sparse2dv_##n>;
 AR_P_T(double, d)
 AR_P_T(float, s)
 #undef AR_P_T
-}
+}  // namespace statick
 
 #endif  //  STATICK_ARRAY_HPP_

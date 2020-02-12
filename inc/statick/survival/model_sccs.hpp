@@ -10,10 +10,8 @@ template <typename MODAO>
 class TModelSCCS {
  public:
   using DAO = MODAO;
-  using T   = typename DAO::value_type;
-  using T_F = typename DAO::T_F;
-  using T_L = typename DAO::T_L;
-  using FrR = typename DAO::T_F::view1d_type;
+  using T = typename DAO::value_type;
+  using FrR = typename DAO::FEATURE::view1d_type;
   using value_type = T;
 
   static size_t get_max_interval(DAO &dao, size_t i) {
@@ -28,9 +26,7 @@ class TModelSCCS {
     return dao.features[i]->row(t);
   }
 
-  static size_t get_longitudinal_label(DAO &dao, size_t i, size_t t) {
-    return (*dao.labels[i])[t];
-  }
+  static size_t get_longitudinal_label(DAO &dao, size_t i, size_t t) { return (*dao.labels[i])[t]; }
 
   static T get_inner_prod(DAO &dao, const T *const coeffs, const size_t i, const size_t t) {
     return dao.features[i]->row(t).dot(coeffs);
@@ -95,14 +91,14 @@ class TModelSCCS {
   }
 
   static T lip_max(DAO &dao) {
-    if(dao.lip_dao.lip_consts.empty()) compute_lip_consts(dao);
+    if (dao.lip_dao.lip_consts.empty()) compute_lip_consts(dao);
     return statick::max(dao.lip_dao.lip_consts.data(), dao.lip_dao.lip_consts.size());
   }
 
   static void compute_lip_consts(DAO &dao, size_t n_threads = 1) {
     dao.lip_dao.lip_consts.resize(dao.n_samples(), 0);
     double max_sq_norm, sq_norm;
-    auto compute_lib_func = [&](size_t start, size_t size){
+    auto compute_lib_func = [&](size_t start, size_t size) {
       for (size_t sample = start; sample < (start + size); sample++) {
         max_sq_norm = 0;
         size_t max_interval = get_max_interval(dao, sample);
@@ -123,14 +119,11 @@ class TModelSCCS {
     };
     size_t sample_size = dao.n_samples() / n_threads, off_set = dao.n_samples() % n_threads;
     std::vector<std::thread> threads;
-    for(size_t i = 1; i < n_threads; i++)
-      threads.emplace_back(
-        [&](size_t _s1, size_t _s2){
-          compute_lib_func(_s1, _s2);
-        }, (i * sample_size) + off_set, sample_size
-      );
+    for (size_t i = 1; i < n_threads; i++)
+      threads.emplace_back([&](size_t _s1, size_t _s2) { compute_lib_func(_s1, _s2); },
+                           (i * sample_size) + off_set, sample_size);
     compute_lib_func(0, sample_size + off_set);
-    for(auto & t : threads) t.join();
+    for (auto &t : threads) t.join();
   }
 };
 }  // namespace statick

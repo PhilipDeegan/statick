@@ -15,9 +15,10 @@ class DAO {
   using value_type = T;
 
   DAO(MODAO &modao)
-    : iterate(modao.n_features() + static_cast<size_t>(INTERCEPT)),
-      gradients_average(modao.n_features()), gradients_memory(modao.n_samples()),
-      rand(0, modao.n_samples() - 1) { }
+      : iterate(modao.n_features() + static_cast<size_t>(INTERCEPT)),
+        gradients_average(modao.n_features()),
+        gradients_memory(modao.n_samples()),
+        rand(0, modao.n_samples() - 1) {}
 
   std::vector<T> iterate, gradients_average, gradients_memory;
   RandomMinMax<INDICE_TYPE> rand;
@@ -33,9 +34,9 @@ class DAO : public statick::saga::DAO<_MODEL, _INTERCEPT> {
   using MODAO = typename MODEL::DAO;
   using value_type = T;
   static constexpr bool INTERCEPT = _INTERCEPT;
-  using SUPER::iterate;
   using SUPER::gradients_average;
   using SUPER::gradients_memory;
+  using SUPER::iterate;
 
   DAO(MODAO &modao) : statick::saga::DAO<_MODEL, INTERCEPT>(modao) {}
 
@@ -43,8 +44,7 @@ class DAO : public statick::saga::DAO<_MODEL, _INTERCEPT> {
 };
 
 template <typename MODEL, bool INTERCEPT = false, typename PROX,
-          typename T = typename MODEL::value_type,
-          typename DAO = statick::saga::dense::DAO<T>>
+          typename T = typename MODEL::value_type, typename DAO = statick::saga::dense::DAO<T>>
 void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox) {
   const size_t n_samples = modao.n_samples(), n_features = modao.n_features();
   auto *features = modao.features().data();
@@ -62,7 +62,7 @@ void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox) {
       iterate[j] -= step * (grad_factor_diff * x_i[j] + grad_avg_j);
       dao.gradients_average[j] += grad_factor_diff * x_i[j] * n_samples_inverse;
     }
-    if constexpr(INTERCEPT) {
+    if constexpr (INTERCEPT) {
       iterate[n_features] -= step * (grad_factor_diff + dao.gradients_average[n_features]);
       dao.gradients_average[n_features] += grad_factor_diff * n_samples_inverse;
     }
@@ -100,27 +100,26 @@ class DAO : public statick::saga::DAO<_MODEL, _INTERCEPT> {
   using MODAO = typename MODEL::DAO;
   using value_type = T;
   static constexpr bool INTERCEPT = _INTERCEPT;
-  using SUPER::iterate;
   using SUPER::gradients_average;
   using SUPER::gradients_memory;
+  using SUPER::iterate;
 
   DAO(MODAO &modao)
-     : statick::saga::DAO<_MODEL, INTERCEPT>(modao),
-       steps_corrections(statick::saga::sparse::compute_step_corrections(modao.features())) {}
+      : statick::saga::DAO<_MODEL, INTERCEPT>(modao),
+        steps_corrections(statick::saga::sparse::compute_step_corrections(modao.features())) {}
 
   T step = 0.00257480411965l;
   std::vector<T> steps_corrections;
 };
 
 template <typename MODEL, bool INTERCEPT = false, typename PROX,
-          typename T = typename MODEL::value_type,
-          typename DAO = statick::saga::sparse::DAO<T>>
+          typename T = typename MODEL::value_type, typename DAO = statick::saga::sparse::DAO<T>>
 void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox) {
   const size_t n_samples = modao.n_samples(), n_features = modao.n_features();
-  (void) n_features;  // possibly unused if constexpr
+  (void)n_features;  // possibly unused if constexpr
   T n_samples_inverse = ((double)1 / (double)n_samples), step = dao.step;
-  auto * iterate = dao.iterate.data();
-  auto * steps_corrections = dao.steps_corrections.data();
+  auto *iterate = dao.iterate.data();
+  auto *steps_corrections = dao.steps_corrections.data();
   auto &features = modao.features();
   for (size_t t = 0; t < n_samples; ++t) {
     INDICE_TYPE i = dao.rand.next();
@@ -133,20 +132,20 @@ void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox) {
     T grad_factor_diff = grad_i_factor - grad_i_factor_old;
     for (size_t idx_nnz = 0; idx_nnz < x_i_size; ++idx_nnz) {
       const INDICE_TYPE &j = x_i_indices[idx_nnz];
-      iterate[j] -=
-          step * (grad_factor_diff * x_i[idx_nnz] + steps_corrections[j] * dao.gradients_average[j]);
+      iterate[j] -= step * (grad_factor_diff * x_i[idx_nnz] +
+                            steps_corrections[j] * dao.gradients_average[j]);
       dao.gradients_average[j] += grad_factor_diff * x_i[idx_nnz] * n_samples_inverse;
       iterate[j] = PROX::call_single(prox, iterate[j], step * steps_corrections[j]);
     }
-    if constexpr(INTERCEPT) {
+    if constexpr (INTERCEPT) {
       iterate[n_features] -= step * (grad_factor_diff + dao.gradients_average[n_features]);
       dao.gradients_average[n_features] += grad_factor_diff * n_samples_inverse;
       iterate[n_features] = PROX::call_single(prox, iterate[n_features], step);
     }
   }
 }
-}  /* namespace sparse */
-}  /* namespace saga */
+} /* namespace sparse */
+} /* namespace saga */
 
 class SAGA {
  public:
@@ -155,10 +154,11 @@ class SAGA {
   using sparse_dao = statick::saga::sparse::DAO<M, I>;
 
   template <typename M, bool I>
-  using  dense_dao = statick::saga:: dense::DAO<M, I>;
+  using dense_dao = statick::saga::dense::DAO<M, I>;
 
   template <typename M, bool I = false>
-  using DAO = typename std::conditional<M::DAO::FEATURE::is_sparse, sparse_dao<M, I>, dense_dao<M, I>>::type;
+  using DAO = typename std::conditional<M::DAO::FEATURE::is_sparse, sparse_dao<M, I>,
+                                        dense_dao<M, I>>::type;
 
   template <typename _DAO, typename PROX>
   static inline void SOLVE(_DAO &dao, typename _DAO::MODAO &modao, PROX &prox) {
@@ -166,7 +166,7 @@ class SAGA {
     if constexpr (std::is_same<_DAO, sparse_dao<M, _DAO::INTERCEPT>>::value)
       statick::saga::sparse::solve<M>(dao, modao, prox);
     else
-      statick::saga:: dense::solve<M>(dao, modao, prox);
+      statick::saga::dense::solve<M>(dao, modao, prox);
   }
 };
 }  // namespace statick

@@ -61,4 +61,4 @@ class Sparse {
 
 }  // namespace statick
 
-#endif  //  TICK_ARRAY_SPARSE_ARRAY_HPP_
+#endif  //  STATICK_ARRAY_SPARSE_ARRAY_HPP_

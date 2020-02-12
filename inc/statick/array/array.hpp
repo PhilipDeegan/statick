@@ -40,14 +40,15 @@ bool load_array_with_raw_data(Archive &ar, std::vector<T> &data) {
   return true;
 }
 
-template <typename T> class ArrayView;
+template <typename T>
+class ArrayView;
 
 template <typename T>
 class Array {
  public:
   using value_type = T;
-  using real_type  = Array<T>;
-  using view_type  = ArrayView<T>;
+  using real_type = Array<T>;
+  using view_type = ArrayView<T>;
   static constexpr bool is_sparse = 0;
 
   Array(size_t size = 0) : m_data(size) {}
@@ -56,13 +57,14 @@ class Array {
   const T *data() const { return m_data.data(); }
   size_t size() const { return m_data.size(); }
   bool empty() const { return !m_data.size(); }
-  void resize(size_t s) { m_data.resize(s);}
-  void resize(size_t s, T val) { m_data.resize(s, val);}
+  void resize(size_t s) { m_data.resize(s); }
+  void resize(size_t s, T val) { m_data.resize(s, val); }
   T &operator[](size_t i) { return m_data[i]; }
 
   static std::shared_ptr<Array<T>> FROM_CEREAL(const std::string &file) {
     auto array = std::make_shared<Array<T>>();
-    { std::ifstream bin_data(file, std::ios::in | std::ios::binary);
+    {
+      std::ifstream bin_data(file, std::ios::in | std::ios::binary);
       cereal::PortableBinaryInputArchive iarchive(bin_data);
       if (statick::load_array_with_raw_data(iarchive, array->m_data)) return std::move(array);
     }
@@ -72,7 +74,8 @@ class Array {
   static std::shared_ptr<Array<T>> RANDOM(size_t size, T seed = -1) {
     auto arr = std::make_shared<Array<T>>(size);
     std::mt19937_64 generator;
-    if(seed > 0) generator = std::mt19937_64(seed);
+    if (seed > 0)
+      generator = std::mt19937_64(seed);
     else {
       std::random_device r;
       std::seed_seq seed_seq{r(), r(), r(), r(), r(), r(), r(), r()};
@@ -81,8 +84,7 @@ class Array {
     if constexpr (std::is_floating_point<T>::value) {
       std::uniform_real_distribution<T> uniform_dist;
       for (size_t i = 0; i < size; i++) arr->m_data[i] = uniform_dist(generator);
-    }
-    else {
+    } else {
       std::uniform_int_distribution<T> uniform_dist;
       for (size_t i = 0; i < size; i++) arr->m_data[i] = uniform_dist(generator);
     }
@@ -90,35 +92,40 @@ class Array {
   }
 
   template <typename K>
-  void operator*=(const K a) { kul::math::scale(m_data.size(), a, m_data.data()); }
+  void operator*=(const K a) {
+    kul::math::scale(m_data.size(), a, m_data.data());
+  }
 
   template <typename ARRAY>
-  typename std::enable_if<std::is_arithmetic<ARRAY>::value, T>::type
-  dot(ARRAY * const  that) const {
+  typename std::enable_if<std::is_arithmetic<ARRAY>::value, T>::type dot(ARRAY *const that) const {
     return statick::dot(this->m_data.data(), that, this->m_data.size());
   }
   template <typename ARRAY>
-  typename std::enable_if<!std::is_arithmetic<ARRAY>::value, T>::type
-  dot(const ARRAY &that) const {
+  typename std::enable_if<!std::is_arithmetic<ARRAY>::value, T>::type dot(const ARRAY &that) const {
     return statick::dot(this->m_data.data(), that.data(), this->m_data.size());
   }
   template <typename ARRAY>
-  typename std::enable_if<!std::is_arithmetic<ARRAY>::value, T>::type
-  operator*(ARRAY *const that) const {
+  typename std::enable_if<!std::is_arithmetic<ARRAY>::value, T>::type operator*(
+      ARRAY *const that) const {
     return statick::dot(this->m_data.data(), that, this->m_data.size());
   }
   template <typename ARRAY>
-  typename std::enable_if<!std::is_arithmetic<ARRAY>::value, T>::type
-  operator*(const ARRAY &that) const {
+  typename std::enable_if<!std::is_arithmetic<ARRAY>::value, T>::type operator*(
+      const ARRAY &that) const {
     return statick::dot(this->m_data.data(), that.data(), this->m_data.size());
   }
 
   template <class Archive>
-  void load(Archive &ar) { load_array_with_raw_data(ar, m_data); }
+  void load(Archive &ar) {
+    load_array_with_raw_data(ar, m_data);
+  }
   template <class Archive>
-  void save(Archive &ar) const { dense::save<T>(ar, *this); }
+  void save(Archive &ar) const {
+    dense::save<T>(ar, *this);
+  }
 
   std::vector<T> m_data;
+
  private:
   Array(Array &that) = delete;
   Array(const Array &that) = delete;
@@ -133,18 +140,18 @@ template <typename T>
 class ArrayView {
  public:
   using value_type = T;
-  using real_type  = Array<T>;
-  using view_type  = ArrayView<T>;
-  static constexpr bool is_sparse =  0;
+  using real_type = Array<T>;
+  using view_type = ArrayView<T>;
+  static constexpr bool is_sparse = 0;
 
-  ArrayView(){}
+  ArrayView() {}
   ArrayView(const std::vector<T> &_data) : _size(_data.size()), v_data(_data.data()) {}
   ArrayView(const T *_data, const size_t _size) : _size(_size), v_data(_data) {}
   ArrayView(ArrayView &&that) : _size(that._size), v_data(that.v_data) {}
   ArrayView &operator=(const ArrayView &&that) {
-    if(&that != this){
-      const_cast<size_t&>(this->_size) =  that._size;
-      this->v_data =  that.v_data;
+    if (&that != this) {
+      const_cast<size_t &>(this->_size) = that._size;
+      this->v_data = that.v_data;
     }
     return *this;
   };
@@ -155,26 +162,26 @@ class ArrayView {
   T value(size_t i) const { return v_data[i]; }
 
   template <typename K>
-  void operator*=(const K a) { kul::math::scale(_size, a, v_data); }
+  void operator*=(const K a) {
+    kul::math::scale(_size, a, v_data);
+  }
 
   template <typename ARRAY>
-  typename std::enable_if<std::is_arithmetic<ARRAY>::value, T>::type
-  dot(ARRAY * const  that) const {
+  typename std::enable_if<std::is_arithmetic<ARRAY>::value, T>::type dot(ARRAY *const that) const {
     return statick::dot(this->v_data, that, this->_size);
   }
   template <typename ARRAY>
-  typename std::enable_if<!std::is_arithmetic<ARRAY>::value, T>::type
-  dot(const ARRAY &that) const {
+  typename std::enable_if<!std::is_arithmetic<ARRAY>::value, T>::type dot(const ARRAY &that) const {
     return statick::dot(this->v_data, that.data(), this->_size);
   }
   template <typename ARRAY>
-  typename std::enable_if<!std::is_arithmetic<ARRAY>::value, T>::type
-  operator*(ARRAY *const that) const {
+  typename std::enable_if<!std::is_arithmetic<ARRAY>::value, T>::type operator*(
+      ARRAY *const that) const {
     return statick::dot(this->v_data, that, this->_size);
   }
   template <typename ARRAY>
-  typename std::enable_if<!std::is_arithmetic<ARRAY>::value, T>::type
-  operator*(const ARRAY &that) const {
+  typename std::enable_if<!std::is_arithmetic<ARRAY>::value, T>::type operator*(
+      const ARRAY &that) const {
     return statick::dot(this->v_data, that.data(), this->_size);
   }
 
@@ -261,7 +268,7 @@ class SharedArrayList {
   void add_at(std::shared_ptr<ARRAY> arr, size_t i) { m_data[i] = arr; }
 
   auto &operator[](size_t index) { return m_data[index]; }
-  const auto &operator[](size_t index) const  { return m_data[index]; }
+  const auto &operator[](size_t index) const { return m_data[index]; }
 
  private:
   std::vector<std::shared_ptr<ARRAY>> m_data;
@@ -278,10 +285,6 @@ class SharedArrayList {
 template <typename T>
 using SharedArrayViewList = SharedArrayList<T, ArrayView<T>>;
 
-
 }  // namespace statick
 
-
-// CEREAL_SPECIALIZE_FOR_ALL_ARCHIVES(statick::Array<double>, cereal::specialization::member_load_save)
-
-#endif  //  TICK_ARRAY_ARRAY_HPP_
+#endif  //  STATICK_ARRAY_ARRAY_HPP_

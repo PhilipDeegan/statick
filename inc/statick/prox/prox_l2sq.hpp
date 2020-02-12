@@ -1,24 +1,24 @@
 #ifndef STATICK_PROX_PROX_L2SQ_HPP_
 #define STATICK_PROX_PROX_L2SQ_HPP_
 namespace statick {
-namespace prox_l2sq{
-namespace p0 { // > 0
-template <class T> static inline
-T call_single(T x, T step, T strength) {
+namespace prox_l2sq {
+namespace p0 {  // > 0
+template <class T>
+static inline T call_single(T x, T step, T strength) {
   return x / (1 + step * strength);
 }
-}  // namespace p0 { // > 0
+}  // namespace p0
 template <class T>
 T call_single(T x, T step, T strength) {
   if (x < 0) return 0;
   return p0::call_single(x, step, strength);
 }
-template <typename T> static inline
-T value_single(T x) {
+template <typename T>
+static inline T value_single(T x) {
   return x * x / 2;
 }
-template <class T> static inline
-T value(const T *coeffs, size_t size, T strength) {
+template <class T>
+static inline T value(const T *coeffs, size_t size, T strength) {
   T val = 0;
   for (size_t i = 0; i < size; i++) val += value_single(coeffs[i]);
   return strength * val;
@@ -31,7 +31,7 @@ class ProxL2Sq {
   static constexpr std::string_view NAME = "l2sq";
   using value_type = T;
 
-  ProxL2Sq(T _strength) : strength(_strength){}
+  ProxL2Sq(T _strength) : strength(_strength) {}
   static inline T value(ProxL2Sq &prox, const T *coeffs, const size_t size) {
     return statick::prox_l2sq::value(coeffs, size, prox.strength);
   }
@@ -42,7 +42,7 @@ class ProxL2Sq {
       return statick::prox_l2sq::p0::call_single(x, step, prox.strength);
   }
 
-  static inline void call(ProxL2Sq &prox, const T* coeffs, T step, T *out, size_t size) {
+  static inline void call(ProxL2Sq &prox, const T *coeffs, T step, T *out, size_t size) {
     if constexpr (POSITIVE)
       for (size_t i = 0; i < size; i++)
         out[i] = prox_l2sq::call_single(coeffs[i], step, prox.strength);
@@ -52,7 +52,7 @@ class ProxL2Sq {
   }
   static inline void call(const T *coeffs, T step, T *out, size_t size) {}
 
-  T strength {0};
+  T strength{0};
 };
 }  // namespace statick
 #endif  // STATICK_PROX_PROX_L2SQ_HPP_

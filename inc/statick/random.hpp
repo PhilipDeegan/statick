@@ -15,9 +15,10 @@ template <typename T>
 class Random {
  public:
   Random(INDICE_TYPE seed = 0) { reseed(seed); }
-  void reseed(INDICE_TYPE seed){
-    if(seed > 0) generator = std::mt19937_64(seed);
-    else{
+  void reseed(INDICE_TYPE seed) {
+    if (seed > 0)
+      generator = std::mt19937_64(seed);
+    else {
       std::random_device r;
       std::seed_seq seed_seq{r(), r(), r(), r(), r(), r(), r(), r()};
       generator = std::mt19937_64(seed_seq);
@@ -40,6 +41,6 @@ class RandomMinMax : public Random<T> {
   std::uniform_int_distribution<INDICE_TYPE>::param_type p;
 };
 
-}
+}  // namespace statick
 
 #endif  //  STATICK_RANDOM_HPP_

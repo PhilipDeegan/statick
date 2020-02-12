@@ -11,9 +11,9 @@ class DAO {
   using T = typename MODAO::value_type;
   using value_type = T;
   static constexpr bool INTERCEPT = _INTERCEPT;
-  DAO(MODAO &modao) :
-    iterate(modao.n_features() + static_cast<size_t>(INTERCEPT)),
-    rand(0, modao.n_samples() - 1) {}
+  DAO(MODAO &modao)
+      : iterate(modao.n_features() + static_cast<size_t>(INTERCEPT)),
+        rand(0, modao.n_samples() - 1) {}
 
   T step = 1e-5;
   size_t t = 0;
@@ -23,8 +23,7 @@ class DAO {
 
 namespace dense {
 template <typename MODEL, bool INTERCEPT = false, typename PROX,
-          typename T = typename MODEL::value_type,
-          typename DAO = sgd::DAO<T>>
+          typename T = typename MODEL::value_type, typename DAO = sgd::DAO<T>>
 void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox) {
   auto &t = dao.t;
   const size_t n_samples = modao.n_samples(), n_features = modao.n_features(), start_t = t;
@@ -47,8 +46,7 @@ void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox) {
 }  // namespace dense
 namespace sparse {
 template <typename MODEL, bool INTERCEPT = false, typename PROX,
-          typename T = typename MODEL::value_type,
-          typename DAO = sgd::DAO<T>>
+          typename T = typename MODEL::value_type, typename DAO = sgd::DAO<T>>
 void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox) {
   auto &t = dao.t;
   const size_t n_samples = modao.n_samples(), n_features = modao.n_features(), start_t = t;
@@ -65,7 +63,9 @@ void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox) {
     const INDICE_TYPE *x_indices = features.row_indices(i);
     const size_t row_size = features.row_size(i);
     for (size_t j = 0; j < row_size; j++) iterate[x_indices[j]] += x_i[j] * delta;
-    if constexpr(INTERCEPT) { iterate[n_features] += delta; }
+    if constexpr (INTERCEPT) {
+      iterate[n_features] += delta;
+    }
     PROX::call(prox, iterate, step_t, iterate, n_features);
   }
 }

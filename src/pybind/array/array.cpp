@@ -3,7 +3,5 @@
 namespace py = pybind11;
 
 namespace statick {
-PYBIND11_MODULE(statick_array, m) {
-  m.attr("__name__") = "statick.array";
-}
+PYBIND11_MODULE(statick_array, m) { m.attr("__name__") = "statick.array"; }
 }  //  namespace statick

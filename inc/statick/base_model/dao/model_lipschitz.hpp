@@ -10,6 +10,7 @@ namespace lipschitz {
 template <typename T = double>
 class DAO {
  public:
+  using This = DAO<T>;
   inline bool ready_lip_consts() const { return b_vars[0]; }
   inline bool ready_lip_max() const { return b_vars[1]; }
   inline bool ready_lip_mean() const { return b_vars[2]; }
@@ -18,32 +19,29 @@ class DAO {
   inline T lip_max() const { return t_vars[1]; }
 
   template <class Archive>
-  void serialize(Archive &ar) {
+  This &serialize(Archive &ar) {
     bool &ready_lip_consts = b_vars[0], &ready_lip_max = b_vars[1], &ready_lip_mean = b_vars[2];
-    T &lip_mean = t_vars[0],  &lip_max = t_vars[1];
-    ar(CEREAL_NVP(ready_lip_consts), CEREAL_NVP(ready_lip_max),
-       CEREAL_NVP(ready_lip_mean), CEREAL_NVP(lip_consts), CEREAL_NVP(lip_mean),
-       CEREAL_NVP(lip_max));
+    T &lip_mean = t_vars[0], &lip_max = t_vars[1];
+    ar(CEREAL_NVP(ready_lip_consts), CEREAL_NVP(ready_lip_max), CEREAL_NVP(ready_lip_mean),
+       CEREAL_NVP(lip_consts), CEREAL_NVP(lip_mean), CEREAL_NVP(lip_max));
+    return *this;
   }
 
   bool b_vars[3]{false};
   T t_vars[2]{0};
   statick::Array<T> lip_consts;
 
-  size_t size_of() const {
-    return (sizeof(T) * 2) + 24 + lip_consts.size();
-  }
+  size_t size_of() const { return (sizeof(T) * 2) + 24 + lip_consts.size(); }
 };
 
 template <class ARCHIVE, class T>
-std::shared_ptr<DAO<T>> load(ARCHIVE &ar, std::shared_ptr<DAO<T>> &dao = nullptr){
-  if(!dao) dao = std::make_shared<DAO<T>>();
-  ar(*dao.get());
-  return dao;
+std::shared_ptr<DAO<T>> load(ARCHIVE &ar, std::shared_ptr<DAO<T>> &dao = nullptr) {
+  if (!dao) dao = std::make_shared<DAO<T>>();
+  return dao->serialize(ar);
 }
 
 template <class T>
-std::shared_ptr<DAO<T>> load(std::string file){
+std::shared_ptr<DAO<T>> load(std::string file) {
   std::ifstream bin_data(file, std::ios::in | std::ios::binary);
   cereal::PortableBinaryInputArchive ar(bin_data);
   return load<cereal::PortableBinaryInputArchive, T>(ar);

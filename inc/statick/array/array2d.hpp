@@ -26,7 +26,6 @@ void save(const A2D &a2d, const std::string &_file) {
 }
 }  // namespace dense_2d
 
-
 template <class T, class Archive>
 bool load_array2d_with_raw_data(Archive &ar, std::vector<T> &data, std::vector<size_t> &info) {
   bool is_sparse = false;
@@ -46,17 +45,19 @@ bool load_array2d_with_raw_data(Archive &ar, std::vector<T> &data, std::vector<s
   return true;
 }
 
-template <class T>    class Sparse2D;
-template <typename T> class Array2DView;
+template <class T>
+class Sparse2D;
+template <typename T>
+class Array2DView;
 
 template <typename T>
 class Array2D {
  public:
   using value_type = T;
-  using real_type  = Array2D<T>;
-  using view_type  = Array2DView<T>;
+  using real_type = Array2D<T>;
+  using view_type = Array2DView<T>;
   using view1d_type = ArrayView<T>;
-  static constexpr bool is_sparse =  0;
+  static constexpr bool is_sparse = 0;
 
   Array2D() {}
   Array2D(size_t rows, size_t cols) : m_data(rows * cols), m_info(3) {
@@ -68,29 +69,29 @@ class Array2D {
 
   Array2D(const std::vector<std::vector<T>> &data) { allocVector2D_Data(data); }
 
-  Array2D<T>& operator=(const std::vector<std::vector<T>> &data) {
+  Array2D<T> &operator=(const std::vector<std::vector<T>> &data) {
     allocVector2D_Data(data);
     return *this;
   }
 
   void allocVector2D_Data(const std::vector<std::vector<T>> &data) {
-    if (data.size() == 0){
+    if (data.size() == 0) {
       m_data.clear();
       return;
     }
     m_info.resize(3);
     m_info[0] = data[0].size();
-    for(auto &row : data)
-      if(row.size() != m_info[0])
+    for (auto &row : data)
+      if (row.size() != m_info[0])
         KEXCEPT(dense_2d::Exception, "Invalid data vector, inconsistent column number");
     m_info[1] = data.size();
-    m_info[2] = m_info[0]  * m_info[1] ;
+    m_info[2] = m_info[0] * m_info[1];
     m_data.resize(m_info[2]);
-    for (auto &row  : data) m_data.insert(m_data.end(), row.begin(), row.end());
+    for (auto &row : data) m_data.insert(m_data.end(), row.begin(), row.end());
   }
 
   const T *data() const { return m_data.data(); }
-  ArrayView<T> row(size_t i)  const { return ArrayView<T>(&m_data[i * m_info[0]], m_info[0]); }
+  ArrayView<T> row(size_t i) const { return ArrayView<T>(&m_data[i * m_info[0]], m_info[0]); }
   const T *row_raw(size_t i) const { return &m_data[i * m_info[0]]; }
   const T &operator[](int i) const { return m_data[i]; }
 
@@ -112,9 +113,9 @@ class Array2D {
 
   static std::shared_ptr<Array2D<T>> RANDOM(size_t rows, size_t cols, T seed = -1) {
     std::mt19937_64 generator;
-    if(seed > 0)
+    if (seed > 0)
       generator = std::mt19937_64(seed);
-    else{
+    else {
       std::random_device r;
       std::seed_seq seed_seq{r(), r(), r(), r(), r(), r(), r(), r()};
       generator = std::mt19937_64(seed_seq);
@@ -125,13 +126,20 @@ class Array2D {
     return arr;
   }
 
-  template <class Archive> void load(Archive &ar) { load_array2d_with_raw_data(ar, m_data, m_info); }
-  template <class Archive> void save(Archive &ar) const { dense_2d::save<T>(ar, *this); }
+  template <class Archive>
+  void load(Archive &ar) {
+    load_array2d_with_raw_data(ar, m_data, m_info);
+  }
+  template <class Archive>
+  void save(Archive &ar) const {
+    dense_2d::save<T>(ar, *this);
+  }
 
   Sparse2D<T> toSparse2D() const;
 
   std::vector<T> m_data;
   std::vector<size_t> m_info;
+
  private:
   Array2D(Array2D &that) = delete;
   Array2D(const Array2D &that) = delete;
@@ -146,10 +154,10 @@ template <typename T>
 class Array2DView {
  public:
   using value_type = T;
-  using real_type  = Array2D<T>;
-  using view_type  = Array2DView<T>;
+  using real_type = Array2D<T>;
+  using view_type = Array2DView<T>;
   using view1d_type = ArrayView<T>;
-  static constexpr bool is_sparse =  0;
+  static constexpr bool is_sparse = 0;
 
   Array2DView(const T *_data, const size_t *_info)
       : v_data(_data), m_cols(&_info[0]), m_rows(&_info[1]), m_size(&_info[2]) {}
@@ -256,7 +264,7 @@ class SharedArray2DList {
   void add_at(std::shared_ptr<ARRAY> &arr, size_t i) { m_data[i] = arr; }
 
   auto &operator[](size_t index) { return m_data[index]; }
-  const auto &operator[](size_t index) const  { return m_data[index]; }
+  const auto &operator[](size_t index) const { return m_data[index]; }
 
  private:
   std::vector<std::shared_ptr<ARRAY>> m_data;
@@ -274,6 +282,5 @@ class SharedArray2DList {
 template <typename T>
 using SharedArray2DViewList = SharedArray2DList<T, Array2DView<T>>;
 
-
 }  // namespace statick
-#endif  //  TICK_ARRAY_ARRAY2D_HPP_
+#endif  //  STATICK_ARRAY_ARRAY2D_HPP_

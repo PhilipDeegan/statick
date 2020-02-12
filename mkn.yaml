@@ -1,4 +1,4 @@
-#! clean build test -O
+#! clean build test -dtOU
 
 name: statick
 scm: https://github.com/dekken/statick
@@ -21,6 +21,14 @@ profile:
       with: numpy
     link:
       delete: -Wl,-stack_size,1000000
+
+- name: py
+  parent: base
+  self: statick.py
+        statick.array.py
+        statick.linear_model.py
+        statick.prox.py
+        statick.solver.py
 
 - name: py.py
   parent: base
@@ -59,17 +67,11 @@ profile:
   out: statick_solver
   src: src/pybind/solver
 
-- name: py
-  parent: base
-  self: statick.py
-        statick.array.py
-        statick.linear_model.py
-        statick.prox.py
-        statick.solver.py
-
-- name: clean
+- name: format
   parent: base
   mod:
   - name: clang.format
-    link:
-      paths: .
+    init:
+      style: file
+      types: cpp:cxx:cc:h:hpp
+      paths: inc src test

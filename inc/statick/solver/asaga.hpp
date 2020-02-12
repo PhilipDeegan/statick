@@ -19,10 +19,13 @@ class DAO {
   static constexpr bool INTERCEPT = _INTERCEPT;
 
   DAO(MODAO &modao, size_t _n_epochs, size_t _epoch_size, size_t _threads)
-      : n_epochs(_n_epochs), epoch_size(_epoch_size), n_threads(_threads),
+      : n_epochs(_n_epochs),
+        epoch_size(_epoch_size),
+        n_threads(_threads),
         iterate(modao.n_features() + static_cast<size_t>(INTERCEPT)),
         steps_corrections(statick::saga::sparse::compute_step_corrections(modao.features())),
-        gradients_average(modao.n_features()), gradients_memory(modao.n_samples()),
+        gradients_average(modao.n_features()),
+        gradients_memory(modao.n_samples()),
         rand(0, modao.n_samples() - 1) {
     for (size_t i = 0; i < modao.n_samples(); i++) gradients_memory[i].store(0);
     for (size_t i = 0; i < modao.n_features(); i++) gradients_average[i].store(0);
@@ -47,7 +50,7 @@ void threaded_solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox, size_t n_t
   const auto &n_epochs = dao.n_epochs;
   const auto n_samples = features.rows(), n_features = features.cols();
   const auto epoch_size = dao.epoch_size != 0 ? dao.epoch_size : n_samples;
-    auto * iterate = dao.iterate.data(), * steps_corrections = dao.steps_corrections.data();
+  auto *iterate = dao.iterate.data(), *steps_corrections = dao.steps_corrections.data();
   T n_samples_inverse = ((double)1 / (double)n_samples), x_ij = 0, step_correction = 0;
   T grad_factor_diff = 0, grad_avg_j = 0, grad_i_factor = 0, grad_i_factor_old = 0;
   auto n_threads = dao.n_threads;
@@ -62,7 +65,8 @@ void threaded_solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox, size_t n_t
       const INDICE_TYPE *x_i_indices = features.row_indices(i);
       grad_i_factor = MODEL::grad_i_factor(modao, iterate, i);
       grad_i_factor_old = gradients_memory[i];
-      while (!gradients_memory[i].compare_exchange_weak(grad_i_factor_old, grad_i_factor)) {}
+      while (!gradients_memory[i].compare_exchange_weak(grad_i_factor_old, grad_i_factor)) {
+      }
       grad_factor_diff = grad_i_factor - grad_i_factor_old;
       for (idx_nnz = 0; idx_nnz < x_i_size; ++idx_nnz) {
         const INDICE_TYPE &j = x_i_indices[idx_nnz];
@@ -72,11 +76,11 @@ void threaded_solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox, size_t n_t
         while (!gradients_average[j].compare_exchange_weak(
             grad_avg_j, grad_avg_j + (grad_factor_diff * x_ij * n_samples_inverse))) {
         }
-        iterate[j] = PROX::call_single(prox,
-            iterate[j] - (step * (grad_factor_diff * x_ij + step_correction * grad_avg_j)),
+        iterate[j] = PROX::call_single(
+            prox, iterate[j] - (step * (grad_factor_diff * x_ij + step_correction * grad_avg_j)),
             step * step_correction);
       }
-      if constexpr(INTERCEPT) {
+      if constexpr (INTERCEPT) {
         iterate[n_features] -= step * (grad_factor_diff + gradients_average[n_features]);
         T gradients_average_j = gradients_average[n_features];
         while (!gradients_average[n_features].compare_exchange_weak(
@@ -85,7 +89,7 @@ void threaded_solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox, size_t n_t
         iterate[n_features] = PROX::call_single(prox, iterate[n_features], step);
       }
     }
-    if constexpr(std::is_same<typename DAO::HISTORY, statick::solver::History<T, TOL>>::value) {
+    if constexpr (std::is_same<typename DAO::HISTORY, statick::solver::History<T, TOL>>::value) {
       if (n_thread == 0) {
         if ((dao.history.last_record_epoch + epoch) == 1 ||
             ((dao.history.last_record_epoch + epoch) % dao.history.log_every_n_epochs == 0)) {
@@ -97,7 +101,7 @@ void threaded_solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox, size_t n_t
       }
     }
   }
-  if constexpr(std::is_same<typename DAO::HISTORY, statick::solver::History<T, TOL>>::value) {
+  if constexpr (std::is_same<typename DAO::HISTORY, statick::solver::History<T, TOL>>::value) {
     if (n_thread == 0) {
       auto end = std::chrono::steady_clock::now();
       double time = ((end - start).count()) * std::chrono::steady_clock::period::num /
@@ -112,11 +116,11 @@ template <typename MODEL, bool INTERCEPT = false, typename PROX, typename DAO>
 void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox) {
   using T = typename MODEL::value_type;
   using TOL = typename DAO::HISTORY::TOLERANCE;
-  auto objectife = [&](T* iterate, size_t size){
+  auto objectife = [&](T *iterate, size_t size) {
     return MODEL::LOSS(modao, iterate) + PROX::value(prox, iterate, size);
   };
-  (void) objectife;
-  if constexpr(std::is_same<typename DAO::HISTORY, statick::solver::History<T, TOL>>::value) {
+  (void)objectife;
+  if constexpr (std::is_same<typename DAO::HISTORY, statick::solver::History<T, TOL>>::value) {
     auto &history = dao.history;
     history.init(dao.n_epochs / history.log_every_n_epochs + 1, dao.iterate.size());
     dao.history.f_objective = objectife;
@@ -124,18 +128,16 @@ void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox) {
   std::vector<std::thread> threads;
   for (size_t i = 1; i < dao.n_threads; i++) {
     threads.emplace_back(
-      [&](size_t n_thread) {
-        threaded_solve<MODEL, INTERCEPT>(dao, modao, prox, n_thread);
-      }, i);
+        [&](size_t n_thread) { threaded_solve<MODEL, INTERCEPT>(dao, modao, prox, n_thread); }, i);
   }
   threaded_solve<MODEL, INTERCEPT>(dao, modao, prox, 0);
-  for (auto & thread : threads) thread.join();
+  for (auto &thread : threads) thread.join();
   std::vector<T> &objs(dao.history.objectives);
   auto min_objective = *std::min_element(std::begin(objs), std::end(objs));
 }
 
-}  /* namespace sparse */
-}  /* namespace asaga  */
+} /* namespace sparse */
+} /* namespace asaga  */
 class ASAGA {
  public:
   static constexpr std::string_view NAME = "asaga";
@@ -151,6 +153,6 @@ class ASAGA {
       throw std::runtime_error("Only sparse features are support for ASAGA");
   }
 };
-}  /* namespace statick */
+} /* namespace statick */
 
 #endif  // STATICK_SOLVER_ASAGA_HPP_

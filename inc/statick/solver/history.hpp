@@ -1,40 +1,49 @@
 #ifndef STATICK_SOLVER_HISTORY_HPP_
 #define STATICK_SOLVER_HISTORY_HPP_
 
-namespace statick {
-namespace solver {
+namespace statick::solver {
 
-class NoTolerance{};
+class NoTolerance {};
 
 template <typename T>
-class Tolerance{
+class Tolerance {
  public:
-   T val{0}, prev_obj{0};
+  T val{0}, prev_obj{0};
+
+  Tolerance &operator=(T const &&v) {
+    val = v;
+    return *this;
+  }
+  Tolerance &operator=(T const &v) { return (*this) = v; }
 };
 
 template <typename T>
 class NoObjective {
  public:
-   static NoObjective &I() { static NoObjective i; return i; }
-   std::function<T(T*, size_t)> noop = [](T* iterate, size_t size){ return iterate ? 0 : size - size; };
+  static NoObjective &I() {
+    static NoObjective i;
+    return i;
+  }
+  std::function<T(T *, size_t)> noop = [](T *iterate, size_t size) {
+    return iterate ? 0 : size - size;
+  };
 };
-class INC{
+class INC {
  public:
-  INC(size_t &_i) : i(_i){}
-  ~INC(){ i++; }
+  INC(size_t &_i) : i(_i) {}
+  ~INC() { i++; }
   size_t &i;
 };
-
 
 template <typename T, typename TOL>
 class History {
  public:
   using TOLERANCE = TOL;
   bool save_history(double time, size_t epoch, T *iterate, size_t size) {
-    INC inc(i); // increments i on stack unwinding
+    INC inc(i);  // increments i on stack unwinding
     time_history[i] = last_record_time + time;
     epoch_history[i] = last_record_epoch + epoch;
-    std::copy(iterate, iterate+size, iterate_history[i].data());
+    std::copy(iterate, iterate + size, iterate_history[i].data());
     objectives[i] = f_objective(iterate, size);
     if constexpr (std::is_same<TOLERANCE, Tolerance<T>>::value) {
       auto &prev_obj = tol.prev_obj, &obj = objectives[i];
@@ -52,18 +61,18 @@ class History {
   std::vector<std::vector<T>> iterate_history;
   std::vector<T> objectives;
   TOLERANCE tol;
-  std::function<T(T*, size_t)> &f_objective = NoObjective<T>::I().noop;
+  std::function<T(T *, size_t)> &f_objective = NoObjective<T>::I().noop;
 
   History(){};
   ~History(){};
-  void init(size_t v_size, size_t i_size){
+  void init(size_t v_size, size_t i_size) {
     time_history.resize(v_size);
     epoch_history.resize(v_size);
     objectives.resize(v_size);
     iterate_history.resize(0);
-    for(size_t vi = 0; vi < v_size; vi++) iterate_history.emplace_back(i_size);
+    for (size_t vi = 0; vi < v_size; vi++) iterate_history.emplace_back(i_size);
   }
-  void set_f_objective(std::function<T(T*, size_t)> &fob){ f_objective = fob; }
+  void set_f_objective(std::function<T(T *, size_t)> &fob) { f_objective = fob; }
 
   History(History &that) = delete;
   History(const History &that) = delete;
@@ -73,18 +82,17 @@ class History {
   History &operator=(History &&that) = delete;
   History &operator=(const History &that) = delete;
   History &operator=(const History &&that) = delete;
-
 };
 
 class NoHistory {
  public:
   using TOLERANCE = NoTolerance;
   NoHistory &save_history() { return *this; }
-  void init(size_t, size_t){}
+  void init(size_t, size_t) {}
   template <typename T>
-  void set_f_objective(std::function<T(T*, size_t)> &){}
+  void set_f_objective(std::function<T(T *, size_t)> &) {}
 };
-}  // namespace solver
-}  // namespace statick
+
+}  // namespace statick::solver
 
 #endif  // STATICK_SOLVER_HISTORY_HPP_
