@@ -23,10 +23,9 @@ cd $ROOT
 
 R="https://github.com/X-DataInitiative/tick --depth 1 tick -b master --recursive"
 TM=(array base random base_model linear_model preprocessing robust prox solver)
-git clone $R && cd tick
-python3 -m pip install -r requirements.txt && python3 -m pip install tick && cd $ROOT
+git clone $R && (cd tick && python3 -m pip install -r requirements.txt --user && \
+                 ./sh/mkn.sh ${TM[@]})
 
-export PYTHONPATH="$ROOT"
 KLOG=3 ./test.sh
 KLOG=3 mkn build test -tdOa -D_KUL_USE_MKL $XTRA \
     -l "-lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -pthread -ldl"

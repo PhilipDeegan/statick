@@ -9,8 +9,9 @@ R="https://github.com/X-DataInitiative/tick --depth 1 tick -b master --recursive
 ARF="adult.features.cereal"; ARL="adult.labels.cereal";
 URF="url.features.cereal"; URL="url.labels.cereal";
 TM=(array base random base_model linear_model preprocessing robust prox solver)
-[ ! -d "$CWD/tick" ] && git clone $R && cd tick && ./sh/mkn.sh ${TM[@]} && cd $CWD
+mkn -v
 mkn clean build -dStOp py $XTRA;
+[ ! -d "$CWD/tick" ] && git clone $R && (cd tick && ./sh/mkn.sh ${TM[@]})
 cat > $CWD/${PYGET} << EOL
 import statick
 from tick.dataset.download_helper import fetch_tick_dataset
