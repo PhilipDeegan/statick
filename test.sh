@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -e
+set -ex
 CWD="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 [ -z "$PYTHONPATH" ] && export PYTHONPATH="$CWD/tick:$CWD"
 export MKN_LIB_LINK_LIB=1
