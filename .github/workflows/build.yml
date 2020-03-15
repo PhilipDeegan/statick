@@ -1,0 +1,33 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        python-version: [3.6, 3.7]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+        # sudo apt-get update && sudo apt-get install libatlas-base-dev libblas-dev
+    - name: run
+      run: |
+        git clone https://github.com/dekken/maiken -b master --depth 1 --recursive
+        (cd maiken && make nix && cp mkn ..)
+        python3 -m pip install pip --upgrade
+        python3 -m pip install tick && mkdir tick
+        export PATH="$PWD:$PATH"
+        KLOG=3 ./test.sh
+
+
+
