@@ -10,6 +10,7 @@ cp /c/Python37-x64/python.exe /c/Python37-x64/python3.exe
 export PY=python3.exe
 export MKN_CL_PREFERRED=1 # forces mkn to use cl even if gcc/clang are found
 
+
 $PY -V
 $PY -m pip install pip --upgrade
 $PY -m pip install wheel
@@ -27,4 +28,5 @@ $PY -m pip install appveyor/pip/numpydoc-0.8.0-py2.py3-none-any.whl
 $PY -m pip install appveyor/pip/scipy-1.3.0-cp37-cp37m-win_amd64.whl
 
 ./sh/mkn.sh ${TM[@]} && cd $ROOT
+export XTRA="-a -std:c++17"
 ./test.sh
