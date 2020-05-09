@@ -1,0 +1,28 @@
+path_classifiers:
+  tag:
+    exclude: tick
+  test: tests/**/*.cpp
+queries:
+  exclude: tick
+extraction:
+  cpp:
+    prepare:
+      packages:
+      - build-essential
+      - python3
+      - python3-pip
+    configure:
+      command:
+      - python3 -m pip install pip --upgrade
+      - git clone https://github.com/X-DataInitiative/tick --depth 1 --recursive
+      - cd tick; python3 -m pip install -r requirements.txt &
+      - cd ..; git clone https://github.com/Dekken/maiken -b master --depth 1 maiken
+      - cd maiken; make nix; mv mkn ..; cd ..; rm -rf maiken
+      - export PATH=$PWD:$PATH
+      - cd tick; ./sh/mkn.sh; cd ..
+    index:
+      build_command:
+      - export XTRA="-x res/ci/travis-linux.yaml"
+      - export PATH="$PWD:$PATH"
+      - export PYTHONPATH="$PWD/tick:$PWD"
+      - ./test.sh
