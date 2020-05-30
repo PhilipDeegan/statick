@@ -96,11 +96,9 @@ bool compare(py_arrayv_d &dense, py_csr_double &sparse) {
 
 namespace statick {
 PYBIND11_MODULE(statick, m) {
-  auto import = []() {
-    import_array();
-    // Py_Initialize();
-  };
-  import();
+  auto import = []() { import_array(); };
+  auto r = import();
+  (void)r;
   m.def("make_array", &make_array, py::return_value_policy::move);
   m.def("add_arrays", &add_arrays, "Adding two numpy arrays");
   m.def("take_sparse2d", &take_sparse2d, "take_sparse2d");

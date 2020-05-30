@@ -1,5 +1,4 @@
 import scipy, numpy as np
-import statick.linear_model
 from tick.linear_model import ModelLogReg as TMLR
 
 class ModelLogReg(TMLR):

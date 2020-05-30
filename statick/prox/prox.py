@@ -1,4 +1,4 @@
-import scipy, numpy as np
+import numpy as np
 from tick.prox.base.prox import Prox as TP
 
 class DummyProx(TP):

@@ -1,4 +1,3 @@
-from .bin.statick_solver import *
-from .saga import *
-from .sgd  import *
-from .svrg import *
+from .saga import SAGA
+from .sgd  import SGD
+from .svrg import SVRG

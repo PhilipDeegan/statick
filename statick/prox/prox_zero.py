@@ -1,8 +1,6 @@
 
-from statick.prox.prox import Prox as PROX
 from tick.prox import ProxZero as TPZERO
-
-from .prox import *
+from statick.prox.prox import Prox as PROX
 
 class ProxZero(PROX, TPZERO):
 

@@ -7,7 +7,7 @@ class DummySolver(SFOS):
     def _set_cpp_solver(self, dtype_or_object_with_dtype): return None
     def set_epoch_size(self, v): pass
     def set_rand_max(self, v): pass
-    def set_model(self, model: TMGL): pass
+    def set_model(self, model): pass
 
 class Solver(DummySolver):
     @staticmethod
