@@ -1,3 +1,2 @@
-from .bin.statick_prox import *
-from .prox_l2sq import *
-from .prox_zero import *
+from .prox_l2sq import ProxL2Sq
+from .prox_zero import ProxZero

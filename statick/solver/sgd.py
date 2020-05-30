@@ -1,10 +1,5 @@
-import scipy, numpy as np
-from statick.solver.solver import Solver as SOLVER
 from tick.solver import SGD as TS
-from tick.prox.base.prox import Prox as TPROX
-from tick.base_model import ModelGeneralizedLinear as TMGL
-
-from .solver import *
+from statick.solver.solver import Solver as SOLVER
 
 class SGD(SOLVER, TS):
 
@@ -13,5 +8,5 @@ class SGD(SOLVER, TS):
         SOLVER.__init__(self, **kwargs)
         object.__setattr__(self, "_s_name", "sgd")
 
-    def set_model(self, model: TMGL):
+    def set_model(self, model):
         return SOLVER.set_model(self, SUPER=TS, model=model)
