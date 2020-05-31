@@ -24,7 +24,7 @@ class Solver(DummySolver):
         object.__setattr__(self, "_solver", DummySolver())
         object.__setattr__(self, "_dao", None)
 
-    def set_model(self, SUPER, model: TMGL):
+    def set_super_model(self, SUPER, model: TMGL):
         import statick.solver.bin.statick_solver as statick_solver
         SUPER.set_model(self, model)
         func = self._s_name + "_" + Solver.CFUNC_RESOLVER(model, "_dao_")

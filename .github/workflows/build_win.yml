@@ -1,0 +1,36 @@
+name: Statick on windows-latest
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    name: Python ${{ matrix.python-version }}
+    runs-on: windows-latest
+
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: ['3.6', '3.7', '3.8']
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+
+    - run: bash -c "rm /bin/link" # interferes with cl/link.exe
+
+
+
+    - uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+        architecture: x64
+
+    - shell: cmd
+      run: |
+        call "C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Auxiliary/Build/vcvars64.bat"
+        bash -c "(cd $(dirname $(which python)); cp python.exe python3.exe)"
+        bash -c ./res/ci/appvey.sh

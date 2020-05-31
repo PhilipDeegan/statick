@@ -21,12 +21,9 @@ cache:
   - C:\ProgramData\chocolatey\bin -> appveyor.yml
   - C:\ProgramData\chocolatey\lib -> appveyor.yml
 
-install:
-  - IF NOT EXIST C:\ProgramData\chocolatey\bin\swig.exe choco install res\ci\swig.4.0.0.nupkg --yes --limit-output #> $null
-  - cat C:\ProgramData\chocolatey\logs\chocolatey.log
-
 build_script:
+  - cp /c/Python37-x64/python.exe /c/Python37-x64/python3.exe
   - SET PATH=C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.23.28105\bin\Hostx64\x64;C:\Program Files\Git\usr\bin;%PATH%
   - call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
   - rm "C:\Program Files\Git\usr\bin\link.exe" # messes with msvc link.exe
-  - bash -c "PATH=\"$PWD:/c/Python37-x64/:/c/Program Files/Git/usr/bin:$PATH\"; ./res/ci/appvey.sh"
+  - bash -c "PATH=\"/c/Python37-x64/:/c/Program Files/Git/usr/bin:$PATH\"; ./res/ci/appvey.sh"

@@ -9,4 +9,4 @@ class SVRG(SOLVER, TS):
         object.__setattr__(self, "_s_name", "svrg")
 
     def set_model(self, model):
-        return SOLVER.set_model(self, SUPER=TS, model=model)
+        return SOLVER.set_super_model(self, SUPER=TS, model=model)
