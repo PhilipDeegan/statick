@@ -28,6 +28,7 @@ before_install:
     python3 -V
     curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python3 get-pip.py --user
     python3 -m pip install pip --upgrade
+    python3 -m pip install -r res/pip_deps.txt --user --upgrade
     git clone https://github.com/Dekken/maiken --depth 10 -b master maiken
     if [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
       clang++ -v
