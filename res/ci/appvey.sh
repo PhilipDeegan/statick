@@ -13,13 +13,13 @@ export MKN_CL_PREFERRED=1 # forces mkn to use cl even if gcc/clang are found
 
 $PY -V
 $PY -m pip install pip --upgrade
-$PY -m pip install wheel
+$PY -m pip install wheel urllib3 cython --upgrade
 
 R="https://github.com/X-DataInitiative/tick --depth 1 tick -b master --recursive"
 TM=(array base random base_model linear_model preprocessing robust prox solver)
 git clone $R && cd tick # cp rc.exe tick/lib &&
 ls -l
-$PY -m pip install -r requirements.txt --user
+$PY -m pip install -r requirements.txt --user --upgrade
 
 git clone https://github.com/X-DataInitiative/tick_appveyor -b master --depth 1 appveyor
 cat appveyor/pip/numpy/numpy-1.16.4+mkl-cp37* > appveyor/pip/numpy-1.16.4+mkl-cp37-cp37m-win_amd64.whl
