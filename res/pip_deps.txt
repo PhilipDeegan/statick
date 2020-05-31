@@ -1,0 +1,11 @@
+numpy
+numpydoc
+scipy
+matplotlib
+scikit-learn
+pandas
+dill
+urllib3
+wheel
+cython
+tick
