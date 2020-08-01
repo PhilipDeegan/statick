@@ -4,11 +4,11 @@
 namespace statick {
 
 template <class T>
-class Sparse {
+class SparseView {
  public:
-  Sparse(const T *data, const size_t _size, const INDICE_TYPE *indices)
+  SparseView(const T *data, const size_t _size, const INDICE_TYPE *indices)
       : v_data(data), _size(_size), indices(indices) {}
-  Sparse(Sparse &&that) : _size(that._size) {
+  SparseView(SparseView &&that) : _size(that._size) {
     this->v_data = that.v_data;
     this->indices = that.indices;
   };
@@ -24,7 +24,7 @@ class Sparse {
     return 0;
   }
 
-  T dot(const Sparse<T> &that) const {
+  T dot(const SparseView<T> &that) const {
     T result = 0;
     size_t i1 = 0, i2 = 0;
     while (true) {
@@ -49,14 +49,14 @@ class Sparse {
   const T *v_data;
   const size_t _size;
   const INDICE_TYPE *indices;
-  Sparse() = delete;
-  Sparse(Sparse &that) = delete;
-  Sparse(const Sparse &that) = delete;
-  Sparse(const Sparse &&that) = delete;
-  Sparse &operator=(Sparse &that) = delete;
-  Sparse &operator=(Sparse &&that) = delete;
-  Sparse &operator=(const Sparse &that) = delete;
-  Sparse &operator=(const Sparse &&that) = delete;
+  SparseView() = delete;
+  SparseView(SparseView &that) = delete;
+  SparseView(const SparseView &that) = delete;
+  SparseView(const SparseView &&that) = delete;
+  SparseView &operator=(SparseView &that) = delete;
+  SparseView &operator=(SparseView &&that) = delete;
+  SparseView &operator=(const SparseView &that) = delete;
+  SparseView &operator=(const SparseView &&that) = delete;
 };
 
 }  // namespace statick

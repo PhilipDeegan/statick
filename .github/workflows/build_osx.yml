@@ -20,9 +20,13 @@ jobs:
       with:
         submodules: true
 
-    - run: |
-        git clone https://github.com/dekken/maiken -b master --depth 1 --recursive
-        (cd maiken && make bsd && cp mkn ..)
+    - name: Get mkn
+      uses: dawidd6/action-download-artifact@v2
+      with:
+        name: mkn
+        branch: master
+        workflow: build_osx.yml
+        repo: Dekken/maiken
 
     - uses: actions/setup-python@v1
       with:
@@ -30,6 +34,7 @@ jobs:
         architecture: x64
 
     - run: |
+        chmod +x mkn
         export PATH="$PWD:$PATH"
         python3 -m pip install pip --upgrade
         python3 -m pip install -r res/pip_deps.txt --user --upgrade

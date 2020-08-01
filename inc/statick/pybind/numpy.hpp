@@ -351,7 +351,7 @@ class csr_t : public csr {
 
   std::vector<size_t> _info;
   std::shared_ptr<statick::Sparse2DView<T>> m_data_ptr;
-  std::shared_ptr<statick_py::_PC<T>> m_pc;
+  std::shared_ptr<statick_py::Sparse2dState<T>> mSparse2dState;
 
   csr_t() : csr(0, static_cast<const T *>(nullptr)) {}
   csr_t(handle h, borrowed_t) : csr(h, borrowed_t{}), _info(3) {
@@ -411,10 +411,12 @@ class csr_t : public csr {
 
   explicit csr_t(const buffer_info &info) : csr(info) {}
 
-  explicit csr_t(std::shared_ptr<statick_py::_PC<T>> &&pc)
-      : csr(reinterpret_steal<object>(statick_py::sparse2d_to_csr<T>(*pc.get()))), m_pc(pc) {
-    m_data_ptr = std::make_shared<statick::Sparse2DView<T>>(m_pc->p_data, m_pc->info.data(),
-                                                            m_pc->p_indices, m_pc->p_row_indices);
+  explicit csr_t(std::shared_ptr<statick_py::Sparse2dState<T>> &&state)
+      : csr(reinterpret_steal<object>(statick_py::sparse2d_to_csr<T>(*state.get()))),
+        mSparse2dState(state) {
+    m_data_ptr = std::make_shared<statick::Sparse2DView<T>>(
+        mSparse2dState->p_data, mSparse2dState->info.data(), mSparse2dState->p_indices,
+        mSparse2dState->p_row_indices);
   }
 
   csr_t(ShapeContainer shape, StridesContainer strides, const T *ptr = nullptr,

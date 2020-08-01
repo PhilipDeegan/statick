@@ -137,10 +137,10 @@ class Array2D {
 
   Sparse2D<T> toSparse2D() const;
 
+ private:
   std::vector<T> m_data;
   std::vector<size_t> m_info;
 
- private:
   Array2D(Array2D &that) = delete;
   Array2D(const Array2D &that) = delete;
   Array2D(const Array2D &&that) = delete;

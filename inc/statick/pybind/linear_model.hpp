@@ -23,9 +23,8 @@ template <typename T, typename DAO>
 void fit_s(DAO &dao, py_csr_t<T> &a, py_array_t<T> &b) {
   dao.X = a;
   dao.y = b;
-  pybind11::buffer_info b_info = dao.y.request();
   dao.m_features = dao.X.m_data_ptr;
-  KLOG(INF) << statick::sum(dao.X.m_data_ptr->data(), dao.X.m_data_ptr->size());
+  pybind11::buffer_info b_info = dao.y.request();
   dao.m_labels = std::make_shared<statick::ArrayView<T>>((T *)b_info.ptr, b_info.shape[0]);
 }
 
