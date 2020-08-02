@@ -1,11 +1,11 @@
-numpy
-numpydoc
-scipy
+wheel
 matplotlib
-scikit-learn
 pandas
 dill
 urllib3
-wheel
 cython
+numpy
+numpydoc
+scipy
+scikit-learn
 tick

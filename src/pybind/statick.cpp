@@ -46,12 +46,12 @@ void save_double_array(py_arrayv_d &v, std::string &file) {
 }
 
 py::object load_double_sparse2d(std::string &file) {
-  statick_py::_PC<double> pc;
+  statick_py::Sparse2dState<double> state;
   std::ifstream bin_data(file, std::ios::in | std::ios::binary);
   cereal::PortableBinaryInputArchive iarchive(bin_data);
-  if (!statick_py::load_sparse2d_with_new_data(iarchive, pc))
+  if (!statick_py::load_sparse2d_with_new_data(iarchive, state))
     throw std::runtime_error("ERORER)EROEORE");
-  return py::reinterpret_steal<py::object>(statick_py::sparse2d_to_csr<double>(pc));
+  return py::reinterpret_steal<py::object>(statick_py::sparse2d_to_csr<double>(state));
 }
 statick_py::array_t<double> load_double_array(std::string &file) {
   return statick_py::array_t<double>(statick::Array<double>::FROM_CEREAL(file));
@@ -85,13 +85,14 @@ bool compare(py_arrayv_d &dense, py_csr_double &sparse) {
   auto d_sparse = arr.toSparse2D();
   auto &s_sparse = *sparse.raw();
 
-  return (s_sparse.size() == d_sparse.m_data.size()) &&
-         (std::vector<T>(s_sparse.v_data, s_sparse.v_data + s_sparse.size()) == d_sparse.m_data) &&
-         (std::vector<INDICE_TYPE>(s_sparse.v_indices, s_sparse.v_indices + s_sparse.size()) ==
-          d_sparse.m_indices) &&
-         (std::vector<INDICE_TYPE>(s_sparse.v_row_indices,
-                                   s_sparse.v_row_indices + s_sparse.rows() + 1) ==
-          d_sparse.m_row_indices);
+  return (s_sparse.size() == d_sparse.size()) &&
+         (std::vector<T>(s_sparse.data(), s_sparse.data() + s_sparse.size()) ==
+          d_sparse.data_vector()) &&
+         (std::vector<INDICE_TYPE>(s_sparse.indices(), s_sparse.indices() + s_sparse.size()) ==
+          d_sparse.indices_vector()) &&
+         (std::vector<INDICE_TYPE>(s_sparse.row_indices(),
+                                   s_sparse.row_indices() + s_sparse.rows() + 1) ==
+          d_sparse.row_indices_vector());
 }
 
 namespace statick {

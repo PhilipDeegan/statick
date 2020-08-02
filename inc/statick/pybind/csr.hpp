@@ -6,28 +6,28 @@
 namespace statick_py {
 
 template <typename T>
-struct _PC {
+struct Sparse2dState {
   T *p_data = nullptr;
   INDICE_TYPE *p_indices = nullptr, *p_row_indices = nullptr;
   size_t info[4];
 };
 
 template <class Archive, class T>
-bool load_sparse2d_with_new_data(Archive &ar, _PC<T> &pc) {
-  auto &info = pc.info;
+bool load_sparse2d_with_new_data(Archive &ar, Sparse2dState<T> &state) {
+  auto &info = state.info;
   ar(info[2], info[1], info[0], info[3]);
-  pc.p_data = reinterpret_cast<T *>(PyMem_RawMalloc(info[2] * sizeof(T)));
-  pc.p_indices = reinterpret_cast<INDICE_TYPE *>(PyMem_RawMalloc(info[2] * sizeof(INDICE_TYPE)));
-  pc.p_row_indices =
+  state.p_data = reinterpret_cast<T *>(PyMem_RawMalloc(info[2] * sizeof(T)));
+  state.p_indices = reinterpret_cast<INDICE_TYPE *>(PyMem_RawMalloc(info[2] * sizeof(INDICE_TYPE)));
+  state.p_row_indices =
       reinterpret_cast<INDICE_TYPE *>(PyMem_RawMalloc((info[1] + 1) * sizeof(INDICE_TYPE)));
-  ar(cereal::binary_data(pc.p_data, sizeof(T) * info[2]));
-  ar(cereal::binary_data(pc.p_indices, sizeof(INDICE_TYPE) * info[2]));
-  ar(cereal::binary_data(pc.p_row_indices, sizeof(INDICE_TYPE) * (info[1] + 1)));
+  ar(cereal::binary_data(state.p_data, sizeof(T) * info[2]));
+  ar(cereal::binary_data(state.p_indices, sizeof(INDICE_TYPE) * info[2]));
+  ar(cereal::binary_data(state.p_row_indices, sizeof(INDICE_TYPE) * (info[1] + 1)));
   return true;
 }
 
 template <typename T>
-PyObject *sparse2d_to_csr(_PC<T> &pc) {
+PyObject *sparse2d_to_csr(Sparse2dState<T> &state) {
   auto data_type = NPY_UINT64;
   if constexpr (std::is_same<T, double>::value)
     data_type = NPY_DOUBLE;
@@ -41,22 +41,23 @@ PyObject *sparse2d_to_csr(_PC<T> &pc) {
 #else
   auto indice_type = NPY_UINT32;
 #endif
-  auto info = pc.info;
+  auto info = state.info;
   size_t cols = info[0], rows = info[1], size_sparse = info[2];
   npy_intp dims[1];
   dims[0] = size_sparse;
   npy_intp rowDim[1];
   rowDim[0] = rows + 1;
 
-  PyArrayObject *array = (PyArrayObject *)PyArray_SimpleNewFromData(1, dims, data_type, pc.p_data);
+  PyArrayObject *array =
+      (PyArrayObject *)PyArray_SimpleNewFromData(1, dims, data_type, state.p_data);
   if (!PyArray_Check(array)) throw std::runtime_error("Array check failed");
 
   PyArrayObject *indices =
-      (PyArrayObject *)PyArray_SimpleNewFromData(1, dims, indice_type, pc.p_indices);
+      (PyArrayObject *)PyArray_SimpleNewFromData(1, dims, indice_type, state.p_indices);
   if (!PyArray_Check(indices)) throw std::runtime_error("indices check failed");
 
   PyArrayObject *row_indices =
-      (PyArrayObject *)PyArray_SimpleNewFromData(1, rowDim, indice_type, pc.p_row_indices);
+      (PyArrayObject *)PyArray_SimpleNewFromData(1, rowDim, indice_type, state.p_row_indices);
   if (!PyArray_Check(row_indices)) throw std::runtime_error("row_indices check failed");
 
   if (!array) throw std::runtime_error("Array failed");

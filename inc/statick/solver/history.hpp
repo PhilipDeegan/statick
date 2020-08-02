@@ -73,15 +73,6 @@ class History {
     for (size_t vi = 0; vi < v_size; vi++) iterate_history.emplace_back(i_size);
   }
   void set_f_objective(std::function<T(T *, size_t)> &fob) { f_objective = fob; }
-
-  History(History &that) = delete;
-  History(const History &that) = delete;
-  History(History &&that) = delete;
-  History(const History &&that) = delete;
-  History &operator=(History &that) = delete;
-  History &operator=(History &&that) = delete;
-  History &operator=(const History &that) = delete;
-  History &operator=(const History &&that) = delete;
 };
 
 class NoHistory {

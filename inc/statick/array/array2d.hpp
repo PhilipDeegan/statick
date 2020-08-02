@@ -137,17 +137,9 @@ class Array2D {
 
   Sparse2D<T> toSparse2D() const;
 
+ private:
   std::vector<T> m_data;
   std::vector<size_t> m_info;
-
- private:
-  Array2D(Array2D &that) = delete;
-  Array2D(const Array2D &that) = delete;
-  Array2D(const Array2D &&that) = delete;
-  Array2D &operator=(Array2D &that) = delete;
-  Array2D &operator=(Array2D &&that) = delete;
-  Array2D &operator=(const Array2D &that) = delete;
-  Array2D &operator=(const Array2D &&that) = delete;
 };
 
 template <typename T>
@@ -178,15 +170,6 @@ class Array2DView {
  private:
   const T *v_data;
   const size_t *m_cols, *m_rows, *m_size;
-
-  Array2DView() = delete;
-  Array2DView(Array2DView &that) = delete;
-  Array2DView(const Array2DView &that) = delete;
-  Array2DView(const Array2DView &&that) = delete;
-  Array2DView &operator=(Array2DView &that) = delete;
-  Array2DView &operator=(Array2DView &&that) = delete;
-  Array2DView &operator=(const Array2DView &that) = delete;
-  Array2DView &operator=(const Array2DView &&that) = delete;
 };
 
 template <class Archive, class T>
@@ -240,15 +223,6 @@ class Array2DList {
  private:
   std::vector<T> m_data;
   std::vector<size_t> m_info;
-
-  Array2DList(Array2DList &that) = delete;
-  Array2DList(const Array2DList &that) = delete;
-  Array2DList(Array2DList &&that) = delete;
-  Array2DList(const Array2DList &&that) = delete;
-  Array2DList &operator=(Array2DList &that) = delete;
-  Array2DList &operator=(Array2DList &&that) = delete;
-  Array2DList &operator=(const Array2DList &that) = delete;
-  Array2DList &operator=(const Array2DList &&that) = delete;
 };
 
 template <typename T, typename ARRAY = Array2D<T>>
@@ -268,15 +242,6 @@ class SharedArray2DList {
 
  private:
   std::vector<std::shared_ptr<ARRAY>> m_data;
-
-  SharedArray2DList(SharedArray2DList &that) = delete;
-  SharedArray2DList(const SharedArray2DList &that) = delete;
-  SharedArray2DList(SharedArray2DList &&that) = delete;
-  SharedArray2DList(const SharedArray2DList &&that) = delete;
-  SharedArray2DList &operator=(SharedArray2DList &that) = delete;
-  SharedArray2DList &operator=(SharedArray2DList &&that) = delete;
-  SharedArray2DList &operator=(const SharedArray2DList &that) = delete;
-  SharedArray2DList &operator=(const SharedArray2DList &&that) = delete;
 };
 
 template <typename T>
