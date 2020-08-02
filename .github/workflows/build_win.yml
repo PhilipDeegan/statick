@@ -17,8 +17,6 @@ jobs:
         python-version: ['3.6', '3.7', '3.8']
     steps:
     - uses: actions/checkout@v2
-      with:
-        submodules: true
 
     - name: Get mkn
       uses: dawidd6/action-download-artifact@v2
@@ -36,6 +34,7 @@ jobs:
     - uses: allenevans/set-env@v1.0.0
       with:
         MKN_CL_PREFERRED: 1
+        KUL_GIT_CO: --depth 10 # is added to git clone calls
 
     - shell: cmd
       run: | # interferes with cl/link.exe
