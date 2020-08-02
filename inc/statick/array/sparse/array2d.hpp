@@ -194,14 +194,6 @@ class Sparse2D {
   std::vector<T> m_data;
   std::vector<size_t> m_info;
   std::vector<INDICE_TYPE> m_indices, m_row_indices;
-
-  Sparse2D(Sparse2D &that) = delete;
-  Sparse2D(const Sparse2D &that) = delete;
-  Sparse2D(const Sparse2D &&that) = delete;
-  Sparse2D &operator=(Sparse2D &that) = delete;
-  Sparse2D &operator=(Sparse2D &&that) = delete;
-  Sparse2D &operator=(const Sparse2D &that) = delete;
-  Sparse2D &operator=(const Sparse2D &&that) = delete;
 };
 
 template <class T>
@@ -253,15 +245,6 @@ class Sparse2DView {
   T *v_data = nullptr;
   size_t m_info[3] = {0, 0, 0};
   INDICE_TYPE *v_indices = nullptr, *v_row_indices = nullptr;
-
-  Sparse2DView() = delete;
-  Sparse2DView(Sparse2DView &that) = delete;
-  Sparse2DView(const Sparse2DView &that) = delete;
-  Sparse2DView(const Sparse2DView &&that) = delete;
-  Sparse2DView &operator=(Sparse2DView &that) = delete;
-  Sparse2DView &operator=(Sparse2DView &&that) = delete;
-  Sparse2DView &operator=(const Sparse2DView &that) = delete;
-  Sparse2DView &operator=(const Sparse2DView &&that) = delete;
 };
 
 template <class T>
@@ -335,15 +318,6 @@ class Sparse2DList {
   std::vector<T> m_data;
   std::vector<size_t> m_info;
   std::vector<INDICE_TYPE> m_indices, m_row_indices;
-
-  Sparse2DList(Sparse2DList &that) = delete;
-  Sparse2DList(const Sparse2DList &that) = delete;
-  Sparse2DList(Sparse2DList &&that) = delete;
-  Sparse2DList(const Sparse2DList &&that) = delete;
-  Sparse2DList &operator=(Sparse2DList &that) = delete;
-  Sparse2DList &operator=(Sparse2DList &&that) = delete;
-  Sparse2DList &operator=(const Sparse2DList &that) = delete;
-  Sparse2DList &operator=(const Sparse2DList &&that) = delete;
 };
 
 template <class T>
@@ -375,16 +349,6 @@ class Sparse2DViewList {
   const T *v_data;
   const size_t *v_info;
   const INDICE_TYPE *v_indices, *v_row_indices;
-
-  Sparse2DViewList() = delete;
-  Sparse2DViewList(Sparse2DViewList &that) = delete;
-  Sparse2DViewList(const Sparse2DViewList &that) = delete;
-  Sparse2DViewList(Sparse2DViewList &&that) = delete;
-  Sparse2DViewList(const Sparse2DViewList &&that) = delete;
-  Sparse2DViewList &operator=(Sparse2DViewList &that) = delete;
-  Sparse2DViewList &operator=(Sparse2DViewList &&that) = delete;
-  Sparse2DViewList &operator=(const Sparse2DViewList &that) = delete;
-  Sparse2DViewList &operator=(const Sparse2DViewList &&that) = delete;
 };
 
 template <typename T, typename A2D /* != is_sparse*/>

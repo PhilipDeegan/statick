@@ -49,14 +49,6 @@ class SparseView {
   const T *v_data;
   const size_t _size;
   const INDICE_TYPE *indices;
-  SparseView() = delete;
-  SparseView(SparseView &that) = delete;
-  SparseView(const SparseView &that) = delete;
-  SparseView(const SparseView &&that) = delete;
-  SparseView &operator=(SparseView &that) = delete;
-  SparseView &operator=(SparseView &&that) = delete;
-  SparseView &operator=(const SparseView &that) = delete;
-  SparseView &operator=(const SparseView &&that) = delete;
 };
 
 }  // namespace statick

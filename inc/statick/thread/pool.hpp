@@ -34,10 +34,10 @@ class ThreadPool {
 #endif
 
  public:
-  ThreadPool(const ThreadPool&) = delete;
-  ThreadPool(const ThreadPool&&) = delete;
-  ThreadPool& operator=(const ThreadPool&) = delete;
-  ThreadPool& operator=(const ThreadPool&&) = delete;
+  ThreadPool(ThreadPool const&) = delete;
+  ThreadPool(ThreadPool&&) = delete;
+  ThreadPool& operator=(ThreadPool const&) = delete;
+  ThreadPool& operator=(ThreadPool&&) = delete;
 
   explicit ThreadPool(uint16_t n_threads, uint16_t smt = 0)
       : m_n_threads(n_threads),

@@ -125,15 +125,6 @@ class Array {
   }
 
   std::vector<T> m_data;
-
- private:
-  Array(Array &that) = delete;
-  Array(const Array &that) = delete;
-  Array(const Array &&that) = delete;
-  Array &operator=(Array &that) = delete;
-  Array &operator=(Array &&that) = delete;
-  Array &operator=(const Array &that) = delete;
-  Array &operator=(const Array &&that) = delete;
 };
 
 template <typename T>
@@ -188,12 +179,6 @@ class ArrayView {
  private:
   const size_t _size = 0;
   const T *v_data = nullptr;
-  ArrayView(ArrayView &that) = delete;
-  ArrayView(const ArrayView &that) = delete;
-  ArrayView(const ArrayView &&that) = delete;
-  ArrayView &operator=(ArrayView &that) = delete;
-  ArrayView &operator=(ArrayView &&that) = delete;
-  ArrayView &operator=(const ArrayView &that) = delete;
 };
 
 template <class Archive, class T>
@@ -244,15 +229,6 @@ class ArrayList {
  private:
   std::vector<T> m_data;
   std::vector<size_t> m_info;
-
-  ArrayList(ArrayList &that) = delete;
-  ArrayList(const ArrayList &that) = delete;
-  ArrayList(ArrayList &&that) = delete;
-  ArrayList(const ArrayList &&that) = delete;
-  ArrayList &operator=(ArrayList &that) = delete;
-  ArrayList &operator=(ArrayList &&that) = delete;
-  ArrayList &operator=(const ArrayList &that) = delete;
-  ArrayList &operator=(const ArrayList &&that) = delete;
 };
 
 template <typename T, typename ARRAY = Array<T>>
@@ -272,15 +248,6 @@ class SharedArrayList {
 
  private:
   std::vector<std::shared_ptr<ARRAY>> m_data;
-
-  SharedArrayList(SharedArrayList &that) = delete;
-  SharedArrayList(const SharedArrayList &that) = delete;
-  SharedArrayList(SharedArrayList &&that) = delete;
-  SharedArrayList(const SharedArrayList &&that) = delete;
-  SharedArrayList &operator=(SharedArrayList &that) = delete;
-  SharedArrayList &operator=(SharedArrayList &&that) = delete;
-  SharedArrayList &operator=(const SharedArrayList &that) = delete;
-  SharedArrayList &operator=(const SharedArrayList &&that) = delete;
 };
 template <typename T>
 using SharedArrayViewList = SharedArrayList<T, ArrayView<T>>;
