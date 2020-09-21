@@ -135,7 +135,8 @@ class Sparse2D {
   std::shared_ptr<view_type> as_view();
 
   statick::Array2D<T> toArray2D() const;
-
+  
+  // Credit for this function goes to: https://github.com/andro2157 
   static std::shared_ptr<Sparse2D<T>> RANDOM(size_t rows, size_t cols, T density, T seed = -1) {
     if (density < 0 || density > 1)
       KEXCEPT(sparse_2d::Exception, "Invalid sparse density, must be between 0 and 1");
