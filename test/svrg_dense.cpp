@@ -2,7 +2,7 @@
 #include "statick/solver/svrg.hpp"
 constexpr bool INTERCEPT = false;
 constexpr size_t N_FEATURES = 1000, N_SAMPLES = 1000, N_ITER = 100, SEED = 1933;
-size_t THREADS = kul::cpu::threads() < 12 ? kul::cpu::threads() : 12;
+size_t THREADS = mkn::kul::cpu::threads() < 12 ? mkn::kul::cpu::threads() : 12;
 int main() {
   using T = double;
   using FEATURES = statick::Array2D<T>;

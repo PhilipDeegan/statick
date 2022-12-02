@@ -1,7 +1,7 @@
 #ifndef STATICK_ARRAY_MATH_HPP_
 #define STATICK_ARRAY_MATH_HPP_
 
-#include "kul/math.hpp"
+#include "mkn/kul/math.hpp"
 
 namespace statick {
 
@@ -24,12 +24,12 @@ inline void set(T *x, Y y, const size_t size) {
 
 template <typename T>
 static inline T dot(const T *const x, const T *const y, const size_t size) {
-  return kul::math::dot(size, x, y);
+  return mkn::kul::math::dot(size, x, y);
 }
 
 template <typename T, typename Y>
 static inline void mult_incr(T *x, const T *const y, const Y a, const size_t size) {
-  return kul::math::mult_incr<T, Y, T>(size, a, y, x);
+  return mkn::kul::math::mult_incr<T, Y, T>(size, a, y, x);
 }
 
 template <typename T, typename Y>

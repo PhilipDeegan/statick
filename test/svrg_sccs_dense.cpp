@@ -31,7 +31,7 @@ int main() {
   dao.step = MODEL::lip_max(madao);
   statick::svrg::dense::solve<MODEL>(dao, madao, prox);
   std::cout << (NOW - start) / 1e3 << std::endl;
-  kul::File tick_interop("sccs.cereal");
+  mkn::kul::File tick_interop("sccs.cereal");
   if (tick_interop) statick::sccs::load_from<T>(tick_interop.real());
   return 0;
 }

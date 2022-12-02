@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ master ]
 
+env:
+    KUL_GIT_CO: --depth 10 # is added to git clone calls
+
 jobs:
   build:
     name: Python ${{ matrix.python-version }}
@@ -14,28 +17,17 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: ['3.6', '3.7', '3.8']
+        python-version: ['3.9']
     steps:
     - uses: actions/checkout@v2
-
-    - name: Get mkn
-      uses: dawidd6/action-download-artifact@v2
-      with:
-        name: mkn
-        branch: master
-        workflow: build_osx.yml
-        repo: Dekken/maiken
 
     - uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python-version }}
         architecture: x64
 
-    - uses: allenevans/set-env@v1.0.0
-      with:
-        KUL_GIT_CO: --depth 10 # is added to git clone calls
-
     - run: |
+        curl -Lo mkn https://github.com/mkn/mkn/releases/download/latest/mkn_osx
         chmod +x mkn
         export PATH="$PWD:$PATH"
         python3 -m pip install pip --upgrade

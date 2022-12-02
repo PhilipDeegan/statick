@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ master ]
 
+env:
+    KUL_GIT_CO: --depth 10 # is added to git clone calls
+    MKN_CL_PREFERRED: 1
+
 jobs:
   build:
     name: Python ${{ matrix.python-version }}
@@ -14,32 +18,24 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: ['3.6', '3.7', '3.8']
+        python-version: ['3.9']
     steps:
     - uses: actions/checkout@v2
-
-    - name: Get mkn
-      uses: dawidd6/action-download-artifact@v2
-      with:
-        name: mkn
-        branch: master
-        workflow: build_win.yml
-        repo: Dekken/maiken
 
     - uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python-version }}
         architecture: x64
 
-    - uses: allenevans/set-env@v1.0.0
+    - run: bash -c "rm /bin/link" # interferes with cl/link.exe
+
+    - uses: ilammy/msvc-dev-cmd@v1
       with:
-        MKN_CL_PREFERRED: 1
-        KUL_GIT_CO: --depth 10 # is added to git clone calls
+        arch: amd64
 
     - shell: cmd
-      run: | # interferes with cl/link.exe
-        bash -c "rm /bin/link"
-        call "C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Auxiliary/Build/vcvars64.bat"
+      run: |
+        bash -c "curl -Lo mkn.exe https://github.com/mkn/mkn/releases/download/latest/mkn.exe"
         bash -c "(cd $(dirname $(which python)); cp python.exe python3.exe)"
         python3 -m pip install pip --upgrade
         python3 -m pip install -r res/pip_deps.txt --user --upgrade

@@ -11,7 +11,7 @@ void call(const T *coeffs, T step, T *out, size_t size, T strength) {
     for (size_t i = 0; i < size; i++) out[i] = 0;
   } else {
     T t = 1. - thresh / norm;
-    kul::math::scale(size, t, out);
+    mkn::kul::math::scale(size, t, out);
   }
 }
 }  // namespace p0

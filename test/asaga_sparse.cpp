@@ -1,7 +1,7 @@
 #include "ipp.ipp"
 #include "statick/solver/asaga.hpp"
 constexpr size_t N_ITER = 200;
-size_t THREADS = kul::cpu::threads() < 12 ? kul::cpu::threads() : 12;
+size_t THREADS = mkn::kul::cpu::threads() < 12 ? mkn::kul::cpu::threads() : 12;
 int main() {
   using T = double;
   using FEATURES = statick::Sparse2D<T>;
