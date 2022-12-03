@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 set -ex
 CWD="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-[ -z "$PYTHONPATH" ] && export PYTHONPATH="$CWD/tick:$CWD"
+[ ! -d "$CWD/tick" ] && \
+    git clone https://github.com/X-DataInitiative/tick --depth 1 && \
+    (cd tick && ./sh/mkn.sh)
+
+export PYTHONPATH="$CWD/tick:$CWD"
 export MKN_LIB_LINK_LIB=1
 PY="${PY:-python3}"; PYGET="get_data.py"; which $PY; $PY -V
 function finish { cd $CWD; }; trap finish EXIT;

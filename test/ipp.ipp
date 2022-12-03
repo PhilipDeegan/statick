@@ -2,7 +2,7 @@
 #include <random>
 #include <fstream>
 #include <algorithm>
-#include "kul/cpu.hpp"
+#include "mkn/kul/cpu.hpp"
 #include "statick/array.hpp"
 #include "statick/prox/prox_l2sq.hpp"
 #include "statick/linear_model/model_logreg.hpp"

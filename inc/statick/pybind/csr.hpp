@@ -34,7 +34,7 @@ PyObject *sparse2d_to_csr(Sparse2dState<T> &state) {
   else if constexpr (std::is_same<T, float>::value)
     data_type = NPY_FLOAT;
   else
-    KEXCEPT(kul::Exception, "Unhandeled data type for csr_matrix");
+    KEXCEPT(mkn::kul::Exception, "Unhandeled data type for csr_matrix");
 
 #ifdef TICK_SPARSE_INDICES_INT64
   auto indice_type = NPY_UINT64;

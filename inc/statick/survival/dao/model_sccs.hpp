@@ -5,9 +5,9 @@
 
 namespace statick {
 namespace sccs {
-class Exception : public kul::Exception {
+class Exception : public mkn::kul::Exception {
  public:
-  Exception(const char *f, const size_t &l, const std::string &s) : kul::Exception(f, l, s) {}
+  Exception(const char *f, const size_t &l, const std::string &s) : mkn::kul::Exception(f, l, s) {}
 };
 
 template <typename T, typename _F = statick::Array2D<T>, typename _L = statick::Array<int32_t>>

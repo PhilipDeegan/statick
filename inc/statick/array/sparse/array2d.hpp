@@ -4,9 +4,9 @@
 namespace statick {
 namespace sparse_2d {
 
-class Exception : public kul::Exception {
+class Exception : public mkn::kul::Exception {
  public:
-  Exception(const char *f, const size_t &l, const std::string &s) : kul::Exception(f, l, s) {}
+  Exception(const char *f, const size_t &l, const std::string &s) : mkn::kul::Exception(f, l, s) {}
 };
 
 // Non-atomic data, BinaryInputArchive

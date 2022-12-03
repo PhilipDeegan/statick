@@ -93,7 +93,7 @@ class Array {
 
   template <typename K>
   void operator*=(const K a) {
-    kul::math::scale(m_data.size(), a, m_data.data());
+    mkn::kul::math::scale(m_data.size(), a, m_data.data());
   }
 
   template <typename ARRAY>
@@ -154,7 +154,7 @@ class ArrayView {
 
   template <typename K>
   void operator*=(const K a) {
-    kul::math::scale(_size, a, v_data);
+    mkn::kul::math::scale(_size, a, v_data);
   }
 
   template <typename ARRAY>
