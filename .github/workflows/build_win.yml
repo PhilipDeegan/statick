@@ -16,13 +16,14 @@ jobs:
     runs-on: windows-latest
 
     strategy:
+      fail-fast: false
       max-parallel: 4
       matrix:
-        python-version: ['3.9']
+        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11']
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
-    - uses: actions/setup-python@v1
+    - uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
         architecture: x64
@@ -37,6 +38,7 @@ jobs:
       run: |
         bash -c "curl -Lo mkn.exe https://github.com/mkn/mkn/releases/download/latest/mkn.exe"
         bash -c "(cd $(dirname $(which python)); cp python.exe python3.exe)"
-        python3 -m pip install pip --upgrade
-        python3 -m pip install -r res/pip_deps.txt --user --upgrade
+        python3 -m pip install pip -U
+        python3 -m pip install wheel -U
+        python3 -m pip install -r res/pip_deps.txt -U
         bash -c 'PATH="$PWD:$PATH" XTRA="-a -std:c++17" ./test.sh'
