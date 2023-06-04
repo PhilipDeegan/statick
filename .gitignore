@@ -1,0 +1,13 @@
+bin
+.mkn
+*.cereal
+*.exp
+*.lib
+*.dll
+*.so
+*.pyd
+__pycache__
+tick
+get_data.py
+url/
+.python-version

@@ -1,0 +1,37 @@
+name: Statick on macos-latest
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+env:
+    KUL_GIT_CO: --depth 10 # is added to git clone calls
+
+jobs:
+  build:
+    name: Python ${{ matrix.python-version }}
+    runs-on: macos-latest
+
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        python-version: ['3.7', '3.9', '3.10', '3.11'] # '3.8' has "'tp_print' is deprecated [-Werror,-Wdeprecated-declarations]"
+    steps:
+    - uses: actions/checkout@v3
+
+    - uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+        architecture: x64
+
+    - run: |
+        curl -Lo mkn https://github.com/mkn/mkn/releases/download/latest/mkn_osx
+        chmod +x mkn
+        export PATH="$PWD:$PATH"
+        python3 -m pip install pip -U
+        python3 -m pip install wheel -U
+        python3 -m pip install -r res/pip_deps.txt -U
+        XTRA="-tx $PWD/res/ci/travis-osx.yaml" KLOG=3 ./res/ci/travis-osx.sh
