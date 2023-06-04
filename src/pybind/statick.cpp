@@ -14,14 +14,14 @@ class array_t : public py_array_t<T> {
 };
 }  // namespace statick_py
 
-py_arrayv_d make_array(const py::ssize_t size) { return py_arrayv_d(size); }
+py_array_d make_array(const py::ssize_t size) { return py_array_d(size); }
 
-statick::ArrayView<double> py_arrayv_d_as_raw_array(py_arrayv_d &pad) {
+statick::ArrayView<double> py_array_d_as_raw_array(py_array_d &pad) {
   py::buffer_info pad_info = pad.request();
   return statick::ArrayView<double>((double *)pad_info.ptr, pad_info.shape[0]);
 }
 
-py_arrayv_d add_arrays(py_arrayv_d i, py_arrayv_d j) {
+py_array_d add_arrays(py_array_d i, py_array_d j) {
   py::buffer_info info_i = i.request(), info_j = j.request();
   if ((info_i.ndim != 1) || (info_j.ndim != 1))
     throw std::runtime_error("Number of dimensions must be one");
@@ -41,8 +41,8 @@ void take_sparse2d(py_csr_double &v) {
 void save_double_sparse2d(py_csr_double &v, std::string &file) {
   statick::sparse_2d::save(*v.raw(), file);
 }
-void save_double_array(py_arrayv_d &v, std::string &file) {
-  statick::dense::save<double>(py_arrayv_d_as_raw_array(v), file);
+void save_double_array(py_array_d &v, std::string &file) {
+  statick::dense::save<double>(py_array_d_as_raw_array(v), file);
 }
 
 py::object load_double_sparse2d(std::string &file) {
@@ -74,7 +74,7 @@ void print_sparse(py_csr_double &v) {
   for (size_t i = 0; i < s_sparse.size(); i++) std::cout << s_sparse.data()[i] << std::endl;
 }
 
-bool compare(py_arrayv_d &dense, py_csr_double &sparse) {
+bool compare(py_array_d &dense, py_csr_double &sparse) {
   using T = double;
   py::buffer_info dbinfo = dense.request();
   std::vector<size_t> dinfo(3);
@@ -97,9 +97,7 @@ bool compare(py_arrayv_d &dense, py_csr_double &sparse) {
 
 namespace statick {
 PYBIND11_MODULE(statick, m) {
-  auto import = []() { import_array(); };
-  auto r = import();
-  (void)r;
+  KLOG(TRC);
   m.def("make_array", &make_array, py::return_value_policy::move);
   m.def("add_arrays", &add_arrays, "Adding two numpy arrays");
   m.def("take_sparse2d", &take_sparse2d, "take_sparse2d");

@@ -17,8 +17,6 @@ profile:
   dep: io.cereal mkn.kul lang.pybind11
   mod:
   - name: lang.python3
-    compile:
-      with: numpy
     link:
       delete: -Wl,-stack_size,1000000
 

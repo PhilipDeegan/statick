@@ -1,19 +1,21 @@
 #!/usr/bin/env bash
 set -ex
 CWD="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PY="${PY:-python3}";
+which $PY; $PY -V
 [ ! -d "$CWD/tick" ] && \
     git clone https://github.com/X-DataInitiative/tick --depth 1 && \
     (cd tick && ./sh/mkn.sh)
 
 export PYTHONPATH="$CWD/tick:$CWD"
 export MKN_LIB_LINK_LIB=1
-PY="${PY:-python3}"; PYGET="get_data.py"; which $PY; $PY -V
+PYGET="get_data.py";
 function finish { cd $CWD; }; trap finish EXIT;
 ARF="adult.features.cereal"; ARL="adult.labels.cereal";
 URF="url.features.cereal"; URL="url.labels.cereal";
 [ ! -d "url" ] && git clone https://github.com/dekken/statick_data --depth 1 -b master url && \
                   (cd url && ./join.sh url_svmlight.tar.gz && rm url_svmlight.tar.gz.part.*)
-mkn -v; mkn clean build -dStOp py $XTRA;
+mkn -v; mkn clean build -dStO 2 -p py $XTRA;
 cat > $CWD/${PYGET} << EOL
 import statick
 from tick.dataset.download_helper import fetch_tick_dataset
