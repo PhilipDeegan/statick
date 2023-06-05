@@ -28,40 +28,28 @@ bool load_sparse2d_with_new_data(Archive &ar, Sparse2dState<T> &state) {
 
 template <typename T>
 PyObject *sparse2d_to_csr(Sparse2dState<T> &state) {
-  auto data_type = NPY_UINT64;
-  if constexpr (std::is_same<T, double>::value)
-    data_type = NPY_DOUBLE;
-  else if constexpr (std::is_same<T, float>::value)
-    data_type = NPY_FLOAT;
-  else
-    KEXCEPT(mkn::kul::Exception, "Unhandeled data type for csr_matrix");
+  KLOG(TRC);
 
-#ifdef TICK_SPARSE_INDICES_INT64
-  auto indice_type = NPY_UINT64;
-#else
-  auto indice_type = NPY_UINT32;
-#endif
   auto info = state.info;
   size_t cols = info[0], rows = info[1], size_sparse = info[2];
-  npy_intp dims[1];
+  Py_intptr_t dims[1];
   dims[0] = size_sparse;
-  npy_intp rowDim[1];
+  Py_intptr_t rowDim[1];
   rowDim[0] = rows + 1;
 
-  PyArrayObject *array =
-      (PyArrayObject *)PyArray_SimpleNewFromData(1, dims, data_type, state.p_data);
-  if (!PyArray_Check(array)) throw std::runtime_error("Array check failed");
-
-  PyArrayObject *indices =
-      (PyArrayObject *)PyArray_SimpleNewFromData(1, dims, indice_type, state.p_indices);
-  if (!PyArray_Check(indices)) throw std::runtime_error("indices check failed");
-
-  PyArrayObject *row_indices =
-      (PyArrayObject *)PyArray_SimpleNewFromData(1, rowDim, indice_type, state.p_row_indices);
-  if (!PyArray_Check(row_indices)) throw std::runtime_error("row_indices check failed");
-
+  py_array_t<T> py_array{pybind11::buffer_info(state.p_data, sizeof(T), pybind11::format_descriptor<T>::value,
+                                   1, dims, {sizeof(T)})};
+  PyObject *array = py_array.release().ptr();
   if (!array) throw std::runtime_error("Array failed");
+
+  py_array_t<INDICE_TYPE> py_indices{pybind11::buffer_info(state.p_indices, sizeof(INDICE_TYPE), pybind11::format_descriptor<INDICE_TYPE>::value,
+                                   1, dims, {sizeof(INDICE_TYPE)})};
+  PyObject *indices = py_indices.release().ptr();
   if (!indices) throw std::runtime_error("indices failed");
+
+  py_array_t<INDICE_TYPE> py_row_indices{pybind11::buffer_info(state.p_row_indices, sizeof(INDICE_TYPE), pybind11::format_descriptor<INDICE_TYPE>::value,
+                                   1, rowDim, {sizeof(INDICE_TYPE)})};
+  PyObject *row_indices = py_row_indices.release().ptr();
   if (!row_indices) throw std::runtime_error("row_indices failed");
 
   PyObject *tuple = PyTuple_New(3);
@@ -105,16 +93,6 @@ PyObject *sparse2d_to_csr(Sparse2dState<T> &state) {
     throw std::runtime_error("set indices failed");
   if (PyObject_SetAttrString(matrix, "_row_indices", (PyObject *)row_indices))
     throw std::runtime_error("set row_indices failed");
-
-#if (NPY_API_VERSION >= 7)
-  PyArray_ENABLEFLAGS(array, NPY_ARRAY_OWNDATA);
-  PyArray_ENABLEFLAGS(indices, NPY_ARRAY_OWNDATA);
-  PyArray_ENABLEFLAGS(row_indices, NPY_ARRAY_OWNDATA);
-#else
-  PyArray_FLAGS(array) |= NPY_OWNDATA;
-  PyArray_FLAGS(indices) |= NPY_OWNDATA;
-  PyArray_FLAGS(row_indices) |= NPY_OWNDATA;
-#endif
 
   Py_DECREF(array);
   Py_DECREF(indices);

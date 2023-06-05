@@ -13,7 +13,7 @@ class Solver(DummySolver):
     @staticmethod
     def CFUNC_RESOLVER(model, s = ""):
         X = model.features
-        C = "s" if isinstance(X, scipy.sparse.csr.csr_matrix) else "d"
+        C = "s" if isinstance(X, scipy.sparse.csr_matrix) else "d"
         T = "d" if X.dtype == np.dtype('float64') else "s"
         return model._MANGLING + s + C + T
 

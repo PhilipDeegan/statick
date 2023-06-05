@@ -357,45 +357,41 @@ class csr_t : public csr {
   csr_t(handle h, borrowed_t) : csr(h, borrowed_t{}), _info(3) {
     auto *obj = h.ptr();
     auto *obj_shape = PyObject_GetAttrString(obj, "shape");
-    auto *obj_indptr = (PyArrayObject *)PyObject_GetAttrString(obj, "indptr");
-    auto *obj_indices = (PyArrayObject *)PyObject_GetAttrString(obj, "indices");
-    auto *obj_data = (PyArrayObject *)PyObject_GetAttrString(obj, "data");
+    auto *obj_data = PyObject_GetAttrString(obj, "data");
+    auto *obj_indices = PyObject_GetAttrString(obj, "indices");
+    auto *obj_indptr = PyObject_GetAttrString(obj, "indptr");
 
     if (obj_shape == NULL || obj_indptr == NULL || obj_indices == NULL || obj_data == NULL) {
       PyErr_SetString(PyExc_ValueError,
                       "Expecting a 2d sparse numpy array (i.e., a python object with 3 fields "
                       "'indptr', 'indices' and 'data')");
       if (obj_shape) Py_DECREF(obj_shape);
-      if (obj_indptr) Py_DECREF(obj_indptr);
-      if (obj_indices) Py_DECREF(obj_indices);
       if (obj_data) Py_DECREF(obj_data);
+      if (obj_indices) Py_DECREF(obj_indices);
+      if (obj_indptr) Py_DECREF(obj_indptr);
       throw std::runtime_error("ERROR 1");
     }
 
-    if (!PyArray_IS_C_CONTIGUOUS(obj_data) || !PyArray_IS_C_CONTIGUOUS(obj_indptr) ||
-        !PyArray_IS_C_CONTIGUOUS(obj_indices)) {
-      PyErr_SetString(
-          PyExc_ValueError,
-          "The fields indptr, indices and data of sparse matrix must be contiguous numpy arrays.");
-      Py_DECREF(obj_indptr);
-      Py_DECREF(obj_indices);
-      Py_DECREF(obj_data);
-      Py_DECREF(obj_shape);
-      throw std::runtime_error("ERROR 2");
+    try{
+      auto py_data = pybind11::reinterpret_steal<py_array_t<T>>(pybind11::handle{obj_data});
+      auto py_indices = pybind11::reinterpret_steal<py_array_t<INDICE_TYPE>>(pybind11::handle{obj_indices});
+      auto py_row_indices = pybind11::reinterpret_steal<py_array_t<INDICE_TYPE>>(pybind11::handle{obj_indptr});
+
+      _info[0] = PyLong_AsLong(PyTuple_GET_ITEM(obj_shape, 1));
+      _info[1] = PyLong_AsLong(PyTuple_GET_ITEM(obj_shape, 0));
+      _info[2] = py_data.shape()[0];
+
+      auto* data = static_cast<T*>(py_data.request().ptr);
+      auto* indices = static_cast<INDICE_TYPE*>(py_indices.request().ptr);
+      auto* row_indices = static_cast<INDICE_TYPE*>(py_row_indices.request().ptr);
+
+      m_data_ptr =
+          std::make_shared<statick::Sparse2DView<T>>(data, _info.data(), indices, row_indices);
+      }
+    catch(...){
+      KLOG(DBG) << "EPIC FAIL";
+      std::abort();
     }
-
-    PyObject *obj_nrows = PyTuple_GET_ITEM(obj_shape, 0);
-    PyObject *obj_ncols = PyTuple_GET_ITEM(obj_shape, 1);
-    _info[0] = PyLong_AsLong(obj_ncols);
-    _info[1] = PyLong_AsLong(obj_nrows);
-    _info[2] = PyArray_DIM(obj_data, 0);
-
-    auto *data = (T *)PyArray_DATA(obj_data);
-    auto *indices = (INDICE_TYPE *)PyArray_DATA(obj_indices);
-    auto *row_indices = (INDICE_TYPE *)PyArray_DATA(obj_indptr);
-
-    m_data_ptr =
-        std::make_shared<statick::Sparse2DView<T>>(data, _info.data(), indices, row_indices);
   }
   csr_t(handle h, stolen_t) : csr(h, stolen_t{}) {}
 
