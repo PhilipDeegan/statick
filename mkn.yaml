@@ -1,7 +1,6 @@
 #! clean build test -dtOU
 
 name: statick
-scm: https://github.com/dekken/statick
 
 parent: base
 test: test/(\w).cpp
@@ -32,8 +31,7 @@ profile:
   parent: base
   install: statick/bin
   mode: none
-  mod:
-  - name: lang.pybind11
+  mod: python3.module
 
 - name: statick.py
   parent: py.py
