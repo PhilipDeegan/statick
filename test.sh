@@ -4,7 +4,7 @@ CWD="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 PY="${PY:-python3}";
 which $PY; $PY -V
 [ ! -d "$CWD/tick" ] && \
-    git clone https://github.com/X-DataInitiative/tick --depth 1 && \
+    git clone https://github.com/PhilipDeegan/tick -b releases --depth 2 && \
     (cd tick && ./sh/mkn.sh)
 
 export PYTHONPATH="$CWD/tick:$CWD"
