@@ -1,5 +1,9 @@
 name: Statick on macos-latest
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches: [ master ]
@@ -8,6 +12,8 @@ on:
 
 env:
     KUL_GIT_CO: --depth 10 # is added to git clone calls
+    MKN_LIB_LINK_LIB: 1
+    MKN_PYTHON_LIB_EMBED: 1
 
 jobs:
   build:
@@ -18,9 +24,9 @@ jobs:
       fail-fast: false
       max-parallel: 4
       matrix:
-        python-version: ['3.7', '3.9', '3.10', '3.11'] # '3.8' has "'tp_print' is deprecated [-Werror,-Wdeprecated-declarations]"
+        python-version: ['3.11', '3.12']
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - uses: actions/setup-python@v4
       with:
@@ -28,10 +34,12 @@ jobs:
         architecture: x64
 
     - run: |
-        curl -Lo mkn https://github.com/mkn/mkn/releases/download/latest/mkn_osx
+        curl -Lo mkn https://github.com/mkn/mkn/releases/download/latest/mkn_arm_osx
         chmod +x mkn
         export PATH="$PWD:$PATH"
         python3 -m pip install pip -U
         python3 -m pip install wheel -U
         python3 -m pip install -r res/pip_deps.txt -U
-        XTRA="-tx $PWD/res/ci/travis-osx.yaml" KLOG=3 ./res/ci/travis-osx.sh
+        brew update && brew install swig
+        XTRA="-tx $PWD/res/mkn/osx" KLOG=4 ./sh/build_tick.sh
+        XTRA="-tx $PWD/res/mkn/osx" KLOG=4 ./sh/test.sh
