@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -x
+set -e
 
 shell_session_update() { :; }
 travis_footer() { :; }
