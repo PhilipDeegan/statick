@@ -1,12 +1,8 @@
 #!/usr/bin/env bash
 set -ex
-CWD="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+CWD="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )" && cd $CWD/.. && CWD=$PWD
 PY="${PY:-python3}";
 which $PY; $PY -V
-[ ! -d "$CWD/tick" ] && \
-    git clone https://github.com/PhilipDeegan/tick -b releases --depth 2
-    #  && \
-    # (cd tick && ./sh/mkn.sh)
 
 export PYTHONPATH="$CWD/tick:$CWD"
 export MKN_LIB_LINK_LIB=1
@@ -14,7 +10,7 @@ PYGET="get_data.py";
 function finish { cd $CWD; }; trap finish EXIT;
 ARF="adult.features.cereal"; ARL="adult.labels.cereal";
 URF="url.features.cereal"; URL="url.labels.cereal";
-[ ! -d "url" ] && git clone https://github.com/dekken/statick_data --depth 1 -b master url && \
+[ ! -d "url" ] && git clone https://github.com/PhilipDeegan/statick_data --depth 1 -b master url && \
                   (cd url && ./join.sh url_svmlight.tar.gz && rm url_svmlight.tar.gz.part.*)
 mkn -v; mkn clean build -dStO 2 -p py $XTRA;
 cat > $CWD/${PYGET} << EOL

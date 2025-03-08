@@ -8,9 +8,9 @@
 file:
   - type: c:S
     archiver: ar -cr
-    compiler: clang -O3
+    compiler: clang
     linker: clang
   - type: cpp:cxx:cc
     archiver: ar -cr
-    compiler: clang++ -std=c++17 -fPIC -O3
+    compiler: clang++ -std=c++17 -fPIC
     linker: clang++ -Wl,-rpath,/usr/local/lib

@@ -1,5 +1,9 @@
 name: Statick on windows-latest
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches: [ master ]
@@ -9,6 +13,8 @@ on:
 env:
     KUL_GIT_CO: --depth 10 # is added to git clone calls
     MKN_CL_PREFERRED: 1
+    MKN_LIB_LINK_LIB: 1
+    MKN_PYTHON_LIB_EMBED: 1
 
 jobs:
   build:
@@ -21,7 +27,7 @@ jobs:
       matrix:
         python-version: ['3.11', '3.12']
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - uses: actions/setup-python@v4
       with:
@@ -41,4 +47,5 @@ jobs:
         python3 -m pip install pip -U
         python3 -m pip install wheel -U
         python3 -m pip install -r res/pip_deps.txt -U
-        bash -c 'PATH="$PWD:$PATH" XTRA="-a -std:c++17" ./test.sh'
+        bash -c 'PATH="$PWD:$PATH" XTRA="-a -std:c++17" ./sh/build_tick.sh'
+        bash -c 'PATH="$PWD:$PATH" XTRA="-a -std:c++17" ./sh/test.sh'
