@@ -1,6 +1,7 @@
-
 from tick.prox import ProxL2Sq as TPL2SQ
+
 from .prox import Prox as PROX
+
 
 class ProxL2Sq(PROX, TPL2SQ):
 

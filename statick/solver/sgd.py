@@ -1,5 +1,7 @@
 from tick.solver import SGD as TS
+
 from statick.solver.solver import Solver as SOLVER
+
 
 class SGD(SOLVER, TS):
 

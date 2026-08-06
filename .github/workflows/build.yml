@@ -1,0 +1,100 @@
+name: build
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+env:
+    MKN_KUL_GIT_CO: --depth 3 # is added to git clone calls
+    MKN_LIB_LINK_LIB: 1
+    MKN_PYTHON_LIB_EMBED: 1
+
+jobs:
+  ubuntu:
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        python-version: ['3.11', '3.12']
+    steps:
+    - uses: actions/checkout@v6
+    - uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+        architecture: x64
+    - run: |
+        curl -Lo mkn https://github.com/mkn/mkn/releases/download/latest/mkn_nix
+        chmod +x mkn
+        export PATH="$PWD:$PATH"
+        python3 -m pip install pip -U
+        python3 -m pip install wheel -U
+        python3 -m pip install -r res/pip_deps.txt -U
+        XTRA="-tx $PWD/res/mkn/linux" KLOG=4 ./sh/build_tick.sh
+        XTRA="-tx $PWD/res/mkn/linux" KLOG=4 ./sh/test.sh
+
+  macos:
+    name: Python ${{ matrix.python-version }}
+    runs-on: macos-latest
+
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        python-version: ['3.11', '3.12']
+    steps:
+    - uses: actions/checkout@v6
+
+    - uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+        architecture: x64
+
+    - run: |
+        curl -Lo mkn https://github.com/mkn/mkn/releases/download/latest/mkn_arm_osx
+        chmod +x mkn
+        export PATH="$PWD:$PATH"
+        python3 -m pip install pip -U
+        python3 -m pip install wheel -U
+        python3 -m pip install -r res/pip_deps.txt -U
+        brew update && brew install swig
+        XTRA="-tx $PWD/res/mkn/osx" KLOG=4 ./sh/build_tick.sh
+        XTRA="-tx $PWD/res/mkn/osx" KLOG=4 ./sh/test.sh
+
+  windows:
+    name: Python ${{ matrix.python-version }}
+    runs-on: windows-latest
+
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        python-version: ['3.11', '3.12']
+    steps:
+    - uses: actions/checkout@v6
+    - uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+        architecture: x64
+
+    - run: bash -c "rm /bin/link" # interferes with cl/link.exe
+    - uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: amd64
+    - shell: cmd
+      run: |
+        bash -c "curl -Lo mkn.exe https://github.com/mkn/mkn/releases/download/latest/mkn.exe"
+        bash -c "(cd $(dirname $(which python)); cp python.exe python3.exe)"
+        python3 -m pip install pip -U
+        python3 -m pip install wheel -U
+        python3 -m pip install -r res/pip_deps.txt -U
+        bash -c 'PATH="$PWD:$PATH" XTRA="-a -std:c++17" ./sh/build_tick.sh'
+        bash -c 'PATH="$PWD:$PATH" XTRA="-a -std:c++17" ./sh/test.sh'

@@ -1,10 +1,14 @@
 # License: BSD 3 clause
 
-import os, gc, scipy, unittest
+import gc
+import os
+import unittest
+
 import numpy as np
-from scipy.sparse import csr_matrix
+import scipy
 
 import statick
+
 
 class Test(unittest.TestCase):
 
@@ -15,12 +19,11 @@ class Test(unittest.TestCase):
         try:
             import psutil
         except ImportError:
-            print('Without psutils we cannot ensure we have no memory leaks')
+            print("Without psutils we cannot ensure we have no memory leaks")
             return
 
         def get_memory_used():
-            """Returns memory used by current process
-            """
+            """Returns memory used by current process"""
             process = psutil.Process(os.getpid())
             return process.memory_info()[0]
 
@@ -28,14 +31,15 @@ class Test(unittest.TestCase):
         try:
             n_rows = int(1e3)
             n_cols = int(1e2)
-            s_spar = int((n_rows * n_cols) * .3)
-            data_size = (s_spar * 8)
+            s_spar = int((n_rows * n_cols) * 0.3)
+            data_size = s_spar * 8
             row_size = (n_rows + 1) * 8
             # The size in memory of an array of ``size`` doubles
             bytes_size = (data_size * 2) + (row_size)
 
             sparsearray_double = scipy.sparse.rand(
-                n_rows, n_cols, 0.3, format="csr", dtype=np.float64)
+                n_rows, n_cols, 0.3, format="csr", dtype=np.float64
+            )
 
             statick.save_double_sparse2d(sparsearray_double, cereal_file)
 
@@ -45,14 +49,16 @@ class Test(unittest.TestCase):
             first_filled_memory = get_memory_used()
 
             # Check that new memory is of the correct order (10%)
-            self.assertAlmostEqual(first_filled_memory - initial_memory,
-                                   bytes_size, delta=1.1 * bytes_size)
+            self.assertAlmostEqual(
+                first_filled_memory - initial_memory, bytes_size, delta=1.1 * bytes_size
+            )
             a = 1
             for i in range(10):
                 gc.collect()
                 filled_memory = get_memory_used()
-                self.assertAlmostEqual(filled_memory, initial_memory,
-                                       delta=1.1 * bytes_size)
+                self.assertAlmostEqual(
+                    filled_memory, initial_memory, delta=1.1 * bytes_size
+                )
                 X = statick.load_double_sparse2d(cereal_file)
                 X = 1
             gc.collect()
