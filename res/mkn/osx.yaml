@@ -12,5 +12,5 @@ file:
     linker: clang
   - type: cpp:cxx:cc
     archiver: ar -cr
-    compiler: clang++ -std=c++17 -fPIC
+    compiler: clang++ -std=c++20 -fPIC
     linker: clang++ -Wl,-rpath,/usr/local/lib
