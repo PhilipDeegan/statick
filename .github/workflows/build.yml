@@ -13,6 +13,7 @@ on:
 env:
     MKN_KUL_GIT_CO: --depth 3 # is added to git clone calls
     MKN_LIB_LINK_LIB: 1
+    KLOG: 2
 
 jobs:
   ubuntu:
@@ -37,8 +38,12 @@ jobs:
         python3 -m pip install pip -U
         python3 -m pip install wheel -U
         python3 -m pip install -r res/pip_deps.txt -U
+        ./mkn -v
         ./mkn build -p tick -dta "-fPIC"
-        XTRA="-tx $PWD/res/mkn/linux" KLOG=4 ./sh/test.sh
+        ./mkn clean build -dStO 2 -p py -tx res/mkn/linux
+        ./sh/test_setup.sh
+        ./mkn clean build test -Otx res/mkn/linux
+        python3 test/asaga_sparse.py
 
   macos:
     name: Python ${{ matrix.python-version }}
@@ -64,8 +69,12 @@ jobs:
         python3 -m pip install pip -U
         python3 -m pip install wheel -U
         python3 -m pip install -r res/pip_deps.txt -U
-        ./mkn build -p tick -dta "-fPIC"
-        XTRA="-tx $PWD/res/mkn/osx" KLOG=4 ./sh/test.sh
+        ./mkn -v
+        ./mkn build -p tick -dta "-fPIC -std=c++20"
+        ./mkn clean build -dStO 2 -p py -tx res/mkn/osx -a -std=c++20
+        ./sh/test_setup.sh
+        ./mkn clean build test -Otx res/mkn/osx -a -std=c++20
+        python3 test/asaga_sparse.py
 
   windows:
     name: Python ${{ matrix.python-version }}
@@ -87,14 +96,18 @@ jobs:
     - uses: ilammy/msvc-dev-cmd@v1
       with:
         arch: amd64
-    - shell: cmd
+    - shell: bash
       env:
         MKN_CL_PREFERRED: 1
       run: |
-        bash -c "curl -Lo mkn.exe https://github.com/mkn/mkn/releases/download/latest/mkn.exe"
-        bash -c "(cd $(dirname $(which python)); cp python.exe python3.exe)"
+        curl -Lo mkn.exe https://github.com/mkn/mkn/releases/download/latest/mkn.exe
+        (cd $(dirname $(which python)); cp python.exe python3.exe)
         python3 -m pip install pip -U
         python3 -m pip install wheel -U
         python3 -m pip install -r res/pip_deps.txt -U
-        bash -c 'PATH="$PWD:$PATH" ./mkn  build -p tick -dta "-EHsc"
-        bash -c 'PATH="$PWD:$PATH" XTRA="-a -std:c++20" ./sh/test.sh'
+        ./mkn -v
+        ./mkn build -p tick -dta "-EHsc -std:c++20"
+        ./mkn clean build -dStO 2 -p py -a "-EHsc -std:c++20"
+        ./sh/test_setup.sh
+        ./mkn clean build test -Oa "-EHsc -std:c++20"
+        python3 test/asaga_sparse.py
