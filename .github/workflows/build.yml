@@ -13,7 +13,6 @@ on:
 env:
     MKN_KUL_GIT_CO: --depth 3 # is added to git clone calls
     MKN_LIB_LINK_LIB: 1
-    MKN_PYTHON_LIB_EMBED: 1
 
 jobs:
   ubuntu:
@@ -90,6 +89,8 @@ jobs:
       with:
         arch: amd64
     - shell: cmd
+      env:
+        MKN_CL_PREFERRED: 1
       run: |
         bash -c "curl -Lo mkn.exe https://github.com/mkn/mkn/releases/download/latest/mkn.exe"
         bash -c "(cd $(dirname $(which python)); cp python.exe python3.exe)"
