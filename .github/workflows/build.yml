@@ -39,10 +39,10 @@ jobs:
         python3 -m pip install wheel -U
         python3 -m pip install -r res/pip_deps.txt -U
         ./mkn -v
-        ./mkn build -p tick -dta "-fPIC"
-        ./mkn clean build -dStO 2 -p py -tx res/mkn/linux
+        ./mkn build -p tick -dta -fPIC
+        ./mkn clean build -dStO 2 -p py -tx res/mkn/linux -a -std=c++20
         ./sh/test_setup.sh
-        ./mkn clean build test -Otx res/mkn/linux
+        ./mkn clean build test -Otx res/mkn/linux -a -std=c++20
         python3 test/asaga_sparse.py
 
   macos:
@@ -70,7 +70,7 @@ jobs:
         python3 -m pip install wheel -U
         python3 -m pip install -r res/pip_deps.txt -U
         ./mkn -v
-        ./mkn build -p tick -dta "-fPIC -std=c++20"
+        ./mkn build -p tick -dta -fPIC
         ./mkn clean build -dStO 2 -p py -tx res/mkn/osx -a -std=c++20
         ./sh/test_setup.sh
         ./mkn clean build test -Otx res/mkn/osx -a -std=c++20
@@ -101,7 +101,6 @@ jobs:
         MKN_CL_PREFERRED: 1
       run: |
         curl -Lo mkn.exe https://github.com/mkn/mkn/releases/download/latest/mkn.exe
-        (cd $(dirname $(which python)); cp python.exe python3.exe)
         python3 -m pip install pip -U
         python3 -m pip install wheel -U
         python3 -m pip install -r res/pip_deps.txt -U
