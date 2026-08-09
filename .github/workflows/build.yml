@@ -11,8 +11,7 @@ on:
     branches: [ master ]
 
 env:
-    MKN_KUL_GIT_CO: --depth 3 # is added to git clone calls
-    MKN_LIB_LINK_LIB: 1
+    MKN_KUL_GIT_CO: --depth 1
     KLOG: 2
 
 jobs:
