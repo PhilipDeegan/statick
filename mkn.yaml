@@ -63,6 +63,176 @@ profile:
   out: statick_solver
   src: src/pybind/solver
 
+- name: tick
+  sub: tick&tick(https://github.com/X-DataInitiative/tick)
+  self: tick.serialization
+        tick.preprocessing
+        tick.array_test
+        tick.hawkes/simulation
+        tick.hawkes/inference
+        tick.solver
+        tick.robust
+        tick.survival
+
+- name: tick.py
+  dep: io.cereal lang.pybind11
+  mode: none
+  arg: -DPYTHON_LINK
+  mod: |
+    python3.module
+    lang.python3{compile:{with: numpy}, link:{delete: CoreFoundation -framework }}
+
+- name: tick.array
+  parent: tick.py
+  inc: tick/lib/include
+  install: tick/tick/array/build
+  out: array
+  src: tick/lib/cpp/array
+       tick/python/src/tick_array_module.cpp
+
+- name: tick.base
+  parent: tick.py
+  self: tick.array
+  inc: tick/lib/include
+       tick/python/src
+  install: tick/tick/base/build
+  out: base
+  src: tick/lib/cpp/base
+       tick/python/src/tick_base_module.cpp
+
+- name: tick.array_test
+  parent: tick.py
+  self: tick.base
+  inc: tick/lib/include
+       tick/python/src
+  install: tick/tick/array_test/build
+  out: array_test
+  src: tick/lib/cpp/array_test
+       tick/python/src/tick_array_test_module.cpp
+
+- name: tick.base_model
+  parent: tick.py
+  self: tick.base
+  inc: tick/lib/include
+       tick/python/src
+  install: tick/tick/base_model/build
+  out: base_model
+  src: tick/lib/cpp/base_model
+       tick/python/src/tick_base_model_module.cpp
+
+- name: tick.hawkes/model
+  parent: tick.py
+  self: tick.base_model
+  inc: tick/lib/include
+       tick/python/src
+  install: tick/tick/hawkes/model/build
+  out: hawkes_model
+  src: tick/lib/cpp/hawkes/model
+       tick/python/src/tick_hawkes_model_module.cpp
+
+- name: tick.random
+  parent: tick.py
+  self: tick.base
+  inc: tick/lib/include
+       tick/python/src
+  install: tick/tick/random/build
+  out: crandom
+  src: tick/lib/cpp/random
+       tick/python/src/tick_random_module.cpp
+
+- name: tick.hawkes/simulation
+  parent: tick.py
+  self: tick.random
+  inc: tick/lib/include
+       tick/python/src
+  install: tick/tick/hawkes/simulation/build
+  out: hawkes_simulation
+  src: tick/lib/cpp/hawkes/simulation
+       tick/python/src/tick_hawkes_simulation_module.cpp
+
+- name: tick.hawkes/inference
+  parent: tick.py
+  self: tick.hawkes/model
+  inc: tick/lib/include
+       tick/python/src
+  install: tick/tick/hawkes/inference/build
+  out: hawkes_inference
+  src: tick/lib/cpp/hawkes/inference
+       tick/python/src/tick_hawkes_inference_module.cpp
+
+- name: tick.linear_model
+  parent: tick.py
+  self: tick.base_model
+  inc: tick/lib/include
+       tick/python/src
+  install: tick/tick/linear_model/build
+  out: linear_model
+  src: tick/lib/cpp/linear_model
+       tick/python/src/tick_linear_model_module.cpp
+
+- name: tick.prox
+  parent: tick.py
+  self: tick.base
+  inc: tick/lib/include
+       tick/python/src
+  install: tick/tick/prox/build
+  out: prox
+  src: tick/lib/cpp/prox
+       tick/python/src/tick_prox_module.cpp
+
+- name: tick.preprocessing
+  parent: tick.py
+  self: tick.base
+  inc: tick/lib/include
+       tick/python/src
+  install: tick/tick/preprocessing/build
+  out: preprocessing
+  src: tick/lib/cpp/preprocessing
+       tick/python/src/tick_preprocessing_module.cpp
+
+- name: tick.robust
+  parent: tick.py
+  self: tick.linear_model
+  inc: tick/lib/include
+       tick/python/src
+  install: tick/tick/robust/build
+  out: robust
+  src: tick/lib/cpp/robust
+       tick/python/src/tick_robust_module.cpp
+
+- name: tick.solver
+  parent: tick.py
+  self: tick.random
+        tick.linear_model
+        tick.prox
+        tick.robust
+  inc: tick/lib/include
+       tick/python/src
+  install: tick/tick/solver/build
+  out: solver
+  src: tick/lib/cpp/solver
+       tick/python/src/tick_solver_module.cpp
+
+- name: tick.survival
+  parent: tick.py
+  self: tick.base_model
+  inc: tick/lib/include
+       tick/python/src
+  install: tick/tick/survival/build
+  out: survival
+  src: tick/lib/cpp/survival
+       tick/python/src/tick_survival_module.cpp
+
+- name: tick.serialization
+  parent: tick.py
+  self: tick.linear_model
+        tick.solver
+        tick.prox
+        tick.robust
+        tick.survival
+  install: tick/tick/serialization/build
+  out: serialization
+
 - name: format
   parent: base
   mod:

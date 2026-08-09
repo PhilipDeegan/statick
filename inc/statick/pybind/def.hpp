@@ -9,6 +9,9 @@
 #include "pybind11/complex.h"
 #include "pybind11/functional.h"
 
+#include "mkn/kul/defs.hpp"
+#define STATICK_PYBIND_SIG MKN_KUL_SIG_HIDDEN
+
 template <typename T>
 using py_array_t = pybind11::array_t<T, pybind11::array::c_style | pybind11::array::forcecast>;
 using py_array_d = py_array_t<double>;

@@ -1,4 +1,6 @@
 
+super: settings
+
 file:
   - type: c:S
     archiver: ar -cr

@@ -5,7 +5,7 @@ namespace py = pybind11;
 
 namespace statick_py {
 template <typename T>
-class array_t : public py_array_t<T> {
+class STATICK_PYBIND_SIG array_t : public py_array_t<T> {
  public:
   array_t(std::shared_ptr<statick::Array<T>> _data)
       : py_array_t<T>(_data->size(), _data->data()), data(_data) {}

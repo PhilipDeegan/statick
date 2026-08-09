@@ -58,7 +58,7 @@ struct csr_info : csr_info_scalar<T> {};
 
 }  // namespace detail
 
-class csr : public buffer {
+class STATICK_PYBIND_SIG csr : public buffer {
  public:
   PYBIND11_OBJECT_CVT(csr, buffer, detail::npy_api::get().PyArray_Check_, raw_csr)
 
@@ -337,7 +337,7 @@ class csr : public buffer {
 };
 
 template <typename T, int ExtraFlags = csr::forcecast>
-class csr_t : public csr {
+class STATICK_PYBIND_SIG csr_t : public csr {
  private:
   struct private_ctor {};
   // Delegating constructor needed when both moving and accessing in the same constructor

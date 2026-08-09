@@ -37,7 +37,7 @@ jobs:
         python3 -m pip install pip -U
         python3 -m pip install wheel -U
         python3 -m pip install -r res/pip_deps.txt -U
-        XTRA="-tx $PWD/res/mkn/linux" KLOG=4 ./sh/build_tick.sh
+        ./mkn build -p tick -dta "-fPIC"
         XTRA="-tx $PWD/res/mkn/linux" KLOG=4 ./sh/test.sh
 
   macos:
@@ -64,8 +64,7 @@ jobs:
         python3 -m pip install pip -U
         python3 -m pip install wheel -U
         python3 -m pip install -r res/pip_deps.txt -U
-        brew update && brew install swig
-        XTRA="-tx $PWD/res/mkn/osx" KLOG=4 ./sh/build_tick.sh
+        ./mkn build -p tick -dta "-fPIC"
         XTRA="-tx $PWD/res/mkn/osx" KLOG=4 ./sh/test.sh
 
   windows:
@@ -97,5 +96,5 @@ jobs:
         python3 -m pip install pip -U
         python3 -m pip install wheel -U
         python3 -m pip install -r res/pip_deps.txt -U
-        bash -c 'PATH="$PWD:$PATH" XTRA="-a -std:c++20" ./sh/build_tick.sh'
+        bash -c 'PATH="$PWD:$PATH" ./mkn  build -p tick -dta "-EHsc"
         bash -c 'PATH="$PWD:$PATH" XTRA="-a -std:c++20" ./sh/test.sh'
