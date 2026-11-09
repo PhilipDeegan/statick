@@ -74,8 +74,8 @@ void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox) {
   auto *iterate = dao.iterate.data();
   statick::ThreadPool pool(n_threads - 1);
   std::vector<std::function<void()>> funcs;
-  for (size_t i = 1; i < n_threads - 1; i++)
-    funcs.emplace_back([&]() { solve_thread<MODEL, RM, ST, INTERCEPT>(dao, modao, prox, i); });
+  for (size_t i = 1; i < n_threads; ++i)
+    funcs.emplace_back([&, i]() { solve_thread<MODEL, RM, ST, INTERCEPT>(dao, modao, prox, i); });
   auto start = std::chrono::steady_clock::now();
   auto log_history = [&](size_t epoch) {
     dao.t += epoch_size;

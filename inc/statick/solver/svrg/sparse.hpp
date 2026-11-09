@@ -126,8 +126,8 @@ void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox) {
     }
   };
   std::vector<std::function<void()>> funcs;
-  for (size_t i = 1; i < n_threads - 1; i++)
-    funcs.emplace_back([&]() { solve_thread<MODEL, RM, ST, INTERCEPT>(dao, modao, prox, i); });
+  for (size_t i = 1; i < n_threads; ++i)
+    funcs.emplace_back([&, i]() { solve_thread<MODEL, RM, ST, INTERCEPT>(dao, modao, prox, i); });
   statick::ThreadPool pool(n_threads - 1);
   for (size_t epoch = 1; epoch < (n_epochs + 1); ++epoch) {
     statick::svrg::prepare_solve<MODEL>(dao, modao, dao.t);

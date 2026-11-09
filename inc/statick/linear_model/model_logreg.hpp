@@ -80,9 +80,16 @@ class ModelLogReg {
 
   template <bool INTERCEPT = false, bool FILL = true, class K>
   static void compute_grad_i(DAO &dao, const K *coeffs, T *out, const size_t i) {
-    auto *x_i = dao.features().row_raw(i);
+    auto const &features = dao.features();
+    auto *x_i = features.row_raw(i);
     const T alpha_i = grad_i_factor(dao, coeffs, i);
-    if constexpr (FILL)
+    if constexpr (std::decay_t<decltype(features)>::is_sparse) {
+      // x_i holds only row i's non-zeros; scatter them by column index
+      if constexpr (FILL) set(out, T{0}, dao.n_features());
+      auto const *cols = features.row_indices(i);
+      for (size_t k = 0, nnz = features.row_size(i); k < nnz; ++k)
+        out[cols[k]] += x_i[k] * alpha_i;
+    } else if constexpr (FILL)
       mult_fill(out, x_i, alpha_i, dao.n_features());
     else
       mult_incr(out, x_i, alpha_i, dao.n_features());
