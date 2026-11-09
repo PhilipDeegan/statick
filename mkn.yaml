@@ -206,6 +206,7 @@ profile:
         tick.linear_model
         tick.prox
         tick.robust
+        tick.survival
   inc: tick/lib/include
        tick/python/src
   install: tick/tick/solver/build

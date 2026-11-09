@@ -61,9 +61,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
         architecture: x64
 
-    - env:
-        MKN_LIB_LINK_LIB: 1
-      run: |
+    - run: |
         curl -Lo mkn https://github.com/mkn/mkn/releases/download/latest/mkn_arm_osx
         chmod +x mkn
         export PATH="$PWD:$PATH"

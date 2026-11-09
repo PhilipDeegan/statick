@@ -3,6 +3,9 @@
 #include <fstream>
 #include <algorithm>
 #include "mkn/kul/cpu.hpp"
+#include "mkn/kul/log.hpp"
+#include "mkn/kul/time.hpp"
+#include "mkn/kul/os.hpp"
 #include "statick/array.hpp"
 #include "statick/prox/prox_l2sq.hpp"
 #include "statick/linear_model/model_logreg.hpp"
