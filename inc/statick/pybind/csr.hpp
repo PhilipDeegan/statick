@@ -3,6 +3,8 @@
 #ifndef STATICK_PYBIND_CSR_HPP_
 #define STATICK_PYBIND_CSR_HPP_
 
+#include "mkn/kul/log.hpp"
+
 namespace statick_py {
 
 template <typename T>
