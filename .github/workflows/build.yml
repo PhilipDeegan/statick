@@ -41,7 +41,13 @@ jobs:
         ./mkn build -dStO 2 -p py -tx res/mkn/linux -a -std=c++20
         ./mkn build -p tick -dta "-fPIC -std=c++17" # tick uses std::result_of, removed in C++20
         ./sh/test_setup.sh
-        ./mkn build test -Otx res/mkn/linux -a -std=c++20
+        ulimit -c unlimited # TODO: remove core dump/gdb diagnostics once svrg_sparse segfault is fixed
+        sudo sysctl -w kernel.core_pattern="$PWD/core.%e.%p"
+        ./mkn build test -Otx res/mkn/linux -a "-std=c++20 -g" || {
+          sudo apt-get install -y -qq gdb > /dev/null
+          for c in core.*; do gdb -batch -ex bt -ex "thread apply all bt 12" bin/build/test/*_svrg_sparse.cpp "$c"; done
+          exit 1
+        }
         PYTHONPATH="$PWD/tick:$PWD" python3 test/asaga_sparse.py
 
   macos:
@@ -107,7 +113,7 @@ jobs:
         ./mkn build -dStO 2 -p py -a "-EHsc -std:c++20"
         # tick's mkn profiles rely on DLL import/export, which MSVC can't resolve across its modules
         #  so on windows build tick with its own CMake (TICK_STATIC_LIBS), outside ./tick to avoid shadowing it
-        git clone --depth 1 https://github.com/X-DataInitiative/tick "$RUNNER_TEMP/tick"
+        git clone --depth 1 --recurse-submodules --shallow-submodules https://github.com/X-DataInitiative/tick "$RUNNER_TEMP/tick"
         python3 -m pip install "$RUNNER_TEMP/tick"
         ./sh/test_setup.sh
         ./mkn build test -Oa "-EHsc -std:c++20"
