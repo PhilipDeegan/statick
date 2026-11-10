@@ -41,13 +41,14 @@ jobs:
         ./mkn build -dStO 2 -p py -tx res/mkn/linux -a -std=c++20
         ./mkn build -p tick -dta "-fPIC -std=c++17" # tick uses std::result_of, removed in C++20
         ./sh/test_setup.sh
-        ulimit -c unlimited # TODO: remove core dump/gdb diagnostics once svrg_sparse segfault is fixed
-        sudo sysctl -w kernel.core_pattern="$PWD/core.%e.%p"
+        # TODO: remove gdb diagnostics once svrg_sparse segfault is fixed
         ./mkn build test -Otx res/mkn/linux -a "-std=c++20 -g" || {
           sudo apt-get install -y -qq gdb > /dev/null
-          for c in core.*; do # core.<exe name truncated to 15 chars>.<pid>
-            exe=$(ls bin/build/test/$(echo "$c" | cut -d. -f2)* | head -1)
-            gdb -batch -ex bt -ex "thread apply all bt 12" "$exe" "$c"
+          grep -m1 'model name' /proc/cpuinfo; nproc; g++ --version | head -1
+          for exe in bin/build/test/*_svrg_sparse.cpp; do
+            echo "=== $exe"
+            gdb -batch -ex run -ex bt -ex "info registers rip rsp" -ex "x/4i \$pc" \
+              -ex "thread apply all bt 12" "$exe" 2>&1 | grep -v '^\[New Thread\|^\[Thread'
           done
           exit 1
         }
