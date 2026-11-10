@@ -352,6 +352,8 @@ class STATICK_PYBIND_SIG csr_t : public csr {
   std::vector<size_t> _info;
   std::shared_ptr<statick::Sparse2DView<T>> m_data_ptr;
   std::shared_ptr<statick_py::Sparse2dState<T>> mSparse2dState;
+  py_array_t<T> m_py_data;
+  py_array_t<INDICE_TYPE> m_py_indices, m_py_row_indices;
 
   csr_t() : csr(0, static_cast<const T *>(nullptr)) {}
   csr_t(handle h, borrowed_t) : csr(h, borrowed_t{}), _info(3) {
@@ -373,20 +375,24 @@ class STATICK_PYBIND_SIG csr_t : public csr {
     }
 
     try{
-      auto py_data = pybind11::reinterpret_steal<py_array_t<T>>(pybind11::handle{obj_data});
-      auto py_indices = pybind11::reinterpret_steal<py_array_t<INDICE_TYPE>>(pybind11::handle{obj_indices});
-      auto py_row_indices = pybind11::reinterpret_steal<py_array_t<INDICE_TYPE>>(pybind11::handle{obj_indptr});
+      auto shape = pybind11::reinterpret_steal<pybind11::object>(obj_shape);
+      // ensure() converts when the dtype differs (e.g. scipy/sklearn int64 indices vs
+      //  INDICE_TYPE), the view below points into these so they are kept as members
+      m_py_data = py_array_t<T>::ensure(pybind11::reinterpret_steal<pybind11::object>(obj_data));
+      m_py_indices = py_array_t<INDICE_TYPE>::ensure(
+          pybind11::reinterpret_steal<pybind11::object>(obj_indices));
+      m_py_row_indices = py_array_t<INDICE_TYPE>::ensure(
+          pybind11::reinterpret_steal<pybind11::object>(obj_indptr));
+      if (!m_py_data || !m_py_indices || !m_py_row_indices)
+        throw std::runtime_error("csr_t: could not convert data/indices/indptr");
 
-      _info[0] = PyLong_AsLong(PyTuple_GET_ITEM(obj_shape, 1));
-      _info[1] = PyLong_AsLong(PyTuple_GET_ITEM(obj_shape, 0));
-      _info[2] = py_data.shape()[0];
+      _info[0] = PyLong_AsLong(PyTuple_GET_ITEM(shape.ptr(), 1));
+      _info[1] = PyLong_AsLong(PyTuple_GET_ITEM(shape.ptr(), 0));
+      _info[2] = m_py_data.shape()[0];
 
-      auto* data = static_cast<T*>(py_data.request().ptr);
-      auto* indices = static_cast<INDICE_TYPE*>(py_indices.request().ptr);
-      auto* row_indices = static_cast<INDICE_TYPE*>(py_row_indices.request().ptr);
-
-      m_data_ptr =
-          std::make_shared<statick::Sparse2DView<T>>(data, _info.data(), indices, row_indices);
+      m_data_ptr = std::make_shared<statick::Sparse2DView<T>>(
+          m_py_data.mutable_data(), _info.data(), m_py_indices.mutable_data(),
+          m_py_row_indices.mutable_data());
       }
     catch(...){
       KLOG(DBG) << "EPIC FAIL";
