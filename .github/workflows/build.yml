@@ -38,7 +38,7 @@ jobs:
         python3 -m pip install wheel -U
         python3 -m pip install -r res/pip_deps.txt -U
         ./mkn -v
-        ./mkn build -dStO 2 -p py -tx res/mkn/linux -a -std=c++20
+        ./mkn build -dSO 2 -p py -tx res/mkn/linux -a -std=c++20
         ./mkn build -p tick -dta "-fPIC -std=c++17" # tick uses std::result_of, removed in C++20
         ./sh/test_setup.sh
         # TODO: remove gdb diagnostics once svrg_sparse segfault is fixed
@@ -79,7 +79,7 @@ jobs:
         python3 -m pip install wheel -U
         python3 -m pip install -r res/pip_deps.txt -U
         ./mkn -v
-        ./mkn build -dStO 2 -p py -tx res/mkn/osx -a -std=c++20
+        ./mkn build -dSO 2 -p py -tx res/mkn/osx -a -std=c++20
         ./mkn build -p tick -dta "-fPIC -std=c++17" # tick uses std::result_of, removed in C++20
         ./sh/test_setup.sh
         ./mkn build test -Otx res/mkn/osx -a -std=c++20
