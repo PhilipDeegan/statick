@@ -25,12 +25,14 @@ class DAO {
         n_threads(_threads),
         iterate(modao.n_features() + static_cast<size_t>(INTERCEPT)),
         steps_corrections(statick::svrg::sparse::compute_step_corrections(modao.features())),
-        rand(0, modao.n_samples() - 1) {}
+        rand(0, modao.n_samples() - 1),
+        thread_rands(make_thread_randoms<INDICE_TYPE>(_threads, 0, modao.n_samples() - 1)) {}
   T step = 0.00257480411965l;
   size_t n_epochs, epoch_size, rand_index = 0, n_threads, t = 0;
   std::vector<T> iterate, steps_corrections;
   std::vector<T> full_gradient, fixed_w, grad_i, grad_i_fixed_w, next_iterate;
   RandomMinMax<INDICE_TYPE> rand;
+  std::vector<RandomMinMax<INDICE_TYPE>> thread_rands;  // one per thread
   HISTORY history;
 };
 
@@ -65,8 +67,9 @@ void solve_thread(DAO &dao, typename MODEL::DAO &modao, PROX prox, size_t n_thre
   auto n_threads = dao.n_threads;
   size_t thread_epoch_size = epoch_size / n_threads;
   thread_epoch_size += n_thread < (epoch_size % n_threads);
+  auto &rand = dao.thread_rands[n_thread];
   for (size_t t = 0; t < thread_epoch_size; ++t) {
-    INDICE_TYPE i = dao.rand.next();
+    INDICE_TYPE i = rand.next();
     const size_t x_i_size = features.row_size(i);
     const T *x_i = features.row_raw(i);
     const INDICE_TYPE *x_i_indices = features.row_indices(i);

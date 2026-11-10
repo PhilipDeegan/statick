@@ -89,6 +89,8 @@ profile:
   out: array
   src: tick/lib/cpp/array
        tick/python/src/tick_array_module.cpp
+  if_src: # MSVC needs optimized_exp's t2exp at link time; nix resolves it at load from tick.base
+    win: tick/lib/cpp/base/math/t2exp.cpp
 
 - name: tick.base
   parent: tick.py

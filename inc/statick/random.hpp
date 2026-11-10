@@ -9,6 +9,9 @@
 #endif
 #endif
 
+#include <random>
+#include <vector>
+
 namespace statick {
 
 template <typename T>
@@ -40,6 +43,17 @@ class RandomMinMax : public Random<T> {
 
   std::uniform_int_distribution<INDICE_TYPE>::param_type p;
 };
+
+// One independently seeded generator per thread - std::mt19937_64 is not thread safe
+//  and sharing one across threads can index past its state array
+template <typename T>
+std::vector<RandomMinMax<T>> make_thread_randoms(size_t n_threads, INDICE_TYPE min,
+                                                 INDICE_TYPE max) {
+  std::vector<RandomMinMax<T>> rands;
+  rands.reserve(n_threads);
+  for (size_t i = 0; i < n_threads; ++i) rands.emplace_back(min, max);
+  return rands;
+}
 
 }  // namespace statick
 
