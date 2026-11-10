@@ -105,7 +105,10 @@ jobs:
         python3 -m pip install -r res/pip_deps.txt -U
         ./mkn -v
         ./mkn build -dStO 2 -p py -a "-EHsc -std:c++20"
-        ./mkn build -p tick -dta "-EHsc -std:c++17" # tick uses std::result_of, removed in C++20
+        # tick's mkn profiles rely on DLL import/export, which MSVC can't resolve across its modules
+        #  so on windows build tick with its own CMake (TICK_STATIC_LIBS), outside ./tick to avoid shadowing it
+        git clone --depth 1 https://github.com/X-DataInitiative/tick "$RUNNER_TEMP/tick"
+        python3 -m pip install "$RUNNER_TEMP/tick"
         ./sh/test_setup.sh
         ./mkn build test -Oa "-EHsc -std:c++20"
         PYTHONPATH="$PWD/tick:$PWD" python3 test/asaga_sparse.py
