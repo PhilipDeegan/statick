@@ -45,7 +45,10 @@ jobs:
         sudo sysctl -w kernel.core_pattern="$PWD/core.%e.%p"
         ./mkn build test -Otx res/mkn/linux -a "-std=c++20 -g" || {
           sudo apt-get install -y -qq gdb > /dev/null
-          for c in core.*; do gdb -batch -ex bt -ex "thread apply all bt 12" bin/build/test/*_svrg_sparse.cpp "$c"; done
+          for c in core.*; do # core.<exe name truncated to 15 chars>.<pid>
+            exe=$(ls bin/build/test/$(echo "$c" | cut -d. -f2)* | head -1)
+            gdb -batch -ex bt -ex "thread apply all bt 12" "$exe" "$c"
+          done
           exit 1
         }
         PYTHONPATH="$PWD/tick:$PWD" python3 test/asaga_sparse.py
