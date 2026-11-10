@@ -1,5 +1,7 @@
 from tick.solver import SAGA as TS
+
 from statick.solver.solver import Solver as SOLVER
+
 
 class SAGA(SOLVER, TS):
 

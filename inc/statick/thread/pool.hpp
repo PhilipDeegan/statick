@@ -108,16 +108,18 @@ class ThreadPool {
 
   ThreadPool& sync() {
     while (m_done > 0) std::this_thread::sleep_for(std::chrono::nanoseconds(100));
+    std::unique_lock<std::mutex> lock(m_mutex);
     m_tasks.clear();
     return *this;
   }
 
   template <class T>
   ThreadPool& async(std::vector<std::function<T> >& funcs) {
-    for (auto& func : funcs) {
-      m_tasks.emplace_back([&]() { func(); });
+    {  // workers read/erase m_tasks under the lock, so writes must hold it too
+      std::unique_lock<std::mutex> lock(m_mutex);
+      for (auto& func : funcs) m_tasks.emplace_back([&func]() { func(); });
+      m_done = funcs.size();
     }
-    m_done = funcs.size();
     m_condition.notify_all();
     return *this;
   }

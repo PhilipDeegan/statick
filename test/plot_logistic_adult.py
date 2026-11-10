@@ -1,21 +1,20 @@
-import scipy, numpy as np
 
-import matplotlib.pyplot as plt
-from sklearn.metrics import roc_curve, auc
 
 from tick.dataset import fetch_tick_dataset
 
-train_set = fetch_tick_dataset('binary/adult/adult.trn.bz2')
-test_set = fetch_tick_dataset('binary/adult/adult.tst.bz2')
+train_set = fetch_tick_dataset("binary/adult/adult.trn.bz2")
+test_set = fetch_tick_dataset("binary/adult/adult.tst.bz2")
 X, y = train_set[0], train_set[1]
 
 from statick.linear_model import ModelLogReg
 from statick.prox import ProxL2Sq
-from statick.solver import SAGA, SVRG
+from statick.solver import SAGA
 
-solver = SAGA(step=1e-3, max_iter=100, verbose=False, tol=1e-5, n_threads=8) \
-          .set_model(ModelLogReg().fit(X, y))                \
-          .set_prox (ProxL2Sq(strength=((1. / X.shape[0]) + 1e-10)))
+solver = (
+    SAGA(step=1e-3, max_iter=100, verbose=False, tol=1e-5, n_threads=8)
+    .set_model(ModelLogReg().fit(X, y))
+    .set_prox(ProxL2Sq(strength=((1.0 / X.shape[0]) + 1e-10)))
+)
 
 solver.solve()
 

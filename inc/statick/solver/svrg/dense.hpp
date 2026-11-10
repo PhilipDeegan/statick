@@ -21,11 +21,13 @@ class DAO {
         epoch_size(_epoch_size),
         n_threads(_threads),
         iterate(modao.n_features() + static_cast<size_t>(INTERCEPT)),
-        rand(0, modao.n_samples() - 1) {}
+        rand(0, modao.n_samples() - 1),
+        thread_rands(make_thread_randoms<INDICE_TYPE>(_threads, 0, modao.n_samples() - 1)) {}
   T step = 0.00257480411965l;
   size_t n_epochs, epoch_size, rand_index = 0, n_threads, t = 0;
   std::vector<T> iterate, full_gradient, fixed_w, grad_i, grad_i_fixed_w, next_iterate;
   RandomMinMax<INDICE_TYPE> rand;
+  std::vector<RandomMinMax<INDICE_TYPE>> thread_rands;  // one per thread
   HISTORY history;
 };
 
@@ -44,8 +46,9 @@ void solve_thread(DAO &dao, typename MODEL::DAO &modao, PROX &prox, size_t n_thr
   auto *iterate = dao.iterate.data(), *full_gradient = dao.full_gradient.data();
   auto *fixed_w = dao.fixed_w.data(), *grad_i_fixed_w = dao.grad_i_fixed_w.data();
   auto *grad_i = dao.grad_i.data();
+  auto &rand = dao.thread_rands[n_thread];
   for (size_t t = 0; t < thread_epoch_size; ++t) {
-    INDICE_TYPE i = dao.rand.next();
+    INDICE_TYPE i = rand.next();
     MODEL::grad_i(modao, iterate, grad_i, iterate_size, i);
     MODEL::grad_i(modao, fixed_w, grad_i_fixed_w, iterate_size, i);
     for (size_t j = 0; j < iterate_size; ++j)
@@ -74,8 +77,8 @@ void solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox) {
   auto *iterate = dao.iterate.data();
   statick::ThreadPool pool(n_threads - 1);
   std::vector<std::function<void()>> funcs;
-  for (size_t i = 1; i < n_threads - 1; i++)
-    funcs.emplace_back([&]() { solve_thread<MODEL, RM, ST, INTERCEPT>(dao, modao, prox, i); });
+  for (size_t i = 1; i < n_threads; ++i)
+    funcs.emplace_back([&, i]() { solve_thread<MODEL, RM, ST, INTERCEPT>(dao, modao, prox, i); });
   auto start = std::chrono::steady_clock::now();
   auto log_history = [&](size_t epoch) {
     dao.t += epoch_size;

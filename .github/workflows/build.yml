@@ -1,0 +1,124 @@
+name: build
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+env:
+    MKN_KUL_GIT_CO: --depth 1
+    KLOG: 2
+
+jobs:
+  ubuntu:
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        python-version: ['3.12'] # TODO: restore '3.11'
+    steps:
+    - uses: actions/checkout@v6
+    - uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+        architecture: x64
+    - run: |
+        curl -Lo mkn https://github.com/mkn/mkn/releases/download/latest/mkn_nix
+        chmod +x mkn
+        export PATH="$PWD:$PATH"
+        python3 -m pip install pip -U
+        python3 -m pip install wheel -U
+        python3 -m pip install -r res/pip_deps.txt -U
+        ./mkn -v
+        ./mkn build -dSO 2 -p py -tx res/mkn/linux -a -std=c++20
+        ./mkn build -p tick -dta "-fPIC -std=c++17" # tick uses std::result_of, removed in C++20
+        ./sh/test_setup.sh
+        # TODO: remove gdb diagnostics once svrg_sparse segfault is fixed
+        ./mkn build test -Otx res/mkn/linux -a "-std=c++20 -g" || {
+          sudo apt-get install -y -qq gdb > /dev/null
+          grep -m1 'model name' /proc/cpuinfo; nproc; g++ --version | head -1
+          for exe in bin/build/test/*_svrg_sparse.cpp; do
+            echo "=== $exe"
+            gdb -batch -ex run -ex bt -ex "info registers rip rsp" -ex "x/4i \$pc" \
+              -ex "thread apply all bt 12" "$exe" 2>&1 | grep -v '^\[New Thread\|^\[Thread'
+          done
+          exit 1
+        }
+        PYTHONPATH="$PWD/tick:$PWD" python3 test/asaga_sparse.py
+
+  macos:
+    name: Python ${{ matrix.python-version }}
+    runs-on: macos-latest
+
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        python-version: ['3.12'] # TODO: restore '3.11'
+    steps:
+    - uses: actions/checkout@v6
+
+    - uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+        architecture: x64
+
+    - run: |
+        curl -Lo mkn https://github.com/mkn/mkn/releases/download/latest/mkn_arm_osx
+        chmod +x mkn
+        export PATH="$PWD:$PATH"
+        python3 -m pip install pip -U
+        python3 -m pip install wheel -U
+        python3 -m pip install -r res/pip_deps.txt -U
+        ./mkn -v
+        ./mkn build -dSO 2 -p py -tx res/mkn/osx -a -std=c++20
+        ./mkn build -p tick -dta "-fPIC -std=c++17" # tick uses std::result_of, removed in C++20
+        ./sh/test_setup.sh
+        ./mkn build test -Otx res/mkn/osx -a -std=c++20
+        PYTHONPATH="$PWD/tick:$PWD" python3 test/asaga_sparse.py
+
+  windows:
+    name: Python ${{ matrix.python-version }}
+    runs-on: windows-latest
+
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        python-version: ['3.12'] # TODO: restore '3.11'
+    steps:
+    - uses: actions/checkout@v6
+    - uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+        architecture: x64
+
+    - run: bash -c "rm /bin/link" # interferes with cl/link.exe
+    - uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: amd64
+    - shell: bash
+      env:
+        MKN_CL_PREFERRED: 1
+      run: |
+        curl -Lo mkn.exe https://github.com/mkn/mkn/releases/download/latest/mkn.exe
+        python3 -m pip install pip -U
+        python3 -m pip install wheel -U
+        python3 -m pip install -r res/pip_deps.txt -U
+        ./mkn -v
+        ./mkn build -dStO 2 -p py -a "-EHsc -std:c++20"
+        # tick's mkn profiles rely on DLL import/export, which MSVC can't resolve across its modules
+        #  so on windows build tick with its own CMake (TICK_STATIC_LIBS), outside ./tick to avoid shadowing it
+        git clone --depth 1 --recurse-submodules --shallow-submodules https://github.com/X-DataInitiative/tick "$RUNNER_TEMP/tick"
+        python3 -m pip install "$RUNNER_TEMP/tick"
+        ./sh/test_setup.sh
+        ./mkn build test -Oa "-EHsc -std:c++20"
+        PYTHONPATH="$PWD/tick:$PWD" python3 test/asaga_sparse.py

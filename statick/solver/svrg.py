@@ -1,5 +1,7 @@
 from tick.solver import SVRG as TS
+
 from statick.solver.solver import Solver as SOLVER
+
 
 class SVRG(SOLVER, TS):
 

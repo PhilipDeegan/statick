@@ -4,6 +4,8 @@
 #include <memory>
 #include <vector>
 #include <random>
+#include <fstream>
+#include <algorithm>
 
 #ifndef INDICE_TYPE
 #ifdef TICK_SPARSE_INDICES_INT64

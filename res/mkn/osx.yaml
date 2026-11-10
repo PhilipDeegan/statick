@@ -1,3 +1,7 @@
+
+super: settings
+
+
 # inc:
 #     /usr/local/include
 #     /usr/local/Cellar/python/3.7.4/Frameworks/Python.framework/Versions/3.7/include/python3.7m
@@ -5,6 +9,9 @@
 # path:
 #     /usr/local/lib
 #     /usr/local/Cellar/python/3.7.4/Frameworks/Python.framework/Versions/3.7/lib
+
+
+
 file:
   - type: c:S
     archiver: ar -cr
@@ -12,5 +19,5 @@ file:
     linker: clang
   - type: cpp:cxx:cc
     archiver: ar -cr
-    compiler: clang++ -std=c++17 -fPIC
+    compiler: clang++ -std=c++20 -fPIC
     linker: clang++ -Wl,-rpath,/usr/local/lib

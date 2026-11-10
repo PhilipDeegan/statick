@@ -29,7 +29,7 @@ void fit_s(DAO &dao, py_csr_t<T> &a, py_array_t<T> &b) {
 }
 
 template <typename _F, typename _L>
-class DAO : public statick::logreg::DAO<_F, _L> {
+class STATICK_PYBIND_SIG DAO : public statick::logreg::DAO<_F, _L> {
  public:
   using SUPER = statick::logreg::DAO<_F, _L>;
   using FEATURES = typename SUPER::FEATURES;

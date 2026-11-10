@@ -26,7 +26,8 @@ class DAO {
         steps_corrections(statick::saga::sparse::compute_step_corrections(modao.features())),
         gradients_average(modao.n_features()),
         gradients_memory(modao.n_samples()),
-        rand(0, modao.n_samples() - 1) {
+        rand(0, modao.n_samples() - 1),
+        thread_rands(make_thread_randoms<INDICE_TYPE>(_threads, 0, modao.n_samples() - 1)) {
     for (size_t i = 0; i < modao.n_samples(); i++) gradients_memory[i].store(0);
     for (size_t i = 0; i < modao.n_features(); i++) gradients_average[i].store(0);
   }
@@ -35,6 +36,7 @@ class DAO {
   std::vector<T> iterate, steps_corrections;
   std::vector<std::atomic<T>> gradients_average, gradients_memory;
   RandomMinMax<INDICE_TYPE> rand;
+  std::vector<RandomMinMax<INDICE_TYPE>> thread_rands;  // one per thread
   HISTORY history;
 };
 namespace sparse {
@@ -57,9 +59,10 @@ void threaded_solve(DAO &dao, typename MODEL::DAO &modao, PROX &prox, size_t n_t
   size_t idx_nnz = 0, thread_epoch_size = epoch_size / n_threads;
   thread_epoch_size += n_thread < (epoch_size % n_threads);
   const auto start = std::chrono::steady_clock::now();
+  auto &rand = dao.thread_rands[n_thread];
   for (size_t epoch = 1; epoch < (n_epochs + 1); ++epoch) {
     for (size_t t = 0; t < thread_epoch_size; ++t) {
-      INDICE_TYPE i = dao.rand.next();
+      INDICE_TYPE i = rand.next();
       size_t x_i_size = features.row_size(i);
       const T *x_i = features.row_raw(i);
       const INDICE_TYPE *x_i_indices = features.row_indices(i);
